@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/admin/ModeToggle";
 import { signOut } from "@/app/(dashboard)/actions";
@@ -12,15 +13,30 @@ type Props = {
 export function TopBar({ email, role }: Props) {
   const isProd = process.env.NODE_ENV === "production";
   const initials = (email ?? "?").trim().slice(0, 2).toUpperCase();
+  const sha = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+  const branch = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/85 px-6 backdrop-blur-md">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/75 px-6 backdrop-blur-md">
+      <div className="flex min-w-0 items-center gap-3">
         <EnvBadge isProd={isProd} />
-        <span className="hidden text-xs text-ink-3 md:inline">
+        {(sha || branch) && (
+          <span className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-paper-sunken/60 px-2.5 py-1 text-[10px] font-medium text-ink-3 md:inline-flex">
+            {branch && (
+              <span className="font-mono">
+                {branch.length > 14 ? branch.slice(0, 14) + "…" : branch}
+              </span>
+            )}
+            {sha && (
+              <span className="font-mono text-ink-3/80">{sha}</span>
+            )}
+          </span>
+        )}
+        <span className="hidden truncate text-xs text-ink-3 lg:inline">
           Editorial &amp; operations dashboard
         </span>
       </div>
       <div className="flex items-center gap-2">
+        <QuickTools />
         {role && <RoleBadge role={role} />}
         {email && (
           <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-paper-sunken/60 py-1 pr-3 pl-1 sm:flex">
@@ -30,7 +46,9 @@ export function TopBar({ email, role }: Props) {
             >
               {initials}
             </span>
-            <span className="text-xs font-medium text-ink-2">{email}</span>
+            <span className="max-w-[180px] truncate text-xs font-medium text-ink-2">
+              {email}
+            </span>
           </div>
         )}
         <ModeToggle />
@@ -50,14 +68,14 @@ function EnvBadge({ isProd }: { isProd: boolean }) {
       className={cn(
         "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
         isProd
-          ? "border-alert/30 bg-alert/10 text-alert"
-          : "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft",
+          ? "border-alert/40 bg-alert/15 text-alert"
+          : "border-brand/30 bg-brand/10 text-brand",
       )}
     >
       <span
         aria-hidden
         className={cn(
-          "size-1.5 rounded-full",
+          "size-1.5 rounded-full pulse-dot",
           isProd ? "bg-alert" : "bg-brand",
         )}
       />
@@ -67,10 +85,9 @@ function EnvBadge({ isProd }: { isProd: boolean }) {
 }
 
 function RoleBadge({ role }: { role: AdminRole }) {
-  const label = roleLabel(role);
   return (
-    <span className="hidden rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-deep dark:bg-brand/15 dark:text-brand-soft sm:inline-flex">
-      {label}
+    <span className="hidden rounded-full border border-brand/25 bg-brand/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand sm:inline-flex">
+      {roleLabel(role)}
     </span>
   );
 }
@@ -86,4 +103,38 @@ function roleLabel(role: AdminRole): string {
     default:
       return String(role);
   }
+}
+
+/**
+ * Top-right cluster of external operator destinations. The full
+ * list lives in the sidebar's Tools group; this is the
+ * fast-path for the two we open daily.
+ */
+function QuickTools() {
+  const links = [
+    {
+      href: "https://supabase.com/dashboard/project/_/editor",
+      label: "Supabase",
+    },
+    {
+      href: "https://sentry.io/organizations/fairways/issues/",
+      label: "Sentry",
+    },
+  ];
+  return (
+    <div className="hidden items-center gap-1 rounded-full border border-border/60 bg-paper-sunken/40 px-1 py-0.5 md:flex">
+      {links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium text-ink-2 transition-colors hover:bg-paper-raised hover:text-ink"
+        >
+          {link.label}
+          <ExternalLink aria-hidden className="size-3 text-ink-3" />
+        </a>
+      ))}
+    </div>
+  );
 }

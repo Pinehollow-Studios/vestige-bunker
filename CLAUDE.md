@@ -130,3 +130,13 @@ canonical write-up lives on disk.
   TopBar so future role-gated UI can branch on it. Bootstrap procedure
   documented in `Fairways-ios/docs/admin-runbook.md` → "Setup — admin
   roster".
+- **2026-05-22** — Atlas-aligned visual refresh + dev surfaces:
+  globals.css repainted in the iOS Atlas dark / mint palette (default
+  dark; cream almanac kept as light alternative); Sidebar gains
+  Safeguarding + Users sections and a "Tools" shelf; TopBar gains
+  deploy ref + quick-tools cluster; Overview expanded with a Platform
+  Health stats strip, six live queue cards, and an Operator Tools
+  shelf; new `/safeguarding` and `/users` pages (read-only); `/photos`,
+  `/scorecards`, `/analytics` lit up from "Soon" to live counts. No
+  schema changes — every new query reads existing tables or RPCs from
+  `Fairways-ios/supabase/migrations/`. Long-form in `CHANGELOG.md`.

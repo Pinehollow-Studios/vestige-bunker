@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 export function ModeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // Canonical next-themes hydration pattern: render after mount
+  // so the SSR-rendered icon doesn't flash the wrong glyph.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   const isDark = mounted && resolvedTheme === "dark";

@@ -5,15 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================
-   Fairways Admin — Colours, type, surfaces.
-   Mirrors the iOS / Design-System tokens
-   (see Fairways Design System/colors_and_type.css):
-     - Cream / "paper" surfaces in light mode
-     - Warm-slate surfaces in dark mode
-     - England-green accent kept anchored across both modes
+   Fairways Admin — Atlas palette.
+
+   Aligned with the iOS app's Atlas design system + the
+   marketing site (fairways-marketing/src/components/marketing
+   /palette.ts). Atlas is a dark-first identity: deep "paper"
+   ocean backgrounds, warm cream "ink" for text, a mint accent
+   for primary action, with amber + claret as secondary signals.
+
+   Light mode is preserved as a cream "almanac" alternative for
+   editors who prefer it (think country-house guidebook). The
+   default is dark — that's the brand.
+
    shadcn semantic tokens are aliased to brand tokens so all
-   the existing `bg-card`, `bg-muted`, `border-border` etc.
-   utilities pick up the brand palette automatically.
+   `bg-card`, `bg-muted`, `border-border` utilities pick up the
+   brand palette automatically.
    ========================================================= */
 
 @theme inline {
@@ -70,6 +76,10 @@
   --color-info: var(--info);
   --color-alert: var(--alert);
   --color-bucket: var(--bucket);
+  --color-amber: var(--amber);
+  --color-claret: var(--claret);
+  --color-mint: var(--brand);
+  --color-mint-soft: var(--brand-soft);
 
   --radius-sm: calc(var(--radius) * 0.55);
   --radius-md: calc(var(--radius) * 0.78);
@@ -80,14 +90,85 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ---------- Light mode (cream "paper" almanac) ---------- */
+/* ---------- Default (dark): Atlas ocean ---------- */
 :root {
-  /* Brand — England green, anchored across modes. */
-  --brand:        #2F5D3A;
-  --brand-deep:   #1F4128;
-  --brand-soft:   #A9C7A6;
-  --brand-fg:     #FBF6E8; /* cream foreground over deep green fills */
+  /* Surfaces — keyed to iOS Atlas Paper / PaperRaised / PaperSunken. */
+  --paper:        #0E1822;
+  --paper-raised: #131F2B;
+  --paper-sunken: #0A1118;
 
+  /* Text — warm cream, mirroring Atlas Ink. */
+  --ink:          #F3F0E5;
+  --ink-2:        #A8B3C0;
+  --ink-3:        #6E7A89;
+
+  --rule:         rgba(255, 255, 255, 0.10);
+
+  /* Brand = Atlas mint. Mirrors iOS Accent + marketing-site --accent. */
+  --brand:        #5BE4C3;
+  --brand-deep:   #2FB89A; /* mint, pressed/darker — used for nav active fg */
+  --brand-soft:   #8FE85B; /* lime gradient pair, never solo */
+  --brand-fg:     #0A1A22; /* near-black for text on mint fills */
+
+  /* Secondary signals — amber for bucket-list/achievement, claret for alert. */
+  --amber:        #F4A85C;
+  --claret:       #E2664E;
+  --info:         #5B9BE4;
+  --alert:        var(--claret);
+  --bucket:       var(--amber);
+
+  /* shadcn aliases */
+  --background:           var(--paper);
+  --foreground:           var(--ink);
+
+  --card:                 var(--paper-raised);
+  --card-foreground:      var(--ink);
+
+  --popover:              color-mix(in oklab, var(--paper-raised) 92%, white 8%);
+  --popover-foreground:   var(--ink);
+
+  --primary:              var(--brand);
+  --primary-foreground:   var(--brand-fg);
+
+  --secondary:            color-mix(in oklab, var(--brand) 14%, var(--paper-raised));
+  --secondary-foreground: var(--brand);
+
+  --muted:                var(--paper-sunken);
+  --muted-foreground:     var(--ink-2);
+
+  --accent:               color-mix(in oklab, var(--brand) 22%, var(--paper-raised));
+  --accent-foreground:    var(--brand);
+
+  --destructive:          var(--alert);
+
+  --border:               var(--rule);
+  --input:                color-mix(in oklab, var(--rule) 75%, transparent);
+  --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
+
+  /* Chart ramp keyed to the iOS county-completion ramp:
+     sand → moss → pine → peak → mint. */
+  --chart-1: #E9D2A4; /* sand */
+  --chart-2: #7BB47A; /* moss */
+  --chart-3: #2D7A3F; /* pine */
+  --chart-4: #1A4D2E; /* peak */
+  --chart-5: var(--brand); /* mint */
+
+  --radius: 0.875rem; /* 14px — matches Atlas / marketing --r-md */
+
+  /* Sidebar — slightly deeper than paper. Active row uses a soft
+     mint wash so it reads as in-family rather than neutral grey. */
+  --sidebar:                      #0B131C;
+  --sidebar-foreground:           var(--ink);
+  --sidebar-primary:              var(--brand);
+  --sidebar-primary-foreground:   var(--brand-fg);
+  --sidebar-accent:               color-mix(in oklab, var(--brand) 18%, var(--paper-raised));
+  --sidebar-accent-foreground:    var(--brand);
+  --sidebar-border:               var(--rule);
+  --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
+}
+
+/* ---------- Light: cream "almanac" alternative ---------- */
+.light {
   --paper:        #F7F1E3;
   --paper-raised: #FBF6E8;
   --paper-sunken: #EFE7D2;
@@ -98,11 +179,21 @@
 
   --rule:         #D9CFB6;
 
+  /* In light mode, brand reverts to England green so the almanac
+     palette still has a complementary primary. The mint accent is
+     reserved for true cross-product moments (kept available as
+     --color-mint). */
+  --brand:        #2F5D3A;
+  --brand-deep:   #1F4128;
+  --brand-soft:   #A9C7A6;
+  --brand-fg:     #FBF6E8;
+
+  --amber:        #C97A3A;
+  --claret:       #A8423A;
   --info:         #3A6A8C;
-  --alert:        #A8423A;
+  --alert:        var(--claret);
   --bucket:       #7A2E2E;
 
-  /* shadcn aliases — these are what the utility classes consume. */
   --background:           var(--paper);
   --foreground:           var(--ink);
 
@@ -112,7 +203,6 @@
   --popover:              var(--paper-raised);
   --popover-foreground:   var(--ink);
 
-  /* `primary` = brand green. Used on sign-in, primary CTA, accents. */
   --primary:              var(--brand);
   --primary-foreground:   var(--brand-fg);
 
@@ -122,8 +212,6 @@
   --muted:                var(--paper-sunken);
   --muted-foreground:     var(--ink-2);
 
-  /* Hover/selected surface — soft brand wash so navigation reads
-     as part of the same family rather than neutral grey. */
   --accent:               color-mix(in oklab, var(--brand) 14%, var(--paper-raised));
   --accent-foreground:    var(--brand-deep);
 
@@ -133,17 +221,12 @@
   --input:                var(--rule);
   --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 
-  /* Chart ramp keyed off brand green — 5 stops light → deep. */
   --chart-1: color-mix(in oklab, var(--brand) 30%, var(--paper-sunken));
   --chart-2: color-mix(in oklab, var(--brand) 55%, var(--paper-sunken));
   --chart-3: var(--brand);
   --chart-4: var(--brand-deep);
   --chart-5: color-mix(in oklab, var(--brand-deep) 70%, var(--ink));
 
-  --radius: 0.875rem; /* 14px — matches design-system --radius-md */
-
-  /* Sidebar — slightly sunken, deeper paper. Active item gets the
-     brand wash so it stands out without an extra outline. */
   --sidebar:                      color-mix(in oklab, var(--paper-sunken) 80%, var(--paper));
   --sidebar-foreground:           var(--ink);
   --sidebar-primary:              var(--brand);
@@ -154,19 +237,30 @@
   --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 }
 
-/* ---------- Dark mode (warm slate, not pure black) ---------- */
+/* `.dark` selector retained for next-themes interop. Same vars
+   as :root (Atlas is the default), so toggling between system /
+   dark / light only swaps when `.light` is set. */
 .dark {
-  --paper:        #1E2220;
-  --paper-raised: #262B28;
-  --paper-sunken: #181C1A;
+  --paper:        #0E1822;
+  --paper-raised: #131F2B;
+  --paper-sunken: #0A1118;
 
-  --ink:          #ECE5D2;
-  --ink-2:        #B6B0A0;
-  --ink-3:        #7E796D;
+  --ink:          #F3F0E5;
+  --ink-2:        #A8B3C0;
+  --ink-3:        #6E7A89;
 
-  --rule:         #353A37;
+  --rule:         rgba(255, 255, 255, 0.10);
 
-  --brand-soft:   #6FA078;
+  --brand:        #5BE4C3;
+  --brand-deep:   #2FB89A;
+  --brand-soft:   #8FE85B;
+  --brand-fg:     #0A1A22;
+
+  --amber:        #F4A85C;
+  --claret:       #E2664E;
+  --info:         #5B9BE4;
+  --alert:        var(--claret);
+  --bucket:       var(--amber);
 
   --background:           var(--paper);
   --foreground:           var(--ink);
@@ -174,41 +268,41 @@
   --card:                 var(--paper-raised);
   --card-foreground:      var(--ink);
 
-  --popover:              var(--paper-raised);
+  --popover:              color-mix(in oklab, var(--paper-raised) 92%, white 8%);
   --popover-foreground:   var(--ink);
 
-  --primary:              color-mix(in oklab, var(--brand) 78%, var(--paper-raised));
+  --primary:              var(--brand);
   --primary-foreground:   var(--brand-fg);
 
-  --secondary:            color-mix(in oklab, var(--brand) 18%, var(--paper-raised));
-  --secondary-foreground: #DCEFD3;
+  --secondary:            color-mix(in oklab, var(--brand) 14%, var(--paper-raised));
+  --secondary-foreground: var(--brand);
 
   --muted:                var(--paper-sunken);
   --muted-foreground:     var(--ink-2);
 
   --accent:               color-mix(in oklab, var(--brand) 22%, var(--paper-raised));
-  --accent-foreground:    #DCEFD3;
+  --accent-foreground:    var(--brand);
 
-  --destructive:          color-mix(in oklab, var(--alert) 80%, #FFF);
+  --destructive:          var(--alert);
 
   --border:               var(--rule);
-  --input:                color-mix(in oklab, var(--rule) 80%, transparent);
-  --ring:                 color-mix(in oklab, var(--brand) 65%, transparent);
+  --input:                color-mix(in oklab, var(--rule) 75%, transparent);
+  --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 
-  --chart-1: color-mix(in oklab, var(--brand) 35%, var(--paper-sunken));
-  --chart-2: color-mix(in oklab, var(--brand) 55%, var(--paper-sunken));
-  --chart-3: color-mix(in oklab, var(--brand) 75%, var(--paper-raised));
-  --chart-4: var(--brand-soft);
-  --chart-5: #DCEFD3;
+  --chart-1: #E9D2A4;
+  --chart-2: #7BB47A;
+  --chart-3: #2D7A3F;
+  --chart-4: #1A4D2E;
+  --chart-5: var(--brand);
 
-  --sidebar:                      color-mix(in oklab, var(--paper) 70%, #000);
+  --sidebar:                      #0B131C;
   --sidebar-foreground:           var(--ink);
-  --sidebar-primary:              var(--brand-soft);
-  --sidebar-primary-foreground:   var(--paper-sunken);
-  --sidebar-accent:               color-mix(in oklab, var(--brand) 28%, var(--paper-raised));
-  --sidebar-accent-foreground:    #DCEFD3;
+  --sidebar-primary:              var(--brand);
+  --sidebar-primary-foreground:   var(--brand-fg);
+  --sidebar-accent:               color-mix(in oklab, var(--brand) 18%, var(--paper-raised));
+  --sidebar-accent-foreground:    var(--brand);
   --sidebar-border:               var(--rule);
-  --sidebar-ring:                 color-mix(in oklab, var(--brand-soft) 60%, transparent);
+  --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 }
 
 @layer base {
@@ -217,9 +311,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Atlas aurora: two slow-drifting mint / sea blobs over the
+       deep paper. Echoes the marketing-site backdrop. Cheaper
+       than the marketing-site keyframes — admin is a tool, not a
+       hero — but the family resemblance is intentional. */
     background-image:
-      radial-gradient(at 0% 0%, color-mix(in oklab, var(--brand) 6%, transparent) 0%, transparent 55%),
-      radial-gradient(at 100% 0%, color-mix(in oklab, var(--info) 4%, transparent) 0%, transparent 50%);
+      radial-gradient(at 8% 4%, color-mix(in oklab, var(--brand) 14%, transparent) 0%, transparent 55%),
+      radial-gradient(at 96% 0%, color-mix(in oklab, var(--info) 11%, transparent) 0%, transparent 50%),
+      radial-gradient(at 50% 110%, color-mix(in oklab, var(--brand-soft) 7%, transparent) 0%, transparent 55%);
     background-attachment: fixed;
   }
   html {
@@ -228,12 +327,10 @@
   h1, h2, h3, h4 {
     color: var(--ink);
   }
-  /* Editorial display — Source Serif 4 — for hero headings. */
   .display-serif {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }
-  /* Brand display — DM Sans — for section headings + stat numerals. */
   .font-heading,
   .font-brand {
     font-family: var(--font-heading);
@@ -248,14 +345,14 @@
     font-feature-settings: "tnum" 1, "lnum" 1;
   }
   ::selection {
-    background: color-mix(in oklab, var(--brand) 25%, transparent);
+    background: color-mix(in oklab, var(--brand) 30%, transparent);
     color: var(--ink);
   }
 }
 
 /* ---------- Decorative helpers ---------- */
 
-/* Soft brand wash — used on hero headers, stat strip background. */
+/* Soft mint wash — used on hero headers, callouts, stat tiles. */
 .surface-brand {
   background:
     linear-gradient(
@@ -265,24 +362,84 @@
     );
 }
 
+/* Deep-mint gradient — used on hero panels, primary CTAs. */
 .surface-brand-deep {
   background:
     linear-gradient(
       135deg,
       var(--brand-deep) 0%,
-      var(--brand) 100%
+      var(--brand) 60%,
+      color-mix(in oklab, var(--brand) 60%, var(--brand-soft)) 100%
     );
   color: var(--brand-fg);
 }
 
-/* Crosshatch paper texture — extremely subtle, only visible on
-   raised cards. Same trick the iOS app uses on hero cards. */
+/* Glass — mirrors marketing-site .fw-glass at lower density so
+   admin reads as panels-on-paper, not floating overlay. */
+.surface-glass {
+  background: color-mix(in oklab, var(--paper-raised) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, white 6%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, white 8%, transparent),
+    0 18px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* Subtle textured paper — light, only visible on raised cards. */
 .surface-paper {
   background-color: var(--paper-raised);
   background-image:
     linear-gradient(
       135deg,
       transparent 0%,
-      color-mix(in oklab, var(--brand) 3%, transparent) 100%
+      color-mix(in oklab, var(--brand) 4%, transparent) 100%
     );
+}
+
+/* Topographic backdrop — concentric arcs in muted ink, evokes the
+   iOS county-fill maps. Drop on any container with position:relative. */
+.bg-topo {
+  background-image:
+    radial-gradient(circle at 90% -10%, color-mix(in oklab, var(--brand) 18%, transparent) 0%, transparent 38%),
+    repeating-radial-gradient(circle at 90% -10%, transparent 0 38px, color-mix(in oklab, var(--ink-3) 10%, transparent) 38px 39px);
+}
+
+/* Aurora panel — for hero strips on the overview, mirrors the
+   marketing site's animated blobs but static (admin is a tool). */
+.surface-aurora {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(140% 90% at 90% 10%, color-mix(in oklab, var(--brand) 30%, transparent) 0%, transparent 55%),
+    radial-gradient(120% 80% at 0% 90%, color-mix(in oklab, var(--info) 22%, transparent) 0%, transparent 60%),
+    linear-gradient(135deg, var(--paper-sunken) 0%, var(--paper-raised) 60%, var(--paper-raised) 100%);
+  border: 1px solid color-mix(in oklab, white 8%, transparent);
+}
+
+/* Tiny "live" dot pulse — used in TopBar / Sidebar to signal
+   that a queue has items. Light footprint, no JS. */
+@keyframes fw-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 55%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in oklab, var(--brand) 0%, transparent); }
+}
+.pulse-dot {
+  animation: fw-pulse 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+/* Keyboard shortcut chip. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: color-mix(in oklab, var(--paper-sunken) 80%, transparent);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }

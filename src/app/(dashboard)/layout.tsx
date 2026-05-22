@@ -3,6 +3,12 @@ import { TopBar } from "@/components/admin/TopBar";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createClient } from "@/lib/supabase/server";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+function sevenDaysAgoIso(): string {
+  return new Date(Date.now() - SEVEN_DAYS_MS).toISOString();
+}
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -10,11 +16,21 @@ export default async function DashboardLayout({
 }) {
   const admin = await requireAdmin();
 
-  // Pull lightweight counts in parallel so the sidebar can render
-  // dynamic pip badges next to each live nav item. Failures fall
-  // through silently — the nav item just shows no badge.
+  // Lightweight counts in parallel for sidebar badges. Each result
+  // is independently nullable — a failed query just hides the
+  // matching pip. None of these are blocking critical-path data.
   const supabase = await createClient();
-  const [queueRes, curatedRes, coursesRes, feedbackRes] = await Promise.all([
+  const [
+    queueRes,
+    curatedRes,
+    coursesRes,
+    feedbackRes,
+    photosRes,
+    scorecardsRes,
+    safeguardingRes,
+    usersRes,
+    crashesRes,
+  ] = await Promise.all([
     supabase.rpc("admin_list_verification_queue"),
     supabase
       .from("curated_lists")
@@ -27,6 +43,25 @@ export default async function DashboardLayout({
       .from("feedback_reports")
       .select("id", { count: "exact", head: true })
       .in("status", ["new", "triaged", "inProgress"]),
+    supabase
+      .from("photos")
+      .select("id", { count: "exact", head: true })
+      .eq("moderation_state", "pending"),
+    supabase
+      .from("scorecard_review_queue")
+      .select("id", { count: "exact", head: true })
+      .in("state", ["awaiting_review", "in_review"]),
+    supabase
+      .from("safeguarding_flags")
+      .select("id", { count: "exact", head: true })
+      .eq("state", "pending"),
+    supabase
+      .from("users")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("crash_reports")
+      .select("id", { count: "exact", head: true })
+      .gte("last_seen", sevenDaysAgoIso()),
   ]);
 
   const counts = {
@@ -34,6 +69,11 @@ export default async function DashboardLayout({
     curated: curatedRes.count ?? 0,
     courses: coursesRes.count ?? 0,
     feedback: feedbackRes.count ?? 0,
+    photos: photosRes.count ?? 0,
+    scorecards: scorecardsRes.count ?? 0,
+    safeguarding: safeguardingRes.count ?? 0,
+    users: usersRes.count ?? 0,
+    crashes: crashesRes.count ?? 0,
   };
 
   return (
