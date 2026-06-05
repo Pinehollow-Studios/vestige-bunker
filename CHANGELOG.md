@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-06-05 — Badges editor (`/badges`)
+
+New editorial surface for designing the badges users earn — paired with
+the iOS `badge_catalogue_for_user` work and the
+`20260605140000_editorial_badge_system.sql` migration in the iOS repo
+(badges moved from hardcoded enum kinds to admin-authored
+`badge_definitions`).
+
+- **Index** (`/badges`) — medallion-thumbnail cards grouped by status
+  (live / draft / archived), each summarising its criteria, with a
+  "+ New badge" inline create flow. Mirrors the curated-lists index.
+- **Editor** (`/badges/[id]`) — sticky **live preview** (earned + locked
+  + grid sizes) beside the form:
+  - **Visual composer** — glyph picker over a curated SF-Symbol set (+
+    free-text override for any valid symbol), theme + tier colour
+    swatches, shape / effect selects, hex tint override, and optional
+    custom-PNG artwork upload to the `badge-art` bucket.
+  - **Editorial** — name / slug / tagline / description / how-to-earn /
+    category / series key+rank / display priority / secret flag.
+  - **Criteria builder** — no raw SQL: pick a type (reach a number ·
+    complete a county · complete a list · play a course · manual), then
+    a metric + target (+ optional county/tier/style scope) or an entity
+    picker.
+  - **Lifecycle** — publish / unpublish, archive, delete, an "award to
+    everyone who qualifies" backfill (`admin_backfill_badge_definition`),
+    and a paste-a-UUID manual grant / revoke (`admin_grant_badge` /
+    `admin_revoke_badge`).
+- **`components/badges/BadgeMedallion.tsx`** — an SVG medallion mirroring
+  the iOS `BadgeMedallion` (same shapes, palette, tier frames, effects;
+  lucide glyph map) so what's designed here is what ships.
+- Sidebar gains a **Badges** entry under Editorial.
+- No schema changes in this repo — the table + RPCs land in the iOS
+  repo's migration (per the "iOS owns all schema" rule). That migration
+  is **not yet applied** to the dev project — the editor renders but
+  reads/writes need it live (Tom-action).
+- TypeScript clean (`tsc --noEmit`), ESLint clean.
+
 ## 2026-05-23 — Fixed sidebar, personalised greeting, integrated tools registry
 
 Three coupled changes that turn the shell from "static frame" into

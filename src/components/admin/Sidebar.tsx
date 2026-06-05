@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
+  Award,
   BarChart3,
   ExternalLink,
   Images,
@@ -80,6 +81,7 @@ const NAV: NavItem[] = [
     countKey: "users",
   },
   { href: "/curated", label: "Curated lists", group: "editorial", ready: true, icon: Sparkles, countKey: "curated" },
+  { href: "/badges", label: "Badges", group: "editorial", ready: true, icon: Award },
   { href: "/courses", label: "Courses", group: "editorial", ready: true, icon: MapPin, countKey: "courses" },
   { href: "/analytics", label: "Analytics", group: "insights", ready: true, icon: BarChart3 },
 ];
