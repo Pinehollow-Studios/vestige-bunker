@@ -12,7 +12,16 @@
  * matched on both sides.
  */
 
-export type FeedbackKind = "bug" | "dataError" | "featureRequest" | "general";
+export type FeedbackKind =
+  | "bug"
+  | "dataError"
+  | "featureRequest"
+  | "general"
+  // Beta-program report types (Vestige-ios 2026-06-06 beta-depth slice).
+  | "crash"
+  | "visualGlitch"
+  | "performance"
+  | "confusingUX";
 export type FeedbackStatus =
   | "new"
   | "triaged"
@@ -20,6 +29,11 @@ export type FeedbackStatus =
   | "resolved"
   | "wontFix";
 export type FeedbackSeverity = "low" | "medium" | "high" | "critical";
+/** Reporter's own impact read (beta depth) — distinct from the
+ * admin-set `FeedbackSeverity` triage scale. */
+export type FeedbackUserSeverity = "blocker" | "major" | "minor" | "cosmetic";
+/** How reliably the issue reproduces (beta depth). */
+export type FeedbackReproducibility = "always" | "sometimes" | "once" | "unsure";
 export type FeedbackMessageKind = "reply" | "status_change";
 export type FeedbackMessageAuthorRole =
   | "moderator"
@@ -42,6 +56,12 @@ export type FeedbackQueueRow = {
   kind: FeedbackKind;
   status: FeedbackStatus;
   severity: FeedbackSeverity | null;
+  // Beta-depth fields (nullable for pre-2026-06-06 reports + reports
+  // filed before the beta flow existed).
+  area: string | null;
+  area_label: string | null;
+  user_severity: FeedbackUserSeverity | null;
+  reproducibility: FeedbackReproducibility | null;
   body_preview: string;
   tags: string[];
   duplicate_of_report_id: string | null;
@@ -74,6 +94,12 @@ export type FeedbackReport = {
   ios_version: string | null;
   device_model: string | null;
   category_context: Record<string, string> | null;
+  // Beta-depth fields (nullable for non-beta reports).
+  area: string | null;
+  area_path: string[] | null;
+  area_label: string | null;
+  user_severity: FeedbackUserSeverity | null;
+  reproducibility: FeedbackReproducibility | null;
   tags: string[] | null;
   is_founder: boolean | null;
   duplicate_of_report_id: string | null;
@@ -148,6 +174,14 @@ export function kindLabel(kind: FeedbackKind): string {
       return "Feature request";
     case "general":
       return "General";
+    case "crash":
+      return "Crash";
+    case "visualGlitch":
+      return "Visual glitch";
+    case "performance":
+      return "Performance";
+    case "confusingUX":
+      return "Confusing UX";
   }
 }
 
@@ -206,4 +240,99 @@ export function statusChipClasses(status: FeedbackStatus): string {
     case "wontFix":
       return "border-border bg-paper-sunken/60 text-ink-2";
   }
+}
+
+// MARK: - Beta-depth helpers (area / user severity / reproducibility)
+
+/** Reporter-set impact label. Mirrors iOS `FeedbackUserSeverity`. */
+export function userSeverityLabel(value: FeedbackUserSeverity | null): string {
+  switch (value) {
+    case "blocker":
+      return "Blocker";
+    case "major":
+      return "Major";
+    case "minor":
+      return "Minor";
+    case "cosmetic":
+      return "Cosmetic";
+    default:
+      return "—";
+  }
+}
+
+export function userSeverityChipClasses(
+  value: FeedbackUserSeverity | null,
+): string {
+  switch (value) {
+    case "blocker":
+      return "border-alert/40 bg-alert/15 text-alert";
+    case "major":
+      return "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300";
+    case "minor":
+      return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+    case "cosmetic":
+      return "border-border bg-paper-sunken/60 text-ink-2";
+    default:
+      return "border-dashed border-border/70 bg-paper-sunken/40 text-ink-3";
+  }
+}
+
+/** Reproducibility label. Mirrors iOS `FeedbackReproducibility`. */
+export function reproducibilityLabel(
+  value: FeedbackReproducibility | null,
+): string {
+  switch (value) {
+    case "always":
+      return "Every time";
+    case "sometimes":
+      return "Sometimes";
+    case "once":
+      return "Just once";
+    case "unsure":
+      return "Not sure";
+    default:
+      return "—";
+  }
+}
+
+/** All report types — drives the queue kind filter. */
+export const FEEDBACK_KINDS: FeedbackKind[] = [
+  "bug",
+  "crash",
+  "visualGlitch",
+  "performance",
+  "confusingUX",
+  "dataError",
+  "featureRequest",
+  "general",
+];
+
+/** Reporter-impact filter options. */
+export const FEEDBACK_USER_SEVERITIES: FeedbackUserSeverity[] = [
+  "blocker",
+  "major",
+  "minor",
+  "cosmetic",
+];
+
+/**
+ * Top-level page-location areas — the `feedback_reports.area` slug the
+ * queue filter matches on. Mirrors the top level of the iOS
+ * `FeedbackArea.tree`. The full breadcrumb lives in `area_label`.
+ */
+export const FEEDBACK_AREAS: { slug: string; label: string }[] = [
+  { slug: "home", label: "Home" },
+  { slug: "atlas", label: "Atlas / map" },
+  { slug: "club", label: "Club" },
+  { slug: "you", label: "You / profile" },
+  { slug: "round", label: "Logging a round" },
+  { slug: "onboarding", label: "Sign in & onboarding" },
+  { slug: "settings", label: "Settings" },
+  { slug: "notifications", label: "Notifications" },
+  { slug: "other", label: "Other" },
+];
+
+export function areaSlugLabel(slug: string | null): string {
+  if (!slug) return "—";
+  return FEEDBACK_AREAS.find((a) => a.slug === slug)?.label ?? slug;
 }

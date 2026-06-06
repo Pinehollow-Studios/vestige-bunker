@@ -7,11 +7,17 @@ import {
   type FeedbackKind,
   type FeedbackSeverity,
   type FeedbackStatus,
+  type FeedbackUserSeverity,
+  FEEDBACK_AREAS,
+  FEEDBACK_KINDS,
+  FEEDBACK_USER_SEVERITIES,
   kindLabel,
   severityChipClasses,
   severityLabel,
   statusChipClasses,
   statusLabel,
+  userSeverityChipClasses,
+  userSeverityLabel,
 } from "@/lib/feedback/types";
 
 const STATUSES: FeedbackStatus[] = [
@@ -22,12 +28,7 @@ const STATUSES: FeedbackStatus[] = [
   "wontFix",
 ];
 const SEVERITIES: FeedbackSeverity[] = ["low", "medium", "high", "critical"];
-const KINDS: FeedbackKind[] = [
-  "bug",
-  "dataError",
-  "featureRequest",
-  "general",
-];
+const KINDS: FeedbackKind[] = FEEDBACK_KINDS;
 
 /**
  * Filter bar above the feedback queue (slice 6 polish). Status,
@@ -54,6 +55,9 @@ export function QueueFilters({
   const selectedSeverities =
     (params.getAll("severity") as FeedbackSeverity[]) ?? [];
   const selectedKinds = (params.getAll("kind") as FeedbackKind[]) ?? [];
+  const selectedAreas = params.getAll("area") ?? [];
+  const selectedUserSeverities =
+    (params.getAll("userSeverity") as FeedbackUserSeverity[]) ?? [];
 
   const updateParam = (key: string, value: string, present: boolean) => {
     const next = new URLSearchParams(params.toString());
@@ -99,6 +103,8 @@ export function QueueFilters({
     selectedStatuses.length > 0 ||
     selectedSeverities.length > 0 ||
     selectedKinds.length > 0 ||
+    selectedAreas.length > 0 ||
+    selectedUserSeverities.length > 0 ||
     initialSearch.length > 0;
 
   return (
@@ -167,6 +173,40 @@ export function QueueFilters({
               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition ${isActive ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft ring-2 ring-brand/40" : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30"}`}
             >
               {kindLabel(kind)}
+            </button>
+          );
+        })}
+      </FilterRow>
+
+      <FilterRow label="Area">
+        {FEEDBACK_AREAS.map((area) => {
+          const isActive = selectedAreas.includes(area.slug);
+          return (
+            <button
+              key={area.slug}
+              type="button"
+              disabled={pending}
+              onClick={() => updateParam("area", area.slug, !isActive)}
+              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition ${isActive ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft ring-2 ring-brand/40" : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30"}`}
+            >
+              {area.label}
+            </button>
+          );
+        })}
+      </FilterRow>
+
+      <FilterRow label="Reporter impact">
+        {FEEDBACK_USER_SEVERITIES.map((value) => {
+          const isActive = selectedUserSeverities.includes(value);
+          return (
+            <button
+              key={value}
+              type="button"
+              disabled={pending}
+              onClick={() => updateParam("userSeverity", value, !isActive)}
+              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider transition ${userSeverityChipClasses(value)} ${isActive ? "ring-2 ring-brand/40" : "opacity-60 hover:opacity-100"}`}
+            >
+              {userSeverityLabel(value)}
             </button>
           );
         })}

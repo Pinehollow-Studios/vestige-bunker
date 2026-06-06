@@ -3,11 +3,17 @@ import {
   Bug,
   Camera,
   Crown,
+  Gauge,
+  HelpCircle,
   Image as ImageIcon,
   Lightbulb,
   Map,
+  MapPin,
   MessageSquare,
+  Paintbrush,
+  Repeat,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { createClient } from "@/lib/supabase/server";
@@ -18,11 +24,15 @@ import {
   type FeedbackQueueRow,
   type FeedbackSeverity,
   type FeedbackStatus,
+  areaSlugLabel,
   kindLabel,
+  reproducibilityLabel,
   severityChipClasses,
   severityLabel,
   statusChipClasses,
   statusLabel,
+  userSeverityChipClasses,
+  userSeverityLabel,
 } from "@/lib/feedback/types";
 import { QueueFilters } from "./QueueFilters";
 
@@ -61,6 +71,8 @@ export default async function FeedbackQueuePage({
   const severities = asArray<FeedbackSeverity>(params.severity);
   const kinds = asArray<FeedbackKind>(params.kind);
   const tags = asArray<string>(params.tag);
+  const areas = asArray<string>(params.area);
+  const userSeverities = asArray<string>(params.userSeverity);
   const query =
     typeof params.q === "string"
       ? params.q
@@ -72,7 +84,15 @@ export default async function FeedbackQueuePage({
   );
   const safeOffset = Number.isFinite(offset) && offset >= 0 ? offset : 0;
 
-  const { data, error } = await supabase.rpc("admin_feedback_queue", {
+  // The beta-depth filters (p_area_filter / p_user_severity_filter)
+  // only exist on the 9-arg `admin_feedback_queue` from migration
+  // 20260606160000. To stay compatible with a project that hasn't had
+  // that migration applied yet (e.g. prod before Tom's coordinated
+  // deploy), only send the new params when a filter is actually active
+  // — base browsing then resolves against the pre-migration 7-arg
+  // function, and the new return columns simply arrive undefined (the
+  // UI guards hide them) until the migration lands.
+  const queueArgs: Record<string, unknown> = {
     p_status_filter: statuses,
     p_severity_filter: severities,
     p_kind_filter: kinds,
@@ -80,7 +100,11 @@ export default async function FeedbackQueuePage({
     p_search: query || null,
     p_limit: PAGE_SIZE,
     p_offset: safeOffset,
-  });
+  };
+  if (areas) queueArgs.p_area_filter = areas;
+  if (userSeverities) queueArgs.p_user_severity_filter = userSeverities;
+
+  const { data, error } = await supabase.rpc("admin_feedback_queue", queueArgs);
   const queue = (data as FeedbackQueueRow[] | null) ?? [];
 
   const byStatus = bucketByStatus(queue);
@@ -311,6 +335,12 @@ function ReportRow({ row }: { row: FeedbackQueueRow }) {
                   {row.duplicate_count === 1 ? "duplicate" : "duplicates"}
                 </span>
               )}
+              {(row.area_label || row.area) && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 text-[10px] font-medium text-ink-2">
+                  <MapPin aria-hidden className="size-3" />
+                  {row.area_label ?? areaSlugLabel(row.area)}
+                </span>
+              )}
             </div>
             <p className="line-clamp-3 text-sm leading-snug text-ink">
               {row.body_preview}
@@ -376,6 +406,19 @@ function ReportRow({ row }: { row: FeedbackQueueRow }) {
               {row.tags.length > 3 && ` +${row.tags.length - 3}`}
             </span>
           )}
+          {row.user_severity && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${userSeverityChipClasses(row.user_severity)}`}
+            >
+              {userSeverityLabel(row.user_severity)}
+            </span>
+          )}
+          {row.reproducibility && (
+            <span className="inline-flex items-center gap-1 text-ink-3">
+              <Repeat aria-hidden className="size-3" />
+              {reproducibilityLabel(row.reproducibility)}
+            </span>
+          )}
         </footer>
       </article>
     </Link>
@@ -407,6 +450,36 @@ function KindGlyph({ kind }: { kind: FeedbackKind }) {
       return (
         <span className={`${styles} bg-paper-sunken text-ink-2`}>
           <ImageIcon aria-hidden className="size-4" />
+        </span>
+      );
+    case "crash":
+      return (
+        <span className={`${styles} bg-alert/10 text-alert`}>
+          <Zap aria-hidden className="size-4" />
+        </span>
+      );
+    case "visualGlitch":
+      return (
+        <span className={`${styles} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>
+          <Paintbrush aria-hidden className="size-4" />
+        </span>
+      );
+    case "performance":
+      return (
+        <span className={`${styles} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>
+          <Gauge aria-hidden className="size-4" />
+        </span>
+      );
+    case "confusingUX":
+      return (
+        <span className={`${styles} bg-brand/10 text-brand-deep dark:text-brand-soft`}>
+          <HelpCircle aria-hidden className="size-4" />
+        </span>
+      );
+    default:
+      return (
+        <span className={`${styles} bg-paper-sunken text-ink-2`}>
+          <MessageSquare aria-hidden className="size-4" />
         </span>
       );
   }

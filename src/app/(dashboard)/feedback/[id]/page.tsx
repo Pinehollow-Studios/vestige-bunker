@@ -5,7 +5,10 @@ import {
   ArrowLeft,
   ChevronRight,
   Crown,
+  Gauge,
   Hash,
+  MapPin,
+  Repeat,
   Smartphone,
   Tag,
 } from "lucide-react";
@@ -25,11 +28,15 @@ import {
   type FeedbackReporter,
   type FeedbackScreenshot,
   type FeedbackStatus,
+  areaSlugLabel,
   kindLabel,
+  reproducibilityLabel,
   severityChipClasses,
   severityLabel,
   statusChipClasses,
   statusLabel,
+  userSeverityChipClasses,
+  userSeverityLabel,
 } from "@/lib/feedback/types";
 
 export const dynamic = "force-dynamic";
@@ -135,6 +142,7 @@ export default async function FeedbackThreadPage({
             initialDuplicateOf={report.duplicate_of_report_id}
             isSuperAdmin={admin.role === "super_admin"}
           />
+          <ReportDetailsMeta report={report} />
           <SidebarMeta report={report} />
           {report.linked_crash_id && (
             <LinkedCrashCard
@@ -360,6 +368,41 @@ function messageTitle(message: FeedbackMessage): string {
 // --------------------------------------------------------------
 // Sidebar
 // --------------------------------------------------------------
+
+function ReportDetailsMeta({ report }: { report: FeedbackReport }) {
+  const hasArea = Boolean(report.area_label || report.area);
+  if (!hasArea && !report.user_severity && !report.reproducibility) {
+    return null;
+  }
+  return (
+    <div className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+        Report details
+      </p>
+      <ul className="space-y-2 text-xs text-ink-2">
+        {hasArea && (
+          <MetaRow icon={MapPin} label="Location">
+            {report.area_label ?? areaSlugLabel(report.area)}
+          </MetaRow>
+        )}
+        {report.user_severity && (
+          <MetaRow icon={Gauge} label="Reporter impact">
+            <span
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${userSeverityChipClasses(report.user_severity)}`}
+            >
+              {userSeverityLabel(report.user_severity)}
+            </span>
+          </MetaRow>
+        )}
+        {report.reproducibility && (
+          <MetaRow icon={Repeat} label="Reproduces">
+            {reproducibilityLabel(report.reproducibility)}
+          </MetaRow>
+        )}
+      </ul>
+    </div>
+  );
+}
 
 function SidebarMeta({ report }: { report: FeedbackReport }) {
   return (
