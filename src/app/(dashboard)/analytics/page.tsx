@@ -1,6 +1,7 @@
 import { BarChart3, Database, ExternalLink, FileTerminal } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateServiceClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,13 @@ function isoMsAgo(ms: number): string {
 export default async function AnalyticsPage() {
   const metabaseUrl = process.env.NEXT_PUBLIC_METABASE_DASHBOARD_URL;
   const supabase = await createClient();
+  // These are platform-wide totals, but `users` / `logged_rounds` /
+  // `played_markers` / `photos` / `friendships` / `bucket_list_items` are all
+  // own-scoped under RLS (no admin SELECT policy), so the session client would
+  // only count the admin's own rows. Read via service-role (gated by the
+  // layout's requireAdmin) for true counts; fall back to the session client
+  // when unconfigured.
+  const adminRead = (await tryCreateServiceClient()) ?? supabase;
   const weekAgo = isoMsAgo(WEEK_MS);
   const monthAgo = isoMsAgo(MONTH_MS);
 
@@ -36,27 +44,27 @@ export default async function AnalyticsPage() {
     friendsTotalRes,
     bucketTotalRes,
   ] = await Promise.all([
-    supabase.from("users").select("id", { count: "exact", head: true }),
-    supabase
+    adminRead.from("users").select("id", { count: "exact", head: true }),
+    adminRead
       .from("users")
       .select("id", { count: "exact", head: true })
       .gte("created_at", weekAgo),
-    supabase.from("logged_rounds").select("id", { count: "exact", head: true }),
-    supabase
+    adminRead.from("logged_rounds").select("id", { count: "exact", head: true }),
+    adminRead
       .from("logged_rounds")
       .select("id", { count: "exact", head: true })
       .gte("created_at", weekAgo),
-    supabase
+    adminRead
       .from("logged_rounds")
       .select("id", { count: "exact", head: true })
       .gte("created_at", monthAgo),
-    supabase.from("played_markers").select("id", { count: "exact", head: true }),
-    supabase.from("photos").select("id", { count: "exact", head: true }),
-    supabase
+    adminRead.from("played_markers").select("id", { count: "exact", head: true }),
+    adminRead.from("photos").select("id", { count: "exact", head: true }),
+    adminRead
       .from("friendships")
       .select("id", { count: "exact", head: true })
       .eq("status", "accepted"),
-    supabase.from("bucket_list_items").select("user_id", { count: "exact", head: true }),
+    adminRead.from("bucket_list_items").select("user_id", { count: "exact", head: true }),
   ]);
 
   const stats = [

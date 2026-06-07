@@ -69,9 +69,13 @@ function isoMsAgo(ms: number): string {
 export default async function OverviewPage() {
   const supabase = await createClient();
   await requireAdmin();
-  // `public.photos` has no admin SELECT policy, so the session client only
-  // sees the admin's own uploads. Read the queue via service-role (gated by
-  // the requireAdmin above); fall back to the session client when unconfigured.
+  // Several tables have no admin SELECT policy, so the session (anon) client
+  // only sees the admin's own slice — `photos` (own uploads), `users`
+  // (own/public/friends), `logged_rounds` (own), `friendships` (party). Read
+  // those through service-role (gated by the requireAdmin above) for true
+  // platform totals; fall back to the session client when unconfigured.
+  // `courses` (select_authenticated), `curated_lists`/`feedback_reports`/
+  // `crash_reports` (admin-gated policies) are fine on the session client.
   const adminRead = (await tryCreateServiceClient()) ?? supabase;
   const sevenDaysAgo = isoMsAgo(WEEK_MS);
 
@@ -122,13 +126,13 @@ export default async function OverviewPage() {
       .gte("last_seen", sevenDaysAgo)
       .order("last_seen", { ascending: false })
       .limit(5),
-    supabase.from("users").select("id", { count: "exact", head: true }),
-    supabase
+    adminRead.from("users").select("id", { count: "exact", head: true }),
+    adminRead
       .from("users")
       .select("id", { count: "exact", head: true })
       .gte("created_at", sevenDaysAgo),
-    supabase.from("logged_rounds").select("id", { count: "exact", head: true }),
-    supabase
+    adminRead.from("logged_rounds").select("id", { count: "exact", head: true }),
+    adminRead
       .from("logged_rounds")
       .select("id", { count: "exact", head: true })
       .gte("created_at", sevenDaysAgo),
@@ -137,7 +141,7 @@ export default async function OverviewPage() {
       .from("courses")
       .select("id", { count: "exact", head: true })
       .not("polygon", "is", null),
-    supabase
+    adminRead
       .from("friendships")
       .select("id", { count: "exact", head: true })
       .eq("status", "accepted"),
