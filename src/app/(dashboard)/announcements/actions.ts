@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createWriteClient, isProdView } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { announcementMediaStorageKey } from "@/lib/storage";
 import type {
@@ -30,11 +30,7 @@ export async function createAnnouncement(title: string): Promise<ActionResult<st
   if (!trimmed) return { ok: false, message: "Title is required." };
 
   const admin = await requireAdmin();
-  const supabase = await createWriteClient();
-  // In prod view the operator's admin id is a DEV auth user — it does not exist
-  // in prod's auth.users, so stamping it would violate the FK. Attribute to null
-  // (the team) on prod; keep real attribution on dev.
-  const adminId = (await isProdView()) ? null : admin.id;
+  const supabase = await createClient();
   const slug = await uniqueSlug(supabase, slugify(trimmed));
 
   const { data, error } = await supabase
@@ -53,8 +49,8 @@ export async function createAnnouncement(title: string): Promise<ActionResult<st
       audience_kind: "everyone",
       target: {},
       is_archived: false,
-      created_by_admin_id: adminId,
-      last_edited_by_admin_id: adminId,
+      created_by_admin_id: admin.id,
+      last_edited_by_admin_id: admin.id,
     })
     .select("id")
     .single();
@@ -95,7 +91,7 @@ export async function updateAnnouncement(
   patch: AnnouncementPatch,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const update: Record<string, unknown> = {};
 
   if (patch.slug !== undefined) update.slug = patch.slug ? slugify(patch.slug) : null;
@@ -129,8 +125,7 @@ export async function updateAnnouncement(
   if (patch.target !== undefined) update.target = patch.target;
 
   if (Object.keys(update).length === 0) return { ok: true };
-  // Null attribution on prod (dev admin id isn't a prod auth.users row).
-  update.last_edited_by_admin_id = (await isProdView()) ? null : admin.id;
+  update.last_edited_by_admin_id = admin.id;
 
   const { error } = await supabase.from("announcements").update(update).eq("id", id);
   if (error) return { ok: false, message: error.message };
@@ -151,7 +146,7 @@ export async function setPublishState(
   unpublishedAt: string | null = null,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("announcements")
     .update({
@@ -168,7 +163,7 @@ export async function setPublishState(
 
 export async function setArchived(id: string, archived: boolean): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("announcements")
     .update({ is_archived: archived })
@@ -185,7 +180,7 @@ export async function deleteAnnouncement(id: string): Promise<ActionResult> {
   if (admin.role !== "super_admin") {
     return { ok: false, message: "Delete requires super_admin." };
   }
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("announcements").delete().eq("id", id);
   if (error) return { ok: false, message: error.message };
   revalidatePath("/announcements");
@@ -202,7 +197,7 @@ export async function setTargets(
   userIds: string[],
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
 
   const unique = Array.from(new Set(userIds.filter((u) => isUuid(u))));
 
@@ -232,7 +227,7 @@ export async function searchUsers(query: string): Promise<ActionResult<UserPickR
   const q = query.trim();
   if (q.length < 2) return { ok: true, data: [] };
 
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("users")
     .select("id, username, display_name, avatar_photo_id")
@@ -249,7 +244,7 @@ export async function searchUsers(query: string): Promise<ActionResult<UserPickR
  */
 export async function loadTargetUsers(id: string): Promise<ActionResult<UserPickRow[]>> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
 
   const { data: targetRows, error: targetErr } = await supabase
     .from("announcement_targets")
@@ -280,7 +275,7 @@ export async function loadRecipients(
   limit: number,
 ): Promise<ActionResult<AnnouncementRecipient[]>> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_announcement_recipients", {
     p_id: id,
     p_state: state,
@@ -307,7 +302,7 @@ export async function uploadHero(
   if (!(file instanceof File)) return { ok: false, message: "No file provided." };
   if (file.size === 0) return { ok: false, message: "File is empty." };
 
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { path, key } = announcementMediaStorageKey(id);
   const bytes = await file.arrayBuffer();
 
@@ -329,7 +324,7 @@ export async function uploadHero(
 
 export async function removeHero(id: string): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createWriteClient();
+  const supabase = await createClient();
   const { path } = announcementMediaStorageKey(id);
   // Storage 404 (object never existed) is benign — null the column anyway.
   await supabase.storage.from("announcement-media").remove([path]);
@@ -350,7 +345,7 @@ function slugify(input: string): string {
 }
 
 async function uniqueSlug(
-  supabase: Awaited<ReturnType<typeof createWriteClient>>,
+  supabase: Awaited<ReturnType<typeof createClient>>,
   base: string,
 ): Promise<string> {
   if (!base) return crypto.randomUUID().slice(0, 8);

@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
-import { Eye } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { TopBar } from "@/components/admin/TopBar";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { createClient, PROD_VIEW_COOKIE } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { activeEnvKey, DEV_SWITCH_ENABLED, ENV_COOKIE } from "@/lib/supabase/env";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -17,7 +18,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const admin = await requireAdmin();
-  const prodView = (await cookies()).get(PROD_VIEW_COOKIE)?.value === "1";
+  const env = activeEnvKey((await cookies()).get(ENV_COOKIE)?.value);
 
   // Lightweight counts in parallel for sidebar badges. Each result
   // is independently nullable — a failed query just hides the
@@ -92,15 +93,14 @@ export default async function DashboardLayout({
           under it. On <lg the sidebar is hidden entirely. */}
       <Sidebar counts={counts} adminRole={admin.role} />
       <div className="flex min-h-dvh min-w-0 flex-col lg:pl-64">
-        <TopBar admin={admin} prodView={prodView} />
-        {prodView && (
-          <div className="flex items-start gap-3 border-b border-alert/40 bg-alert/10 px-6 py-2.5 text-xs text-alert">
-            <Eye aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <TopBar admin={admin} env={env} devSwitchEnabled={DEV_SWITCH_ENABLED} />
+        {DEV_SWITCH_ENABLED && env === "dev" && (
+          <div className="flex items-start gap-3 border-b border-amber/40 bg-amber/10 px-6 py-2.5 text-xs text-amber">
+            <FlaskConical aria-hidden className="mt-0.5 size-4 shrink-0" />
             <p className="leading-relaxed">
-              <strong className="font-semibold">Prod view — read-only.</strong> You&apos;re looking
-              at live prod data (what&apos;s on users&apos; phones). Edits aren&apos;t possible here;
-              exit prod view to make changes in dev. Some admin queues (feedback, safeguarding) aren&apos;t
-              available in prod view yet.
+              <strong className="font-semibold">Developer dev view.</strong> You&apos;re on the DEV
+              database, not the live app — changes here do not affect TestFlight users. Switch back
+              to prod from the toggle when you&apos;re done.
             </p>
           </div>
         )}

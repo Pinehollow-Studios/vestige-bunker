@@ -1,8 +1,7 @@
-import Link from "next/link";
-import { ArrowUpRight, Check, Eye, ExternalLink, RefreshCw } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/admin/ModeToggle";
-import { ProdViewToggle } from "@/components/admin/ProdViewToggle";
+import { EnvToggle } from "@/components/admin/EnvToggle";
 import { signOut } from "@/app/(dashboard)/actions";
 import {
   type AdminRole,
@@ -10,17 +9,15 @@ import {
   adminDisplayLabel,
   adminInitials,
 } from "@/lib/auth/requireAdmin";
-import { syncSummary, type SyncSummary } from "@/lib/sync/status";
-import { cn } from "@/lib/utils";
+import type { AdminEnvKey } from "@/lib/supabase/env";
 
 type Props = {
   admin: AdminUser;
-  prodView: boolean;
+  env: AdminEnvKey;
+  devSwitchEnabled: boolean;
 };
 
-export async function TopBar({ admin, prodView }: Props) {
-  // In prod-view the sync chip is hidden, so skip its (dev+prod) reads.
-  const sync = prodView ? null : await syncSummary();
+export async function TopBar({ admin, env, devSwitchEnabled }: Props) {
   const sha = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
   const branch = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
 
@@ -34,15 +31,7 @@ export async function TopBar({ admin, prodView }: Props) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/75 px-6 backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-3">
-        {prodView ? (
-          <span className="inline-flex items-center gap-2 rounded-full border border-alert/50 bg-alert/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-alert">
-            <Eye aria-hidden className="size-3" />
-            Prod view · read-only
-          </span>
-        ) : (
-          sync && <SyncChip sync={sync} canSync={admin.role === "super_admin"} />
-        )}
-        <ProdViewToggle active={prodView} />
+        <EnvToggle current={env} enabled={devSwitchEnabled} />
         {(sha || branch) && (
           <span className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-paper-sunken/60 px-2.5 py-1 text-[10px] font-medium text-ink-3 md:inline-flex">
             {branch && (
@@ -86,57 +75,6 @@ export async function TopBar({ admin, prodView }: Props) {
         </form>
       </div>
     </header>
-  );
-}
-
-/**
- * Dev-only context badge + dev↔prod sync state. The dashboard always edits
- * dev; this shows whether prod is in sync and links to the push console.
- * Only super_admins can push, so non-admins just see the state.
- */
-function SyncChip({ sync, canSync }: { sync: SyncSummary; canSync: boolean }) {
-  let tone: "brand" | "amber" | "muted";
-  let label: string;
-  let Icon = RefreshCw;
-
-  if (!sync.configured || !sync.prodLedgerReady) {
-    tone = "muted";
-    label = "sync not ready";
-  } else if (sync.inSync) {
-    tone = "brand";
-    label = "in sync";
-    Icon = Check;
-  } else {
-    tone = "amber";
-    label = `${sync.schemaPushable} to push`;
-    Icon = ArrowUpRight;
-  }
-
-  const body = (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
-        tone === "brand"
-          ? "border-brand/30 bg-brand/10 text-brand"
-          : tone === "amber"
-            ? "border-amber/40 bg-amber/10 text-amber"
-            : "border-border bg-paper-sunken/60 text-ink-3",
-      )}
-    >
-      <span className="text-ink-3">DEV</span>
-      <span aria-hidden className="size-1 rounded-full bg-current opacity-60" />
-      <Icon aria-hidden className="size-3" />
-      {label}
-    </span>
-  );
-
-  // Only super_admins reach /sync; others see the state without a link.
-  return canSync ? (
-    <Link href="/sync" title="Dev → prod sync">
-      {body}
-    </Link>
-  ) : (
-    body
   );
 }
 

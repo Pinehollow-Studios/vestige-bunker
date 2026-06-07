@@ -14,7 +14,6 @@ import {
   MapPin,
   Megaphone,
   MessageSquareWarning,
-  RefreshCw,
   Shield,
   Sparkles,
   Users,
@@ -96,14 +95,6 @@ const NAV: NavItem[] = [
     countKey: "announcements",
   },
   { href: "/courses", label: "Courses", group: "editorial", ready: true, icon: MapPin, countKey: "courses" },
-  {
-    href: "/sync",
-    label: "Sync to prod",
-    group: "editorial",
-    ready: true,
-    icon: RefreshCw,
-    superAdminOnly: true,
-  },
   { href: "/analytics", label: "Analytics", group: "insights", ready: true, icon: BarChart3 },
 ];
 
@@ -314,7 +305,7 @@ function SidebarFooter() {
     <div className="shrink-0 border-t border-border/70 px-5 py-4">
       <p className="flex items-center gap-2 text-[11px] leading-snug text-ink-3">
         <span aria-hidden className="size-1.5 rounded-full bg-brand" />
-        Vestige Admin · Dev
+        Vestige Admin
         {sha && <span className="font-mono text-ink-3/70">· {sha}</span>}
       </p>
       <p className="mt-1 text-[11px] leading-snug text-ink-3/70">

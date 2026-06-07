@@ -1,14 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { envConfig } from "./env";
+import { activeEnvKey, ENV_COOKIE, envConfig } from "./env";
 
 const PUBLIC_PATHS = ["/login", "/auth", "/unauthorized"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  // Dev-only dashboard — always refresh the dev session.
-  const env = envConfig("dev");
+  // Refresh the session for the active environment (prod by default; dev only
+  // via the hidden developer switch).
+  const env = envConfig(activeEnvKey(request.cookies.get(ENV_COOKIE)?.value));
 
   const supabase = createServerClient(
     env.url,
