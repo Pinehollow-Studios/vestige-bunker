@@ -1,6 +1,4 @@
-import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/admin/ModeToggle";
 import { EnvToggle } from "@/components/admin/EnvToggle";
 import { signOut } from "@/app/(dashboard)/actions";
 import {
@@ -42,12 +40,8 @@ export async function TopBar({ admin, env, devSwitchEnabled }: Props) {
             {sha && <span className="font-mono text-ink-3/80">{sha}</span>}
           </span>
         )}
-        <span className="hidden truncate text-xs text-ink-3 lg:inline">
-          Editorial &amp; operations dashboard
-        </span>
       </div>
       <div className="flex items-center gap-2">
-        <QuickTools />
         <RoleBadge role={admin.role} />
         <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-paper-sunken/60 py-1 pr-3 pl-1 sm:flex">
           <span
@@ -67,7 +61,6 @@ export async function TopBar({ admin, env, devSwitchEnabled }: Props) {
             )}
           </span>
         </div>
-        <ModeToggle />
         <form action={signOut}>
           <Button type="submit" variant="ghost" size="sm">
             Sign out
@@ -97,38 +90,4 @@ function roleLabel(role: AdminRole): string {
     default:
       return String(role);
   }
-}
-
-/**
- * Top-right cluster of external operator destinations. The full
- * library lives in the sidebar's Tools shelf and on the overview;
- * this is the fast-path for the two we open daily.
- */
-function QuickTools() {
-  const links = [
-    {
-      href: "https://supabase.com/dashboard/project/_/editor",
-      label: "Supabase",
-    },
-    {
-      href: "https://sentry.io/organizations/pinehollow-studios/issues/",
-      label: "Sentry",
-    },
-  ];
-  return (
-    <div className="hidden items-center gap-1 rounded-full border border-border/60 bg-paper-sunken/40 px-1 py-0.5 md:flex">
-      {links.map((link) => (
-        <a
-          key={link.href}
-          href={link.href}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium text-ink-2 transition-colors hover:bg-paper-raised hover:text-ink"
-        >
-          {link.label}
-          <ExternalLink aria-hidden className="size-3 text-ink-3" />
-        </a>
-      ))}
-    </div>
-  );
 }

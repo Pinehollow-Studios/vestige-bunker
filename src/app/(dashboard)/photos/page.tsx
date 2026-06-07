@@ -58,112 +58,143 @@ export default async function PhotosPage() {
 
   const modCounts = Object.fromEntries(modCountsRes) as Record<PhotoModerationState, number>;
   const pending: Row[] = (recentRes.data as Row[] | null) ?? [];
-  const pendingCount = modCounts.pending;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
         eyebrow="Queues · Photo moderation"
         title="Photo moderation"
-        description="Single-axis moderation queue. Approve / reject controls land with the moderation policy slice (open question §16.13). Counts and queue contents are live."
+        description="Single-axis moderation queue — counts and contents are live, approve / reject controls land next."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {MODERATION_BUCKETS.map((state) => {
-          const count = modCounts[state];
-          const tone =
-            state === "pending"
-              ? "attention"
-              : state === "rejected" || state === "flagged"
-                ? "alert"
-                : "default";
-          return (
-            <div
-              key={state}
-              className="surface-glass flex flex-col gap-2 rounded-2xl p-4"
-            >
-              <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                <span
-                  aria-hidden
-                  className={
-                    "size-1.5 rounded-full " +
-                    (tone === "attention"
-                      ? "bg-brand"
-                      : tone === "alert"
-                        ? "bg-alert"
-                        : "bg-ink-3/60")
-                  }
-                />
-                {prettyMod(state)}
-              </p>
-              <p
-                className={
-                  "font-hero text-3xl leading-none tabular-nums " +
-                  (tone === "attention" && count > 0
-                    ? "text-brand"
-                    : tone === "alert" && count > 0
-                      ? "text-alert"
-                      : "text-ink")
-                }
-              >
-                {count}
-              </p>
-            </div>
-          );
-        })}
+        {MODERATION_BUCKETS.map((state) => (
+          <StatTile
+            key={state}
+            label={prettyMod(state)}
+            value={modCounts[state]}
+            tone={
+              state === "pending"
+                ? "brand"
+                : state === "rejected" || state === "flagged"
+                  ? "alert"
+                  : undefined
+            }
+          />
+        ))}
       </div>
 
       <section className="space-y-3">
-        <header className="flex items-end justify-between border-b border-border/60 pb-2">
+        <div className="flex items-end justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ImageIcon className="size-4 text-brand" aria-hidden />
-            <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">
               Pending queue
             </h2>
-            <span className="text-[10px] tabular-nums text-ink-3">
-              {pendingCount === 0 ? "0" : `${pending.length} of ${pendingCount}`}
+            <span className="text-[11px] tabular-nums text-ink-3">
+              {pending.length}
             </span>
           </div>
-          <p className="hidden text-xs text-ink-3 sm:block">
-            Read-only — moderation actions ship next.
-          </p>
-        </header>
+          <p className="text-xs text-ink-3">Read-only — actions ship next.</p>
+        </div>
 
         {pending.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 px-4 py-10 text-center text-sm text-ink-3">
-            No photos awaiting moderation.
-          </p>
+          <EmptyState
+            title="Nothing to moderate"
+            subtitle="No photos are awaiting review."
+          />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-paper-raised">
-            <table className="w-full text-xs">
-              <thead className="border-b border-border/60 bg-paper-sunken/50 text-left text-[10px] uppercase tracking-wider text-ink-3">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">Kind</th>
-                  <th className="px-3 py-2 font-semibold">Storage key</th>
-                  <th className="px-3 py-2 font-semibold">Taken</th>
-                  <th className="px-3 py-2 text-right font-semibold">Submitted</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {pending.map((row) => (
-                  <tr key={row.id} className="hover:bg-paper-sunken/40">
-                    <td className="px-3 py-2 font-medium text-ink">{prettyKind(row.kind)}</td>
-                    <td className="px-3 py-2 font-mono text-[10px] text-ink-3">
-                      {row.storage_key ? truncate(row.storage_key, 48) : "—"}
-                    </td>
-                    <td className="px-3 py-2 tabular-nums text-ink-3">
-                      {row.taken_at ? relativeTime(row.taken_at) : "no exif"}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-ink-3">
-                      {relativeTime(row.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {pending.map((row) => (
+              <PhotoTile key={row.id} row={row} />
+            ))}
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function PhotoTile({ row }: { row: Row }) {
+  return (
+    <figure className="overflow-hidden rounded-xl border border-rule/70 bg-paper-raised/50">
+      <div className="flex aspect-square items-center justify-center bg-paper-sunken/60 text-ink-3">
+        <ImageIcon className="size-6" aria-hidden />
+      </div>
+      <figcaption className="space-y-2 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-ink">{prettyKind(row.kind)}</span>
+          <StateChip state={row.moderation_state} />
+        </div>
+        <p className="truncate font-mono text-[10px] text-ink-3">
+          {row.storage_key ? truncate(row.storage_key, 28) : "—"}
+        </p>
+        <p className="text-[11px] tabular-nums text-ink-3">
+          {row.taken_at ? relativeTime(row.taken_at) : "no exif"} · submitted{" "}
+          {relativeTime(row.created_at)}
+        </p>
+      </figcaption>
+    </figure>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "brand" | "amber" | "alert";
+}) {
+  const numClass =
+    tone === "brand" && value > 0
+      ? "text-brand"
+      : tone === "alert" && value > 0
+        ? "text-alert"
+        : tone === "amber" && value > 0
+          ? "text-amber"
+          : "text-ink";
+  return (
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+        {label}
+      </p>
+      <p className={"mt-2 font-hero text-3xl leading-none tabular-nums " + numClass}>
+        {value.toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+function StateChip({ state }: { state: PhotoModerationState }) {
+  const cls =
+    state === "approved"
+      ? "border-brand/40 text-brand"
+      : state === "pending"
+        ? "border-amber/40 text-amber"
+        : state === "rejected" || state === "flagged"
+          ? "border-alert/40 text-alert"
+          : "border-rule/70 text-ink-3";
+  return (
+    <span
+      className={
+        "inline-flex rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider " +
+        cls
+      }
+    >
+      {prettyMod(state)}
+    </span>
+  );
+}
+
+function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-12 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+        <ImageIcon className="size-5" aria-hidden />
+      </span>
+      <p className="display-serif text-lg text-ink">{title}</p>
+      <p className="text-sm text-ink-2">{subtitle}</p>
     </div>
   );
 }

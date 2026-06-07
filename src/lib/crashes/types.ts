@@ -87,7 +87,7 @@ export function levelChipClasses(level: CrashLevel): string {
     case "error":
       return "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300";
     case "warning":
-      return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+      return "border-brand/30 bg-brand/10 text-brand";
     case "info":
       return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
     case "debug":
@@ -97,7 +97,7 @@ export function levelChipClasses(level: CrashLevel): string {
 
 export function environmentChipClasses(env: string | null): string {
   if (!env) return "border-dashed border-border/70 bg-paper-sunken/40 text-ink-3";
-  if (env === "release") return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+  if (env === "release") return "border-brand/30 bg-brand/10 text-brand";
   // Debug + everything else stays muted.
   return "border-border bg-paper-sunken/60 text-ink-2";
 }

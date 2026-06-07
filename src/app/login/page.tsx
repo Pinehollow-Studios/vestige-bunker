@@ -76,7 +76,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-deep dark:text-brand-soft">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
               Sign in
             </p>
             <h2 className="display-serif text-3xl font-semibold leading-tight text-ink">
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-paper-raised p-6 ring-1 ring-foreground/5">
+          <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-paper-raised p-6">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-ink-2">
                 Email

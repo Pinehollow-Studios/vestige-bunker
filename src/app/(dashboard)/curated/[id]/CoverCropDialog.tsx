@@ -183,7 +183,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
         if (e.target === e.currentTarget && !working) onClose();
       }}
     >
-      <div className="w-full max-w-3xl space-y-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+      <div className="w-full max-w-3xl space-y-4 rounded-xl border border-rule/70 bg-paper-raised p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-heading text-base">Crop cover image</h2>

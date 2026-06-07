@@ -77,7 +77,7 @@ export default async function AnnouncementsPage({
       <SectionHeader
         eyebrow="Editorial"
         title="Announcements"
-        description="Author the in-app pop-ups the app raises in front of users — what's-new notices, feature spotlights, outreach. Target everyone, a cohort, or hand-picked people; schedule it; then watch who's seen it."
+        description="In-app pop-ups the app raises in front of users."
         actions={<NewAnnouncementButton />}
       />
 
@@ -98,7 +98,7 @@ export default async function AnnouncementsPage({
       {!notConfigured && rows.length > 0 && (
         <>
           {filtered.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-8 text-center text-sm text-ink-2">
+            <p className="rounded-xl border border-rule/70 bg-paper-raised/50 p-8 text-center text-sm text-ink-2">
               No announcements match the current filters.
             </p>
           ) : (
@@ -121,15 +121,17 @@ function AnnouncementRowCard({ row }: { row: AnnouncementOverviewRow }) {
   return (
     <Link
       href={`/announcements/${row.id}`}
-      className="group/card relative block overflow-hidden rounded-2xl border border-border bg-paper-raised ring-1 ring-foreground/5 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition-colors hover:border-brand/40 hover:ring-brand/15"
+      className="group/card block rounded-xl border border-rule/70 bg-paper-raised/50 p-5 transition-colors hover:border-brand/40"
     >
-      <span aria-hidden className={cn("absolute inset-y-0 left-0 w-[3px]", STATUS_DOT[status])} />
-      <article className="flex flex-col gap-3 p-5">
+      <article className="flex flex-col gap-3">
         <header className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-deep dark:text-brand-soft">
-                {KIND_LABELS[row.kind]}
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_DOT[status])} />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
+                  {KIND_LABELS[row.kind]}
+                </span>
               </span>
               {row.eyebrow && <span className="text-ink-3">· {row.eyebrow}</span>}
               <span className="text-ink-3">· priority {row.priority}</span>
@@ -153,7 +155,7 @@ function AnnouncementRowCard({ row }: { row: AnnouncementOverviewRow }) {
           <Stat label="seen" value={row.seen_count} />
           <Stat label="dismissed" value={row.dismissed_count} />
           <Stat label="acted" value={row.acted_count} />
-          <span className="ml-auto inline-flex items-center gap-1 text-brand-deep opacity-0 transition-opacity group-hover/card:opacity-100 dark:text-brand-soft">
+          <span className="ml-auto inline-flex items-center gap-1 text-brand opacity-0 transition-opacity group-hover/card:opacity-100">
             Edit <ArrowUpRight aria-hidden className="size-3" />
           </span>
         </footer>
@@ -181,7 +183,7 @@ function Summary({
   const order: AnnouncementStatus[] = ["live", "scheduled", "draft", "expired", "archived"];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full border border-border bg-paper-raised px-3 py-1 text-xs font-medium text-ink-2">
+      <span className="rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs font-medium text-ink-2">
         {total} total
       </span>
       {order
@@ -189,7 +191,7 @@ function Summary({
         .map((key) => (
           <span
             key={key}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-paper-raised px-3 py-1 text-xs"
+            className="inline-flex items-center gap-2 rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs"
           >
             <span aria-hidden className={cn("size-2 rounded-full", STATUS_DOT[key])} />
             <span className="text-ink-2">{STATUS_LABELS[key]}</span>
@@ -202,12 +204,12 @@ function Summary({
 
 function EmptyState() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div className="relative flex flex-col items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <div className="flex flex-col items-center gap-2">
+        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
           <Megaphone className="size-5" />
         </span>
-        <p className="font-heading text-base font-semibold text-ink">No announcements yet</p>
+        <p className="font-display text-base font-semibold text-ink">No announcements yet</p>
         <p className="text-sm text-ink-2">
           Author your first announcement — a what&apos;s-new card, a feature spotlight, a note to
           the beta.
@@ -219,12 +221,12 @@ function EmptyState() {
 
 function NotConfigured() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div className="relative flex flex-col items-center gap-2">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <div className="flex flex-col items-center gap-2">
         <span className="flex size-10 items-center justify-center rounded-full bg-paper-sunken text-ink-3">
           <Megaphone className="size-5" />
         </span>
-        <p className="font-heading text-base font-semibold text-ink">Announcements not wired here</p>
+        <p className="font-display text-base font-semibold text-ink">Announcements not wired here</p>
         <p className="mx-auto max-w-md text-sm text-ink-2">
           The announcements tables aren&apos;t in this Supabase project yet. Apply the
           <span className="font-mono text-xs"> 20260607100000_announcements.sql</span> migration to

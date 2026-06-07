@@ -107,9 +107,9 @@ export default async function CourseDetailPage(props: { params: RouteParams }) {
     <div className="mx-auto max-w-5xl space-y-6">
       <Link
         href="/courses"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-deep hover:text-brand dark:text-brand-soft"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"
       >
-        <ArrowLeft aria-hidden className="size-3.5" />
+        <ArrowLeft aria-hidden className="size-4" />
         All courses
       </Link>
 
@@ -122,11 +122,11 @@ export default async function CourseDetailPage(props: { params: RouteParams }) {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-paper-raised px-4 py-3 text-xs">
-        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-3 text-xs">
+        <span className="inline-flex items-center gap-1 rounded-full border border-rule/70 bg-paper-sunken/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-2">
           {TIER_LABELS[row.tier]}
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-paper-sunken/40 px-2 py-0.5 text-ink-2">
+        <span className="inline-flex items-center gap-1 rounded-full border border-rule/70 bg-paper-sunken/40 px-2 py-0.5 text-ink-2">
           <Hash aria-hidden className="size-3" />
           {row.curated_lists.length}{" "}
           {row.curated_lists.length === 1 ? "curated list" : "curated lists"}

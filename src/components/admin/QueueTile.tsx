@@ -25,7 +25,7 @@ export function QueueTile({ href, title, description, count, status }: Props) {
       className={cn(
         "h-full transition-all",
         status === "live" &&
-          "hover:-translate-y-px hover:border-brand/40 hover:ring-brand/20",
+          "hover:border-brand/40",
         showAttention && "border-brand/30 ring-brand/15",
       )}
     >
@@ -49,7 +49,7 @@ export function QueueTile({ href, title, description, count, status }: Props) {
       </CardHeader>
       <CardContent>
         {status === "live" ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-deep dark:text-brand-soft">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand">
             Open queue
             <ArrowUpRight aria-hidden className="size-3.5" />
           </span>

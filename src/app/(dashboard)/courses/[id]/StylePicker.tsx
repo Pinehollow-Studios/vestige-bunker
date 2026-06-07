@@ -62,8 +62,8 @@ export function StylePicker({
               className={cn(
                 "inline-flex items-center rounded-full border px-2 py-0.5 text-xs transition-colors",
                 entry.toLowerCase() === value.trim().toLowerCase()
-                  ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft"
-                  : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30 hover:bg-brand/5",
+                  ? "border-brand/40 bg-brand/10 text-brand"
+                  : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30 hover:bg-brand/5",
               )}
             >
               {entry}

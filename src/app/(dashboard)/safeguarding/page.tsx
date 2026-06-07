@@ -67,39 +67,39 @@ export default async function SafeguardingPage({
   const rows: Row[] = (queueRes.data as Row[] | null) ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
         eyebrow="People &amp; safety · Safeguarding"
         title="Safeguarding queue"
-        description="Heuristic flags from the round-log trigger (same-day excess, impossible geography, velocity spike). Backed by admin_safeguarding_queue(). Hide-from-leaderboards, set-account-status, and outreach actions are wired in the next slice."
+        description="Heuristic flags raised by the round-log trigger — review actions land in the next slice."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {STATES.map((state) => {
           const active = state === stateFilter;
+          const count = stateCounts[state];
+          const numClass =
+            state === "pending" && count > 0
+              ? "text-brand"
+              : state === "reviewed_actioned" && count > 0
+                ? "text-amber"
+                : "text-ink";
           return (
             <a
               key={state}
               href={`/safeguarding?state=${state}`}
               className={
-                "surface-glass flex flex-col gap-2 rounded-2xl p-4 transition-colors hover:border-brand/40 " +
-                (active ? "ring-1 ring-brand/40" : "")
+                "rounded-xl border bg-paper-raised/50 p-4 transition-colors " +
+                (active
+                  ? "border-brand text-ink"
+                  : "border-rule/70 hover:bg-paper-raised/40")
               }
             >
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
                 {prettyState(state)}
               </p>
-              <p
-                className={
-                  "font-hero text-3xl leading-none tabular-nums " +
-                  (state === "pending" && stateCounts[state] > 0
-                    ? "text-brand"
-                    : state === "reviewed_actioned" && stateCounts[state] > 0
-                      ? "text-amber"
-                      : "text-ink")
-                }
-              >
-                {stateCounts[state]}
+              <p className={"mt-2 font-hero text-3xl leading-none tabular-nums " + numClass}>
+                {count}
               </p>
             </a>
           );
@@ -107,25 +107,23 @@ export default async function SafeguardingPage({
       </div>
 
       <section className="space-y-3">
-        <header className="flex items-end justify-between border-b border-border/60 pb-2">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Shield className="size-4 text-brand" aria-hidden />
-            <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">
               {prettyState(stateFilter)} flags
             </h2>
-            <span className="text-[10px] tabular-nums text-ink-3">
-              {rows.length}
-            </span>
+            <span className="text-[11px] tabular-nums text-ink-3">{rows.length}</span>
           </div>
           <KindFilter current={kindFilter} state={stateFilter} />
-        </header>
+        </div>
 
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 px-4 py-10 text-center text-sm text-ink-3">
-            No flags in this bucket.
-          </p>
+          <EmptyState
+            title="Queue is clear"
+            subtitle="No flags in this bucket."
+          />
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {rows.map((row) => (
               <FlagRow key={row.flag_id} row={row} />
             ))}
@@ -134,7 +132,7 @@ export default async function SafeguardingPage({
       </section>
 
       {queueRes.error && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
           Failed to load safeguarding queue: {queueRes.error.message}.
         </div>
       )}
@@ -148,37 +146,34 @@ function FlagRow({ row }: { row: Row }) {
       ? row.display_name
       : `@${row.username ?? "unknown"}`;
   return (
-    <li className="surface-glass rounded-2xl p-4">
+    <li className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <KindBadge kind={row.flag_kind} />
-            <span className="font-heading text-sm font-semibold text-ink">
-              {name}
-            </span>
+            <span className="font-medium text-ink">{name}</span>
             {row.username && row.display_name && (
-              <span className="text-[11px] text-ink-3">@{row.username}</span>
+              <span className="text-xs text-ink-3">@{row.username}</span>
             )}
             <AccountStatusBadge status={row.user_account_status} />
             {row.user_is_admin_hidden && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
                 <ShieldAlert className="size-3" aria-hidden /> Hidden
               </span>
             )}
           </div>
           <p className="text-[11px] text-ink-3">
-            Triggered {relativeTime(row.triggered_at)} ·{" "}
-            {row.user_round_count_30d}{" "}
+            Triggered {relativeTime(row.triggered_at)} · {row.user_round_count_30d}{" "}
             round{row.user_round_count_30d === 1 ? "" : "s"} in last 30d
           </p>
         </div>
-        <code className="rounded-md border border-border/60 bg-paper-sunken/60 px-2 py-1 font-mono text-[10px] text-ink-3">
+        <code className="rounded-md border border-rule/70 bg-paper-sunken/60 px-2 py-1 font-mono text-[10px] text-ink-3">
           {row.flag_id.slice(0, 8)}…
         </code>
       </div>
 
       {row.evidence && Object.keys(row.evidence).length > 0 && (
-        <pre className="mt-3 overflow-x-auto rounded-md border border-border/60 bg-paper-sunken/60 px-3 py-2 font-mono text-[10px] leading-relaxed text-ink-2">
+        <pre className="mt-3 overflow-x-auto rounded-md border border-rule/70 bg-paper-sunken/60 px-3 py-2 font-mono text-[10px] leading-relaxed text-ink-2">
 {JSON.stringify(row.evidence, null, 2)}
         </pre>
       )}
@@ -213,8 +208,8 @@ function KindFilter({
             className={
               "rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors " +
               (active
-                ? "border-brand/40 bg-brand/15 text-brand"
-                : "border-border/60 bg-paper-sunken/40 text-ink-3 hover:bg-paper-sunken hover:text-ink-2")
+                ? "border-brand text-brand"
+                : "border-rule/70 text-ink-3 hover:bg-paper-raised/40 hover:text-ink-2")
             }
           >
             {k.label}
@@ -228,12 +223,17 @@ function KindFilter({
 function KindBadge({ kind }: { kind: FlagKind }) {
   const cls =
     kind === "same_day_excess"
-      ? "bg-brand/15 text-brand"
+      ? "border-brand/40 text-brand"
       : kind === "impossible_geography"
-        ? "bg-info/15 text-info"
-        : "bg-amber/15 text-amber";
+        ? "border-info/40 text-info"
+        : "border-amber/40 text-amber";
   return (
-    <span className={"inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " + cls}>
+    <span
+      className={
+        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
+        cls
+      }
+    >
       {prettyKind(kind)}
     </span>
   );
@@ -241,11 +241,28 @@ function KindBadge({ kind }: { kind: FlagKind }) {
 
 function AccountStatusBadge({ status }: { status: "active" | "restricted" | "suspended" }) {
   if (status === "active") return null;
-  const cls = status === "suspended" ? "bg-alert/15 text-alert" : "bg-amber/15 text-amber";
+  const cls = status === "suspended" ? "border-alert/40 text-alert" : "border-amber/40 text-amber";
   return (
-    <span className={"inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " + cls}>
+    <span
+      className={
+        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
+        cls
+      }
+    >
       {status}
     </span>
+  );
+}
+
+function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-12 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+        <Shield className="size-5" aria-hidden />
+      </span>
+      <p className="display-serif text-lg text-ink">{title}</p>
+      <p className="text-sm text-ink-2">{subtitle}</p>
+    </div>
   );
 }
 

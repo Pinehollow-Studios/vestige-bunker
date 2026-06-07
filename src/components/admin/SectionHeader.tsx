@@ -12,7 +12,7 @@ export function SectionHeader({ title, description, eyebrow, actions }: Props) {
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="space-y-2">
         {eyebrow && (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-deep dark:text-brand-soft">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
             {eyebrow}
           </p>
         )}

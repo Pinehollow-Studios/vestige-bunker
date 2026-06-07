@@ -221,8 +221,8 @@ function PreviewCard({
   tier: BadgeTier;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
-      <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
         Live preview
       </h3>
       <div className="flex flex-col items-center gap-3 rounded-xl bg-[#0E1822] p-6">
@@ -259,7 +259,7 @@ function GlyphPicker({ glyph, setGlyph }: { glyph: string; setGlyph: (g: string)
             onClick={() => setGlyph(g.sf)}
             className={cn(
               "flex aspect-square items-center justify-center rounded-lg border bg-paper-sunken/40 transition-colors hover:border-brand/50",
-              glyph === g.sf ? "border-brand bg-brand/10 ring-1 ring-brand/40" : "border-border",
+              glyph === g.sf ? "border-brand bg-brand/10 ring-1 ring-brand/40" : "border-rule/70",
             )}
           >
             <GlyphMini sf={g.sf} />
@@ -361,7 +361,7 @@ function CriteriaBuilder({
         </Field>
       )}
       {criteria.type === "manual" && (
-        <p className="rounded-lg border border-border bg-paper-sunken/40 p-3 text-xs text-ink-2">
+        <p className="rounded-lg border border-rule/70 bg-paper-sunken/40 p-3 text-xs text-ink-2">
           This badge won&apos;t auto-mint. Grant it to users from the panel on the left
           (Founding Member, event badges, one-offs).
         </p>
@@ -384,7 +384,7 @@ function CountThresholdFields({
     setCriteria({ ...criteria, scope: Object.keys(cleaned).length ? cleaned : undefined });
   }
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-paper-sunken/30 p-3">
+    <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Count of">
           <select
@@ -407,7 +407,7 @@ function CountThresholdFields({
         </Field>
       </div>
       {scopeable && (
-        <div className="space-y-2 border-t border-border pt-2">
+        <div className="space-y-2 border-t border-rule/70 pt-2">
           <p className="text-[11px] uppercase tracking-wider text-ink-3">Limit to (optional)</p>
           <div className="grid grid-cols-3 gap-2">
             <select
@@ -482,10 +482,10 @@ function Lifecycle({
   }
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Lifecycle</h3>
-        <p className="text-xs text-muted-foreground">Currently <span className="font-medium">{STATUS_LABELS[status]}</span>.</p>
+    <section className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Lifecycle</h3>
+        <p className="text-xs text-ink-3">Currently <span className="font-medium text-ink-2">{STATUS_LABELS[status]}</span>.</p>
       </header>
 
       {dirty && (
@@ -553,9 +553,9 @@ function ArtCard({ row }: { row: BadgeDefinitionRow }) {
   }
 
   return (
-    <section className="space-y-2 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Custom artwork</h3>
-      <p className="text-xs text-muted-foreground">
+    <section className="space-y-2 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Custom artwork</h3>
+      <p className="text-xs text-ink-3">
         Optional. Overrides the composed medallion with an uploaded PNG (transparent, square). Most badges don&apos;t need this.
       </p>
       <input
@@ -603,9 +603,9 @@ function ManualGrant({ row }: { row: BadgeDefinitionRow }) {
   }
 
   return (
-    <section className="space-y-2 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Grant to a user</h3>
-      <p className="text-xs text-muted-foreground">Paste a user UUID to award or remove this badge directly.</p>
+    <section className="space-y-2 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Grant to a user</h3>
+      <p className="text-xs text-ink-3">Paste a user UUID to award or remove this badge directly.</p>
       <Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user UUID" className="font-mono text-xs" />
       <div className="flex items-center gap-2">
         <Button size="sm" disabled={busy || !userId.trim()} onClick={grant} className="bg-brand text-brand-fg hover:bg-brand-deep">Grant</Button>
@@ -619,10 +619,10 @@ function ManualGrant({ row }: { row: BadgeDefinitionRow }) {
 
 function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">{title}</h3>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">{title}</h3>
+        {hint && <p className="text-xs text-ink-3">{hint}</p>}
       </header>
       {children}
     </section>
@@ -664,7 +664,7 @@ function SwatchButton({
       onClick={onClick}
       className={cn(
         "flex h-8 items-center gap-1 rounded-lg border px-1 transition-transform hover:scale-105",
-        selected ? "border-brand ring-2 ring-brand/40" : "border-border",
+        selected ? "border-brand ring-2 ring-brand/40" : "border-rule/70",
       )}
     >
       <span className="size-6 rounded-md" style={style} />

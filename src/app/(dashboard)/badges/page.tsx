@@ -40,11 +40,11 @@ export default async function BadgesPage() {
   const buckets = bucketRows(defs);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-6">
       <SectionHeader
         eyebrow="Editorial"
         title="Badges"
-        description="Design the badges users chase — artwork, rarity, and exactly what it takes to earn each one. Published badges appear in the app as earned or locked-with-progress."
+        description="Design the badges users chase — artwork, rarity, and how each is earned."
         actions={<NewBadgeButton />}
       />
 
@@ -80,9 +80,8 @@ function BadgeCard({
   return (
     <Link
       href={`/badges/${row.id}`}
-      className="group/card relative flex gap-4 overflow-hidden rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5 transition-all hover:-translate-y-px hover:border-brand/40 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--brand)_30%,transparent)] hover:ring-brand/15"
+      className="group/card flex gap-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-4 transition-colors hover:border-brand/40"
     >
-      <span aria-hidden className={cn("absolute inset-y-0 left-0 w-[3px]", STATUS_DOT[status])} />
       <div className="shrink-0">
         <BadgeMedallion
           spec={{
@@ -99,8 +98,9 @@ function BadgeCard({
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="truncate font-heading text-base font-semibold leading-snug text-ink">
-              {row.name}
+            <h2 className="flex min-w-0 items-center gap-2 truncate font-heading text-base font-semibold leading-snug text-ink">
+              <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", STATUS_DOT[status])} />
+              <span className="truncate">{row.name}</span>
             </h2>
             <span
               className={cn(
@@ -120,7 +120,7 @@ function BadgeCard({
           <Chip>{row.tier}</Chip>
           <Chip>{row.category}</Chip>
           {row.is_secret && <Chip tone="info">Secret</Chip>}
-          <span className="ml-auto inline-flex items-center gap-1 text-brand-deep opacity-0 transition-opacity group-hover/card:opacity-100 dark:text-brand-soft">
+          <span className="ml-auto inline-flex items-center gap-1 text-brand opacity-0 transition-opacity group-hover/card:opacity-100">
             Edit <ArrowUpRight aria-hidden className="size-3" />
           </span>
         </div>
@@ -148,13 +148,13 @@ function Summary({ buckets, total }: { buckets: Record<BadgeStatus, number>; tot
   const order: BadgeStatus[] = ["live", "draft", "archived"];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full border border-border bg-paper-raised px-3 py-1 text-xs font-medium text-ink-2">
+      <span className="rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs font-medium text-ink-2">
         {total} total
       </span>
       {order.map((key) => (
         <span
           key={key}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-paper-raised px-3 py-1 text-xs"
+          className="inline-flex items-center gap-2 rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs"
         >
           <span aria-hidden className={cn("size-2 rounded-full", STATUS_DOT[key])} />
           <span className="text-ink-2">{STATUS_LABELS[key]}</span>
@@ -167,12 +167,12 @@ function Summary({ buckets, total }: { buckets: Record<BadgeStatus, number>; tot
 
 function EmptyState() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div className="relative flex flex-col items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <div className="flex flex-col items-center gap-2">
+        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
           <Sparkles className="size-5" />
         </span>
-        <p className="font-heading text-base font-semibold text-ink">No badges yet</p>
+        <p className="font-display text-base font-semibold text-ink">No badges yet</p>
         <p className="text-sm text-ink-2">Design your first badge to start the catalogue.</p>
       </div>
     </div>

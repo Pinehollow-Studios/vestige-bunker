@@ -99,9 +99,9 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
     <div className="mx-auto max-w-5xl space-y-6">
       <Link
         href="/curated"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-deep hover:text-brand dark:text-brand-soft"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"
       >
-        <ArrowLeft aria-hidden className="size-3.5" />
+        <ArrowLeft aria-hidden className="size-4" />
         All curated lists
       </Link>
 
@@ -115,7 +115,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-paper-raised px-4 py-3 text-xs">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-3 text-xs">
         <span
           className={cn(
             "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
@@ -129,7 +129,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
             className={cn(
               "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
               row.tier === "flagship"
-                ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft"
+                ? "border-brand/40 bg-brand/10 text-brand"
                 : "border-border bg-paper-sunken/60 text-ink-2",
             )}
           >

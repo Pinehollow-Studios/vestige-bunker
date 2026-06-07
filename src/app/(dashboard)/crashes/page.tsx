@@ -7,14 +7,33 @@ import { listCrashes } from "@/lib/crashes/queries";
 import {
   type CrashLevel,
   type CrashReportEnriched,
-  environmentChipClasses,
-  levelChipClasses,
   levelLabel,
 } from "@/lib/crashes/types";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
+
+// Calm, single-tone bordered chips — fatal/error read claret (alert),
+// warning amber, info/debug muted. Kept local to the presentation
+// layer so the queue reads in the Atlas palette without touching the
+// shared lib helpers.
+function levelChip(level: CrashLevel): string {
+  switch (level) {
+    case "fatal":
+    case "error":
+      return "border-alert/40 text-alert";
+    case "warning":
+      return "border-amber/40 text-amber";
+    default:
+      return "border-rule/70 text-ink-3";
+  }
+}
+
+function environmentChip(env: string | null): string {
+  if (env === "release") return "border-brand/40 text-brand";
+  return "border-rule/70 text-ink-3";
+}
 
 /**
  * Crash queue — every Sentry-issued event we've received via the
@@ -92,11 +111,11 @@ export default async function CrashesQueuePage({
       <SectionHeader
         eyebrow="Queues · review"
         title="Crashes"
-        description="Sentry-issued crash events. Stack trace + breadcrumbs + device live in Sentry; click through to open the canonical issue. Linked feedback reports surface on the detail page."
+        description="Sentry-issued crash events, newest first — tap through for the stack trace and any linked feedback."
       />
 
       {queryError && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load crashes: {queryError}
         </div>
       )}
@@ -115,7 +134,7 @@ export default async function CrashesQueuePage({
           {rows.length === 0 ? (
             <EmptyQueue />
           ) : (
-            <ol className="space-y-3">
+            <ol className="divide-y divide-rule/60 overflow-hidden rounded-xl border border-rule/70 bg-paper-raised/50">
               {rows.map((row) => (
                 <li key={row.id}>
                   <CrashRow row={row} />
@@ -165,9 +184,9 @@ function ActiveFiltersStrip({
   if (query) filters.push({ key: "q", label: `text: "${query}"` });
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brand/8 px-4 py-3 text-xs text-brand-deep dark:bg-brand/15 dark:text-brand-soft">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-3 text-xs text-ink-2">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="font-semibold">
+        <span className="font-semibold text-ink">
           {count} {count === 1 ? "row" : "rows"}
         </span>
         {filters.length > 0 && (
@@ -178,7 +197,7 @@ function ActiveFiltersStrip({
               <Link
                 key={f.key}
                 href={`/crashes`}
-                className="rounded-full border border-brand/30 bg-paper-raised px-2 py-0.5 text-[10px] font-semibold text-ink-2 hover:border-alert/40"
+                className="rounded-full border border-rule/70 px-2 py-0.5 text-[10px] font-semibold text-ink-2 hover:border-brand"
               >
                 {f.label} ✕
               </Link>
@@ -197,29 +216,18 @@ function ActiveFiltersStrip({
 
 function EmptyQueue() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 60%)",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-2">
-        <span
-          aria-hidden
-          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft"
-        >
-          <AlertTriangle className="size-5" />
-        </span>
-        <p className="font-heading text-base font-semibold text-ink">
-          No crashes recorded
-        </p>
-        <p className="max-w-md text-sm text-ink-2">
-          Sentry events land here via the <code className="font-mono text-[11px]">sentry-webhook</code> Edge Function. If you expected something here, check the Function logs in Supabase.
-        </p>
-      </div>
+        className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand"
+      >
+        <AlertTriangle className="size-5" />
+      </span>
+      <p className="font-display text-lg text-ink">No crashes recorded</p>
+      <p className="max-w-md text-sm text-ink-2">
+        Sentry events land here via the sentry-webhook Edge Function. If you
+        expected something, check the Function logs in Supabase.
+      </p>
     </div>
   );
 }
@@ -235,7 +243,7 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
   return (
     <Link
       href={`/crashes/${row.id}`}
-      className="block rounded-2xl border border-border bg-paper-raised ring-1 ring-foreground/5 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition-colors hover:border-brand/40 hover:ring-brand/15"
+      className="block transition-colors hover:bg-paper-raised/40"
     >
       <article className="flex flex-col gap-3 p-5">
         <header className="flex flex-wrap items-start gap-3">
@@ -245,17 +253,17 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${levelChipClasses(row.level)}`}
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${levelChip(row.level)}`}
               >
                 {levelLabel(row.level)}
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${environmentChipClasses(row.environment)}`}
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${environmentChip(row.environment)}`}
               >
                 {row.environment ?? "no env"}
               </span>
               {row.release_name && (
-                <span className="rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 font-mono text-[10px] text-ink-2">
+                <span className="rounded-full border border-rule/70 px-2 py-0.5 font-mono text-[10px] text-ink-2">
                   {row.release_name}
                 </span>
               )}
@@ -284,12 +292,12 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
                 <img
                   src={reporterAvatar}
                   alt=""
-                  className="size-6 rounded-full bg-paper-sunken object-cover ring-1 ring-foreground/10"
+                  className="size-6 rounded-full border border-rule/70 bg-paper-sunken object-cover"
                 />
               ) : (
                 <span
                   aria-hidden
-                  className="flex size-6 items-center justify-center rounded-full bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3 ring-1 ring-foreground/10"
+                  className="flex size-6 items-center justify-center rounded-full border border-rule/70 bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3"
                 >
                   {(reporterDisplay ?? "??").slice(0, 2)}
                 </span>
@@ -341,7 +349,7 @@ function PaginationFooter({
       {offset > 0 ? (
         <Link
           href={paramsURL(params, previousOffset)}
-          className="rounded-md border border-border bg-paper-raised px-3 py-1 font-semibold text-ink-2 hover:border-brand/40"
+          className="rounded-lg border border-rule/70 bg-paper-raised/50 px-3 py-1 font-semibold text-ink-2 hover:border-brand"
         >
           ← Previous {pageSize}
         </Link>
@@ -354,7 +362,7 @@ function PaginationFooter({
       {hasNext ? (
         <Link
           href={paramsURL(params, nextOffset)}
-          className="rounded-md border border-border bg-paper-raised px-3 py-1 font-semibold text-ink-2 hover:border-brand/40"
+          className="rounded-lg border border-rule/70 bg-paper-raised/50 px-3 py-1 font-semibold text-ink-2 hover:border-brand"
         >
           Next {pageSize} →
         </Link>

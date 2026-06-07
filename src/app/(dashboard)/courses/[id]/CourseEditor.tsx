@@ -95,17 +95,17 @@ function CoverEditor({
   }
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Hero photo
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ink-3">
           16:9 JPEG. Pick any photo — the cropper opens so you can
-          frame it the way the iOS app crops user covers.
+          frame it.
         </p>
       </header>
-      <div className="aspect-video w-full overflow-hidden rounded-md bg-muted">
+      <div className="aspect-video w-full overflow-hidden rounded-lg border border-rule/70 bg-paper-sunken/40">
         {coverURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -200,12 +200,12 @@ function EditorialForm({
     Number(holeCount) !== row.hole_count;
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Editorial
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ink-3">
           Everything users see in the iOS course detail sheet — par,
           yards, style, established, the long-form description.
         </p>
@@ -373,12 +373,12 @@ function parseNullableInt(input: string): number | null {
 
 function MetaPanel({ row }: { row: CourseDetailRow }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Meta
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ink-3">
           Audit, polygon preview, and curated-list memberships.
         </p>
       </header>
@@ -416,7 +416,7 @@ function MetaPanel({ row }: { row: CourseDetailRow }) {
               <li key={list.id}>
                 <Link
                   href={`/curated/${list.id}`}
-                  className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand-deep transition-colors hover:bg-brand/15 dark:text-brand-soft"
+                  className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:bg-brand/15"
                 >
                   {list.name}
                 </Link>

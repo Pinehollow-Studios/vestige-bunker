@@ -22,7 +22,7 @@ export function Screenshots({ screenshots, signedURLs }: Props) {
   if (screenshots.length === 0) return null;
 
   return (
-    <article className="space-y-3 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
+    <article className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
       <header className="flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
           Screenshots ({screenshots.length})
@@ -40,7 +40,7 @@ export function Screenshots({ screenshots, signedURLs }: Props) {
                 type="button"
                 onClick={() => url && setOpenIndex(index)}
                 disabled={!url}
-                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-paper-sunken/60 disabled:cursor-not-allowed"
+                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-rule/60 bg-paper-sunken/60 disabled:cursor-not-allowed"
               >
                 {url ? (
                   // Plain <img> matches the rest of the dashboard's signed-URL paths.
@@ -48,7 +48,7 @@ export function Screenshots({ screenshots, signedURLs }: Props) {
                   <img
                     src={url}
                     alt={`Screenshot ${index + 1}`}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-[1.01]"
+                    className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
                   />
                 ) : (
                   <span className="flex flex-col items-center gap-1 text-[10px] text-ink-3">

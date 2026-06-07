@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, DM_Sans, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Inter, DM_Sans, Fraunces, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -24,7 +24,8 @@ const dmHero = DM_Sans({
   weight: ["600", "700"],
 });
 
-const sourceSerif = Source_Serif_4({
+// Fraunces — the app's display serif (splash wordmark + headings).
+const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -51,15 +52,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${dmSans.variable} ${dmHero.variable} ${sourceSerif.variable} ${mono.variable} h-full antialiased`}
+      className={`${inter.variable} ${dmSans.variable} ${dmHero.variable} ${fraunces.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
+        {/* Dark-only: the dashboard matches the iOS app (Atlas is dark). The
+            class is forced so every `dark:` utility resolves and the toggle is
+            gone. */}
+        <ThemeProvider attribute="class" forcedTheme="dark">
           {children}
           <Toaster />
         </ThemeProvider>

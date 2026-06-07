@@ -167,79 +167,9 @@
   --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 }
 
-/* ---------- Light: cream "almanac" alternative ---------- */
-.light {
-  --paper:        #F7F1E3;
-  --paper-raised: #FBF6E8;
-  --paper-sunken: #EFE7D2;
-
-  --ink:          #1F2A24;
-  --ink-2:        #4A5751;
-  --ink-3:        #7A857E;
-
-  --rule:         #D9CFB6;
-
-  /* In light mode, brand reverts to England green so the almanac
-     palette still has a complementary primary. The mint accent is
-     reserved for true cross-product moments (kept available as
-     --color-mint). */
-  --brand:        #2F5D3A;
-  --brand-deep:   #1F4128;
-  --brand-soft:   #A9C7A6;
-  --brand-fg:     #FBF6E8;
-
-  --amber:        #C97A3A;
-  --claret:       #A8423A;
-  --info:         #3A6A8C;
-  --alert:        var(--claret);
-  --bucket:       #7A2E2E;
-
-  --background:           var(--paper);
-  --foreground:           var(--ink);
-
-  --card:                 var(--paper-raised);
-  --card-foreground:      var(--ink);
-
-  --popover:              var(--paper-raised);
-  --popover-foreground:   var(--ink);
-
-  --primary:              var(--brand);
-  --primary-foreground:   var(--brand-fg);
-
-  --secondary:            color-mix(in oklab, var(--brand) 9%, var(--paper-raised));
-  --secondary-foreground: var(--brand-deep);
-
-  --muted:                var(--paper-sunken);
-  --muted-foreground:     var(--ink-2);
-
-  --accent:               color-mix(in oklab, var(--brand) 14%, var(--paper-raised));
-  --accent-foreground:    var(--brand-deep);
-
-  --destructive:          var(--alert);
-
-  --border:               var(--rule);
-  --input:                var(--rule);
-  --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
-
-  --chart-1: color-mix(in oklab, var(--brand) 30%, var(--paper-sunken));
-  --chart-2: color-mix(in oklab, var(--brand) 55%, var(--paper-sunken));
-  --chart-3: var(--brand);
-  --chart-4: var(--brand-deep);
-  --chart-5: color-mix(in oklab, var(--brand-deep) 70%, var(--ink));
-
-  --sidebar:                      color-mix(in oklab, var(--paper-sunken) 80%, var(--paper));
-  --sidebar-foreground:           var(--ink);
-  --sidebar-primary:              var(--brand);
-  --sidebar-primary-foreground:   var(--brand-fg);
-  --sidebar-accent:               color-mix(in oklab, var(--brand) 18%, var(--paper-raised));
-  --sidebar-accent-foreground:    var(--brand-deep);
-  --sidebar-border:               var(--rule);
-  --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
-}
-
-/* `.dark` selector retained for next-themes interop. Same vars
-   as :root (Atlas is the default), so toggling between system /
-   dark / light only swaps when `.light` is set. */
+/* Dark-only — the dashboard matches the iOS app (Atlas is dark, full stop).
+   The light "almanac" theme + toggle were removed 2026-06-07. `.dark` is kept
+   as an alias of :root only so any stray next-themes class is a no-op. */
 .dark {
   --paper:        #0E1822;
   --paper-raised: #131F2B;
@@ -311,14 +241,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Atlas aurora: two slow-drifting mint / sea blobs over the
-       deep paper. Echoes the marketing-site backdrop. Cheaper
-       than the marketing-site keyframes — admin is a tool, not a
-       hero — but the family resemblance is intentional. */
+    /* Atlas atmosphere — a whisper, not a light show. One faint mint glow up
+       top and a faint amber warmth bottom-right, mirroring the iOS app's
+       AtlasAtmosphere. Calm enough to sit behind dense data all day. */
     background-image:
-      radial-gradient(at 8% 4%, color-mix(in oklab, var(--brand) 14%, transparent) 0%, transparent 55%),
-      radial-gradient(at 96% 0%, color-mix(in oklab, var(--info) 11%, transparent) 0%, transparent 50%),
-      radial-gradient(at 50% 110%, color-mix(in oklab, var(--brand-soft) 7%, transparent) 0%, transparent 55%);
+      radial-gradient(70% 50% at 50% -8%, color-mix(in oklab, var(--brand) 7%, transparent) 0%, transparent 70%),
+      radial-gradient(60% 50% at 108% 108%, color-mix(in oklab, var(--amber) 5%, transparent) 0%, transparent 70%);
     background-attachment: fixed;
   }
   html {

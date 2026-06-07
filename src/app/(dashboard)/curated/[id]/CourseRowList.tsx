@@ -76,7 +76,7 @@ export function CourseRowList({
   }
 
   return (
-    <ol className="divide-y rounded-md border">
+    <ol className="divide-y divide-rule/60 rounded-lg border border-rule/70 bg-paper-sunken/20">
       {rows.map((row, index) => (
         <CourseRow
           key={row.course_id}
@@ -182,7 +182,7 @@ function CourseRow({
         </div>
       </div>
       {row.editor_note && !editingNote && (
-        <p className="ml-9 rounded-md bg-muted/40 px-3 py-1.5 text-xs italic text-muted-foreground">
+        <p className="ml-9 rounded-md bg-paper-sunken/40 px-3 py-1.5 text-xs italic text-ink-2">
           “{row.editor_note}”
         </p>
       )}

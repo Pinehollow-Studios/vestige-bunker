@@ -15,10 +15,9 @@ import {
   getLinkedFeedbackForCrash,
 } from "@/lib/crashes/queries";
 import {
+  type CrashLevel,
   type CrashLinkedFeedback,
   type CrashReportEnriched,
-  environmentChipClasses,
-  levelChipClasses,
   levelLabel,
 } from "@/lib/crashes/types";
 import {
@@ -28,6 +27,24 @@ import {
 } from "@/lib/sentry/client";
 
 export const dynamic = "force-dynamic";
+
+// Calm, single-tone bordered chips, matched to the queue page.
+function levelChip(level: CrashLevel): string {
+  switch (level) {
+    case "fatal":
+    case "error":
+      return "border-alert/40 text-alert";
+    case "warning":
+      return "border-amber/40 text-amber";
+    default:
+      return "border-rule/70 text-ink-3";
+  }
+}
+
+function environmentChip(env: string | null): string {
+  if (env === "release") return "border-brand/40 text-brand";
+  return "border-rule/70 text-ink-3";
+}
 
 /**
  * Crash detail. Three sections:
@@ -77,7 +94,7 @@ function BackLink() {
   return (
     <Link
       href="/crashes"
-      className="inline-flex items-center gap-1 text-sm text-brand-deep hover:underline dark:text-brand-soft"
+      className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
     >
       <ArrowLeft className="size-3.5" />
       Back to queue
@@ -124,17 +141,17 @@ function CrashHeader({
       )}
       <div className="flex flex-wrap items-center gap-3">
         <span
-          className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${levelChipClasses(crash.level)}`}
+          className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${levelChip(crash.level)}`}
         >
           {levelLabel(crash.level)}
         </span>
         <span
-          className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${environmentChipClasses(crash.environment)}`}
+          className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${environmentChip(crash.environment)}`}
         >
           {crash.environment ?? "no env"}
         </span>
         {crash.release_name && (
-          <span className="rounded-full border border-border bg-paper-sunken/60 px-3 py-1 font-mono text-xs text-ink-2">
+          <span className="rounded-full border border-rule/70 px-3 py-1 font-mono text-xs text-ink-2">
             {crash.release_name}
           </span>
         )}
@@ -143,7 +160,7 @@ function CrashHeader({
             href={sentryURL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-paper-raised px-3 py-1 text-xs font-semibold text-brand-deep transition-colors hover:bg-brand/10 dark:text-brand-soft"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand/40 px-3 py-1 text-xs font-semibold text-brand transition-colors hover:bg-brand/10"
           >
             Open in Sentry
             <ExternalLink className="size-3" />
@@ -156,12 +173,12 @@ function CrashHeader({
               <img
                 src={reporterAvatar}
                 alt=""
-                className="size-7 rounded-full bg-paper-sunken object-cover ring-1 ring-foreground/10"
+                className="size-7 rounded-full border border-rule/70 bg-paper-sunken object-cover"
               />
             ) : (
               <span
                 aria-hidden
-                className="flex size-7 items-center justify-center rounded-full bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3 ring-1 ring-foreground/10"
+                className="flex size-7 items-center justify-center rounded-full border border-rule/70 bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3"
               >
                 {(reporterDisplay ?? "??").slice(0, 2)}
               </span>
@@ -183,7 +200,7 @@ function CrashHeader({
 
 function CrashMetaGrid({ crash }: { crash: CrashReportEnriched }) {
   return (
-    <article className="grid grid-cols-1 gap-3 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5 sm:grid-cols-2">
+    <article className="grid grid-cols-1 gap-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-4 sm:grid-cols-2">
       <MetaRow
         icon={<Smartphone className="size-3.5" />}
         label="Device"
@@ -251,7 +268,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
   if (!result.ok) {
     if (result.reason === "not_configured") {
       return (
-        <article className="rounded-2xl border border-dashed border-border/70 bg-paper-sunken/40 p-5 text-sm text-ink-3">
+        <article className="rounded-xl border border-dashed border-rule/70 bg-paper-raised/50 p-4 text-sm text-ink-3">
           Sentry API isn&apos;t configured for this dashboard. Set{" "}
           <code className="font-mono text-[11px]">SENTRY_AUTH_TOKEN</code>,{" "}
           <code className="font-mono text-[11px]">SENTRY_ORG_SLUG</code>, and{" "}
@@ -268,7 +285,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
       // side, or the row is a synthetic test inserted via curl that
       // never went through Sentry at all.
       return (
-        <article className="rounded-2xl border border-dashed border-border/70 bg-paper-sunken/40 p-5 text-sm text-ink-3">
+        <article className="rounded-xl border border-dashed border-rule/70 bg-paper-raised/50 p-4 text-sm text-ink-3">
           This event isn&apos;t in Sentry. New events take a few seconds to
           propagate after the webhook fires — refresh in a moment. If this
           row was inserted by the smoke-test script (or any other path that
@@ -278,7 +295,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
       );
     }
     return (
-      <article className="rounded-2xl border border-dashed border-border/70 bg-paper-sunken/40 p-5 text-sm text-ink-3">
+      <article className="rounded-xl border border-dashed border-rule/70 bg-paper-raised/50 p-4 text-sm text-ink-3">
         Couldn&apos;t reach Sentry to load stack trace + breadcrumbs. The
         local crash row above is the canonical record we have until Sentry
         is reachable again. Use the &quot;Open in Sentry&quot; button to view
@@ -288,7 +305,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
   }
 
   return (
-    <article className="space-y-4 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
+    <article className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <header className="flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
           Stack trace + breadcrumbs (from Sentry)
@@ -303,7 +320,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
 
 function SentryDetailSkeleton() {
   return (
-    <article className="rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
+    <article className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
         Loading from Sentry…
       </p>
@@ -347,7 +364,7 @@ function ExceptionEntry({ data }: { data: unknown }) {
       {values.map((v, i) => (
         <div
           key={i}
-          className="space-y-2 rounded-xl border border-border/60 bg-paper-sunken/40 p-3"
+          className="space-y-2 rounded-xl border border-rule/60 bg-paper-sunken/40 p-3"
         >
           <p className="text-sm font-semibold text-ink">
             {v.type ?? "Error"}
@@ -409,7 +426,7 @@ function BreadcrumbsEntry({ data }: { data: unknown }) {
         {values.map((b, i) => (
           <li
             key={i}
-            className="flex flex-col rounded border border-border/40 bg-paper-sunken/30 px-2 py-1"
+            className="flex flex-col rounded border border-rule/60 bg-paper-sunken/30 px-2 py-1"
           >
             <span className="font-mono text-[10px] text-ink-3">
               {b.category ?? "—"} · {b.level ?? "info"}
@@ -433,7 +450,7 @@ function SentryTags({ tags }: { tags: SentryEventDetail["tags"] }) {
         {tags.map((tag, i) => (
           <span
             key={i}
-            className="rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 font-mono text-[10px] text-ink-2"
+            className="rounded-full border border-rule/60 bg-paper-sunken/60 px-2 py-0.5 font-mono text-[10px] text-ink-2"
           >
             {tag.key}: {tag.value}
           </span>
@@ -449,7 +466,7 @@ function SentryTags({ tags }: { tags: SentryEventDetail["tags"] }) {
 
 function LinkedFeedbackSection({ rows }: { rows: CrashLinkedFeedback[] }) {
   return (
-    <article className="space-y-3 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
+    <article className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <header className="flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
           Linked feedback ({rows.length})
@@ -471,9 +488,9 @@ function LinkedFeedbackSection({ rows }: { rows: CrashLinkedFeedback[] }) {
             <li key={row.id}>
               <Link
                 href={`/feedback/${row.id}`}
-                className="flex items-start gap-3 rounded-xl border border-border/60 bg-paper-sunken/40 p-3 text-xs transition-colors hover:border-brand/40"
+                className="flex items-start gap-3 rounded-xl border border-rule/60 bg-paper-sunken/40 p-3 text-xs transition-colors hover:border-brand/40"
               >
-                <MessageSquareWarning aria-hidden className="size-4 shrink-0 text-brand-deep dark:text-brand-soft" />
+                <MessageSquareWarning aria-hidden className="size-4 shrink-0 text-brand" />
                 <span className="min-w-0 flex-1 space-y-1">
                   <span className="block text-[10px] uppercase tracking-[0.14em] text-ink-3">
                     {row.status} · {formatAbsolute(row.created_at)}

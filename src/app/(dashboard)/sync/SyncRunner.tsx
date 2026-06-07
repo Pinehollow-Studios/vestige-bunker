@@ -130,7 +130,7 @@ export function SyncRunner({
             className={cn(
               "flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm",
               report.mode === "apply"
-                ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft"
+                ? "border-brand/40 bg-brand/10 text-brand"
                 : "border-border bg-paper-raised text-ink-2",
             )}
           >
@@ -236,7 +236,7 @@ function kindIcon(kind: ChangeKind) {
 function kindChip(kind: ChangeKind): string {
   switch (kind) {
     case "create":
-      return "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft";
+      return "border-brand/40 bg-brand/10 text-brand";
     case "update":
       return "border-info/40 bg-info/10 text-info";
     case "delete":
@@ -250,7 +250,7 @@ function kindChip(kind: ChangeKind): string {
 function kindText(kind: ChangeKind): string {
   switch (kind) {
     case "create":
-      return "text-brand-deep dark:text-brand-soft";
+      return "text-brand";
     case "update":
       return "text-info";
     case "delete":

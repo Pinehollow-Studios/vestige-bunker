@@ -70,7 +70,7 @@ export function AnnouncementFilters() {
     selectedAudiences.length > 0;
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
+    <div className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <header className="flex items-center justify-between">
         <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
           <Filter aria-hidden className="size-3" />
@@ -122,7 +122,7 @@ export function AnnouncementFilters() {
               className={cn(
                 "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
                 isActive
-                  ? "border-brand/40 bg-brand/10 text-brand-deep ring-2 ring-brand/40 dark:text-brand-soft"
+                  ? "border-brand/40 bg-brand/10 text-brand ring-2 ring-brand/40"
                   : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
               )}
             >
@@ -144,7 +144,7 @@ export function AnnouncementFilters() {
               className={cn(
                 "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
                 isActive
-                  ? "border-brand/40 bg-brand/10 text-brand-deep ring-2 ring-brand/40 dark:text-brand-soft"
+                  ? "border-brand/40 bg-brand/10 text-brand ring-2 ring-brand/40"
                   : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
               )}
             >

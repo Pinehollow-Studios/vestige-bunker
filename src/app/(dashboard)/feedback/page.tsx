@@ -12,7 +12,6 @@ import {
   MessageSquare,
   Paintbrush,
   Repeat,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -24,14 +23,12 @@ import {
   type FeedbackQueueRow,
   type FeedbackSeverity,
   type FeedbackStatus,
+  type FeedbackUserSeverity,
   areaSlugLabel,
   kindLabel,
   reproducibilityLabel,
-  severityChipClasses,
   severityLabel,
-  statusChipClasses,
   statusLabel,
-  userSeverityChipClasses,
   userSeverityLabel,
 } from "@/lib/feedback/types";
 import { QueueFilters } from "./QueueFilters";
@@ -114,13 +111,13 @@ export default async function FeedbackQueuePage({
       <SectionHeader
         eyebrow="Queues · review"
         title="Feedback triage"
-        description="In-app feedback reports — every bug, data error, feature request, and general note. Highest severity first; quietly-aging reports drift to the bottom."
+        description="In-app reports — bugs, data errors, requests, and notes. Highest severity first."
       />
 
       <QueueFilters initialSearch={query} />
 
       {error && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load queue: {error.message}
         </div>
       )}
@@ -131,7 +128,7 @@ export default async function FeedbackQueuePage({
           {queue.length === 0 ? (
             <EmptyQueue />
           ) : (
-            <ol className="space-y-3">
+            <ol className="divide-y divide-rule/60 overflow-hidden rounded-xl border border-rule/70 bg-paper-raised/50">
               {queue.map((row) => (
                 <li key={row.report_id}>
                   <ReportRow row={row} />
@@ -171,7 +168,7 @@ function PaginationFooter({
       {offset > 0 ? (
         <Link
           href={paramsURL(params, previousOffset)}
-          className="rounded-md border border-border bg-paper-raised px-3 py-1 font-semibold text-ink-2 hover:border-brand/40"
+          className="rounded-lg border border-rule/70 bg-paper-raised/50 px-3 py-1.5 font-semibold text-ink-2 transition-colors hover:border-brand/40 hover:text-ink"
         >
           ← Previous {pageSize}
         </Link>
@@ -184,7 +181,7 @@ function PaginationFooter({
       {hasNext ? (
         <Link
           href={paramsURL(params, nextOffset)}
-          className="rounded-md border border-border bg-paper-raised px-3 py-1 font-semibold text-ink-2 hover:border-brand/40"
+          className="rounded-lg border border-rule/70 bg-paper-raised/50 px-3 py-1.5 font-semibold text-ink-2 transition-colors hover:border-brand/40 hover:text-ink"
         >
           Next {pageSize} →
         </Link>
@@ -214,6 +211,75 @@ function paramsURL(
 }
 
 // --------------------------------------------------------------
+// Calm chip helpers (presentation-only, local to the feedback UI)
+//
+// The shared `*ChipClasses` helpers in lib/feedback/types render
+// noisy multi-tone pills (amber-500 / blue-500 / emerald-500). The
+// Atlas calm convention is single-tone bordered pills keyed to the
+// brand / amber / alert / ink-3 family only. We map to that here
+// without touching the type logic.
+// --------------------------------------------------------------
+
+const CHIP_BASE =
+  "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider";
+
+type ChipTone = "brand" | "amber" | "alert" | "neutral";
+
+function toneClasses(tone: ChipTone): string {
+  switch (tone) {
+    case "brand":
+      return "border-brand/35 text-brand";
+    case "amber":
+      return "border-amber/40 text-amber";
+    case "alert":
+      return "border-alert/40 text-alert";
+    case "neutral":
+      return "border-rule/70 text-ink-3";
+  }
+}
+
+function statusTone(status: FeedbackStatus): ChipTone {
+  switch (status) {
+    case "new":
+      return "brand";
+    case "inProgress":
+      return "amber";
+    case "triaged":
+      return "neutral";
+    case "resolved":
+      return "brand";
+    case "wontFix":
+      return "neutral";
+  }
+}
+
+function severityTone(severity: FeedbackSeverity | null): ChipTone {
+  switch (severity) {
+    case "critical":
+      return "alert";
+    case "high":
+      return "amber";
+    case "medium":
+      return "brand";
+    default:
+      return "neutral";
+  }
+}
+
+function userSeverityTone(value: FeedbackUserSeverity | null): ChipTone {
+  switch (value) {
+    case "blocker":
+      return "alert";
+    case "major":
+      return "amber";
+    case "minor":
+      return "brand";
+    default:
+      return "neutral";
+  }
+}
+
+// --------------------------------------------------------------
 // Summary strip
 // --------------------------------------------------------------
 
@@ -226,9 +292,9 @@ function SummaryStrip({
 }) {
   const open = byStatus.new + byStatus.triaged + byStatus.inProgress;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brand/8 px-4 py-3 text-xs text-brand-deep dark:bg-brand/15 dark:text-brand-soft">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-semibold">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-3 text-xs text-ink-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold text-ink">
           {total} {total === 1 ? "report" : "reports"}
         </span>
         <span aria-hidden className="text-ink-3">
@@ -238,21 +304,21 @@ function SummaryStrip({
           {open} open
           {byStatus.resolved > 0 && (
             <>
-              {" "}
-              · <span className="font-medium text-ink">{byStatus.resolved}</span>{" "}
+              {" · "}
+              <span className="font-medium text-ink-2">{byStatus.resolved}</span>{" "}
               resolved
             </>
           )}
           {byStatus.wontFix > 0 && (
             <>
-              {" "}
-              · <span className="font-medium text-ink">{byStatus.wontFix}</span>{" "}
+              {" · "}
+              <span className="font-medium text-ink-2">{byStatus.wontFix}</span>{" "}
               won&apos;t fix
             </>
           )}
         </span>
       </div>
-      <span className="text-ink-3">sort: severity ↓, latest activity ↓</span>
+      <span className="text-ink-3">severity ↓ · latest activity ↓</span>
     </div>
   );
 }
@@ -263,31 +329,19 @@ function SummaryStrip({
 
 function EmptyQueue() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-6 py-14 text-center">
+      <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 60%)",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-2">
-        <span
-          aria-hidden
-          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft"
-        >
-          <MessageSquare className="size-5" />
-        </span>
-        <p className="font-heading text-base font-semibold text-ink">
-          Nothing in the inbox
-        </p>
-        <p className="max-w-md text-sm text-ink-2">
-          When users tap{" "}
-          <span className="font-semibold">Send feedback</span> in the iOS app,
-          their reports show up here.
-        </p>
-      </div>
+        className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand"
+      >
+        <MessageSquare className="size-5" />
+      </span>
+      <p className="font-display text-lg font-semibold text-ink">
+        Nothing in the inbox
+      </p>
+      <p className="max-w-sm text-sm text-ink-2">
+        When users tap Send feedback in the iOS app, their reports show up here.
+      </p>
     </div>
   );
 }
@@ -303,185 +357,153 @@ function ReportRow({ row }: { row: FeedbackQueueRow }) {
   const reporterHandle = row.reporter_username
     ? `@${row.reporter_username}`
     : null;
+  const areaName = row.area_label ?? (row.area ? areaSlugLabel(row.area) : null);
 
   return (
     <Link
       href={`/feedback/${row.report_id}`}
-      className="block rounded-2xl border border-border bg-paper-raised ring-1 ring-foreground/5 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition-colors hover:border-brand/40 hover:ring-brand/15"
+      className="block px-5 py-4 transition-colors hover:bg-paper-raised/40"
     >
-      <article className="flex flex-col gap-3 p-5">
-        <header className="flex flex-wrap items-start gap-3">
-          <KindGlyph kind={row.kind} />
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-deep dark:text-brand-soft">
-                {kindLabel(row.kind)}
+      <article className="flex items-start gap-4">
+        <KindGlyph kind={row.kind} />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
+              {kindLabel(row.kind)}
+            </span>
+            {row.is_founder && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber">
+                <Crown aria-hidden className="size-3" />
+                Founder
               </span>
-              {row.is_founder && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                  <Crown aria-hidden className="size-3" />
-                  Founder
-                </span>
-              )}
-              <span className="text-ink-3">
-                {formatRelative(row.created_at)}
+            )}
+            <span className="text-ink-3">{formatRelative(row.created_at)}</span>
+            {areaName && (
+              <span className="inline-flex items-center gap-1 text-ink-3">
+                <MapPin aria-hidden className="size-3" />
+                {areaName}
               </span>
-              {row.duplicate_of_report_id && (
-                <span className="text-ink-3">· marked duplicate</span>
-              )}
-              {row.duplicate_count > 0 && !row.duplicate_of_report_id && (
-                <span className="text-ink-3">
-                  · {row.duplicate_count}{" "}
-                  {row.duplicate_count === 1 ? "duplicate" : "duplicates"}
-                </span>
-              )}
-              {(row.area_label || row.area) && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 text-[10px] font-medium text-ink-2">
-                  <MapPin aria-hidden className="size-3" />
-                  {row.area_label ?? areaSlugLabel(row.area)}
-                </span>
-              )}
-            </div>
-            <p className="line-clamp-3 text-sm leading-snug text-ink">
-              {row.body_preview}
-            </p>
+            )}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+
+          <p className="line-clamp-2 text-sm leading-snug text-ink">
+            {row.body_preview}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
+            <span className="inline-flex items-center gap-1.5">
+              {reporterAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={reporterAvatar}
+                  alt=""
+                  className="size-5 rounded-full bg-paper-sunken object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden
+                  className="flex size-5 items-center justify-center rounded-full bg-paper-sunken text-[9px] font-semibold uppercase text-ink-3"
+                >
+                  {row.user_id ? reporterDisplay.slice(0, 2) : "—"}
+                </span>
+              )}
+              <span className="text-ink-2">
+                {row.user_id ? reporterDisplay : "Anonymous"}
+                {reporterHandle && (
+                  <span className="ml-1 text-ink-3">{reporterHandle}</span>
+                )}
+              </span>
+            </span>
+            {row.screenshot_count > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Camera aria-hidden className="size-3" />
+                {row.screenshot_count}
+              </span>
+            )}
+            {row.duplicate_of_report_id && <span>· duplicate</span>}
+            {row.duplicate_count > 0 && !row.duplicate_of_report_id && (
+              <span>
+                {row.duplicate_count}{" "}
+                {row.duplicate_count === 1 ? "duplicate" : "duplicates"}
+              </span>
+            )}
+            {row.reproducibility && (
+              <span className="inline-flex items-center gap-1">
+                <Repeat aria-hidden className="size-3" />
+                {reproducibilityLabel(row.reproducibility)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <span className={`${CHIP_BASE} ${toneClasses(statusTone(row.status))}`}>
+            {statusLabel(row.status)}
+          </span>
+          {row.severity && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${severityChipClasses(row.severity)}`}
+              className={`${CHIP_BASE} ${toneClasses(severityTone(row.severity))}`}
             >
               {severityLabel(row.severity)}
-            </span>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${statusChipClasses(row.status)}`}
-            >
-              {statusLabel(row.status)}
-            </span>
-          </div>
-        </header>
-
-        {row.last_admin_message_preview && (
-          <div className="rounded-xl border border-border/60 bg-paper-sunken/40 p-3 text-xs leading-relaxed text-ink-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-              Latest reply
-            </p>
-            <p className="mt-1 line-clamp-2 text-ink-2">
-              {row.last_admin_message_preview}
-            </p>
-          </div>
-        )}
-
-        <footer className="flex flex-wrap items-center gap-3 text-xs text-ink-3">
-          {reporterAvatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={reporterAvatar}
-              alt=""
-              className="size-6 rounded-full bg-paper-sunken object-cover ring-1 ring-foreground/10"
-            />
-          ) : (
-            <span
-              aria-hidden
-              className="flex size-6 items-center justify-center rounded-full bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3 ring-1 ring-foreground/10"
-            >
-              {row.user_id ? reporterDisplay.slice(0, 2) : "—"}
-            </span>
-          )}
-          <span className="text-ink-2">
-            {row.user_id ? reporterDisplay : "Anonymous (account deleted)"}
-            {reporterHandle && (
-              <span className="ml-1 text-ink-3">{reporterHandle}</span>
-            )}
-          </span>
-          {row.screenshot_count > 0 && (
-            <span className="inline-flex items-center gap-1 text-ink-3">
-              <Camera aria-hidden className="size-3" />
-              {row.screenshot_count}
-            </span>
-          )}
-          {row.tags.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-ink-3">
-              <Sparkles aria-hidden className="size-3" />
-              {row.tags.slice(0, 3).join(" · ")}
-              {row.tags.length > 3 && ` +${row.tags.length - 3}`}
             </span>
           )}
           {row.user_severity && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${userSeverityChipClasses(row.user_severity)}`}
+              className={`${CHIP_BASE} ${toneClasses(userSeverityTone(row.user_severity))}`}
             >
               {userSeverityLabel(row.user_severity)}
             </span>
           )}
-          {row.reproducibility && (
-            <span className="inline-flex items-center gap-1 text-ink-3">
-              <Repeat aria-hidden className="size-3" />
-              {reproducibilityLabel(row.reproducibility)}
-            </span>
-          )}
-        </footer>
+        </div>
       </article>
     </Link>
   );
 }
 
 function KindGlyph({ kind }: { kind: FeedbackKind }) {
-  const styles = "flex size-9 shrink-0 items-center justify-center rounded-xl";
+  const styles =
+    "flex size-9 shrink-0 items-center justify-center rounded-xl border";
+  return <span className={`${styles} ${kindTone(kind)}`}>{kindIcon(kind)}</span>;
+}
+
+function kindTone(kind: FeedbackKind): string {
   switch (kind) {
     case "bug":
-      return (
-        <span className={`${styles} bg-alert/10 text-alert`}>
-          <Bug aria-hidden className="size-4" />
-        </span>
-      );
-    case "dataError":
-      return (
-        <span className={`${styles} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>
-          <Map aria-hidden className="size-4" />
-        </span>
-      );
-    case "featureRequest":
-      return (
-        <span className={`${styles} bg-brand/10 text-brand-deep dark:text-brand-soft`}>
-          <Lightbulb aria-hidden className="size-4" />
-        </span>
-      );
-    case "general":
-      return (
-        <span className={`${styles} bg-paper-sunken text-ink-2`}>
-          <ImageIcon aria-hidden className="size-4" />
-        </span>
-      );
     case "crash":
-      return (
-        <span className={`${styles} bg-alert/10 text-alert`}>
-          <Zap aria-hidden className="size-4" />
-        </span>
-      );
+      return "border-alert/30 bg-alert/5 text-alert";
+    case "dataError":
     case "visualGlitch":
-      return (
-        <span className={`${styles} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>
-          <Paintbrush aria-hidden className="size-4" />
-        </span>
-      );
     case "performance":
-      return (
-        <span className={`${styles} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>
-          <Gauge aria-hidden className="size-4" />
-        </span>
-      );
+      return "border-amber/30 bg-amber/5 text-amber";
+    case "featureRequest":
     case "confusingUX":
-      return (
-        <span className={`${styles} bg-brand/10 text-brand-deep dark:text-brand-soft`}>
-          <HelpCircle aria-hidden className="size-4" />
-        </span>
-      );
+      return "border-brand/30 bg-brand/5 text-brand";
     default:
-      return (
-        <span className={`${styles} bg-paper-sunken text-ink-2`}>
-          <MessageSquare aria-hidden className="size-4" />
-        </span>
-      );
+      return "border-rule/70 bg-paper-sunken/40 text-ink-2";
+  }
+}
+
+function kindIcon(kind: FeedbackKind) {
+  const cls = "size-4";
+  switch (kind) {
+    case "bug":
+      return <Bug aria-hidden className={cls} />;
+    case "dataError":
+      return <Map aria-hidden className={cls} />;
+    case "featureRequest":
+      return <Lightbulb aria-hidden className={cls} />;
+    case "general":
+      return <ImageIcon aria-hidden className={cls} />;
+    case "crash":
+      return <Zap aria-hidden className={cls} />;
+    case "visualGlitch":
+      return <Paintbrush aria-hidden className={cls} />;
+    case "performance":
+      return <Gauge aria-hidden className={cls} />;
+    case "confusingUX":
+      return <HelpCircle aria-hidden className={cls} />;
+    default:
+      return <MessageSquare aria-hidden className={cls} />;
   }
 }
 

@@ -82,15 +82,15 @@ export default async function AnalyticsPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
         eyebrow="Insights · Analytics"
         title="Analytics"
-        description="Metabase on top of Supabase (CLAUDE.md §3 stack table). When NEXT_PUBLIC_METABASE_DASHBOARD_URL is set, the embed renders here. Until then, the first-cut counts below come straight from the live database."
+        description="Live first-cut counts from the database, with the Metabase embed taking over once it's configured."
       />
 
       {metabaseUrl ? (
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-paper-raised shadow-lg">
+        <div className="overflow-hidden rounded-xl border border-rule/70 bg-paper-raised/50">
           <iframe
             src={metabaseUrl}
             className="h-[720px] w-full"
@@ -99,13 +99,13 @@ export default async function AnalyticsPage() {
           />
         </div>
       ) : (
-        <div className="surface-glass rounded-2xl p-5">
+        <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
           <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-paper-sunken text-brand">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
               <BarChart3 className="size-4" />
             </span>
             <div className="space-y-1">
-              <p className="font-heading text-sm font-semibold text-ink">
+              <p className="font-display text-base text-ink">
                 Metabase embed not configured
               </p>
               <p className="text-xs leading-relaxed text-ink-2">
@@ -113,10 +113,9 @@ export default async function AnalyticsPage() {
                 <code className="rounded bg-paper-sunken px-1 py-px font-mono text-[11px]">
                   NEXT_PUBLIC_METABASE_DASHBOARD_URL
                 </code>{" "}
-                in the Vercel project to embed a dashboard. Use a
-                public-link URL or a signed-embed URL minted server-side.
-                Until then, the live counts and SQL snippets below cover
-                the most-asked questions.
+                in the Vercel project to embed a dashboard. Until then, the
+                live counts and SQL snippets below cover the most-asked
+                questions.
               </p>
             </div>
           </div>
@@ -124,16 +123,19 @@ export default async function AnalyticsPage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           First-cut counts
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="surface-glass rounded-2xl p-4">
+            <div
+              key={stat.label}
+              className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4"
+            >
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
                 {stat.label}
               </p>
-              <p className="mt-2 font-hero text-3xl leading-none tabular-nums text-ink">
+              <p className="mt-2 font-display text-3xl leading-none tabular-nums text-ink">
                 {stat.value.toLocaleString()}
               </p>
               {stat.hint && (
@@ -145,7 +147,7 @@ export default async function AnalyticsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Starter queries
         </h2>
         <p className="text-xs text-ink-3">
@@ -181,7 +183,7 @@ export default async function AnalyticsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Jump to a tool
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -205,11 +207,11 @@ export default async function AnalyticsPage() {
 
 function QueryCard({ title, sql }: { title: string; sql: string }) {
   return (
-    <div className="surface-glass rounded-2xl p-4">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">
         {title}
       </p>
-      <pre className="mt-2 overflow-x-auto rounded-md border border-border/60 bg-paper-sunken/80 px-3 py-2 font-mono text-[11px] leading-relaxed text-ink">
+      <pre className="mt-2 overflow-x-auto rounded-lg border border-rule/60 bg-paper-sunken/80 px-3 py-2 font-mono text-[11px] leading-relaxed text-ink">
 {sql}
       </pre>
     </div>
@@ -232,18 +234,15 @@ function ExternalCard({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group/tool surface-glass flex items-start gap-3 rounded-2xl p-4 transition-all hover:-translate-y-px hover:border-brand/30"
+      className="flex items-start gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-4 transition-colors hover:border-brand"
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-paper-sunken text-brand">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
         {icon}
       </span>
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="flex items-center gap-1 font-heading text-sm font-semibold text-ink">
+        <p className="flex items-center gap-1 font-display text-base text-ink">
           {label}
-          <ExternalLink
-            aria-hidden
-            className="size-3 text-ink-3 transition-transform group-hover/tool:translate-x-0.5 group-hover/tool:-translate-y-0.5"
-          />
+          <ExternalLink aria-hidden className="size-3 text-ink-3" />
         </p>
         <p className="text-[11px] leading-relaxed text-ink-2">{description}</p>
       </div>

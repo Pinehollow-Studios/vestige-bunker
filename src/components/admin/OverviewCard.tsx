@@ -47,27 +47,13 @@ export function OverviewCard({
   const body = (
     <article
       className={cn(
-        "group/card relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl border bg-paper-raised p-5 ring-1 ring-foreground/5 transition-all",
+        "group/card relative flex h-full flex-col gap-4 rounded-2xl border bg-paper-raised/60 p-5 transition-colors",
         isLive
-          ? "border-border hover:-translate-y-px hover:border-brand/40 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--brand)_35%,transparent)] hover:ring-brand/20"
-          : "border-dashed border-border/70 bg-paper-raised/55",
-        showAttention && "border-brand/30 ring-brand/15",
+          ? "border-rule/70 hover:border-brand/40"
+          : "border-dashed border-rule/60 bg-paper-raised/30",
+        showAttention && "border-brand/30",
       )}
     >
-      {/* Brand top-edge stripe — gives every live tile a colour cue
-          even before the user reads anything. Soon tiles skip it. */}
-      {isLive && (
-        <span
-          aria-hidden
-          className={cn(
-            "absolute inset-x-0 top-0 h-[3px]",
-            showAttention
-              ? "bg-gradient-to-r from-brand-deep via-brand to-brand-soft"
-              : "bg-gradient-to-r from-brand/60 via-brand/30 to-transparent",
-          )}
-        />
-      )}
-
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
@@ -87,7 +73,7 @@ export function OverviewCard({
                 className={cn(
                   "font-hero text-3xl leading-none tabular-nums",
                   count > 0
-                    ? "text-brand-deep dark:text-brand-soft"
+                    ? "text-brand"
                     : "text-ink-3/50",
                 )}
               >
@@ -121,7 +107,7 @@ export function OverviewCard({
 
       <footer className="flex items-center justify-between border-t border-border/60 pt-3 text-xs">
         {isLive ? (
-          <span className="inline-flex items-center gap-1 font-semibold text-brand-deep dark:text-brand-soft">
+          <span className="inline-flex items-center gap-1 font-semibold text-brand">
             {ctaLabel ?? "Open"}
             <ArrowUpRight
               aria-hidden
@@ -135,7 +121,7 @@ export function OverviewCard({
           </span>
         )}
         {isLive && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-brand">
             <span aria-hidden className="size-1.5 rounded-full bg-brand" />
             Live
           </span>

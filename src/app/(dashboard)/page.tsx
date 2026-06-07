@@ -1,15 +1,9 @@
 import Link from "next/link";
-import {
-  ExternalLink,
-  FileTerminal,
-  type LucideIcon,
-  ScrollText,
-  Terminal,
-} from "lucide-react";
 import { OverviewCard, PreviewList, StatusBreakdown } from "@/components/admin/OverviewCard";
+import { SectionHeader } from "@/components/admin/SectionHeader";
 import { StatsStrip, type Stat } from "@/components/admin/StatsStrip";
 import { createClient } from "@/lib/supabase/server";
-import { adminDisplayLabel, requireAdmin } from "@/lib/auth/requireAdmin";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { TOOL_GROUPS } from "@/lib/admin/tools";
 import { statusFor, type CuratedListStatus } from "./curated/types";
 
@@ -73,7 +67,7 @@ function isoMsAgo(ms: number): string {
 
 export default async function OverviewPage() {
   const supabase = await createClient();
-  const admin = await requireAdmin();
+  await requireAdmin();
   const sevenDaysAgo = isoMsAgo(WEEK_MS);
 
   const [
@@ -161,52 +155,7 @@ export default async function OverviewPage() {
     coursesTotal > 0 ? Math.round((coursesWithPolygon / coursesTotal) * 100) : 0;
   const friendshipsTotal = friendshipsCountRes.count ?? 0;
 
-  // Top-of-page stats — kept tight on the operational signals. Platform
-  // health gets its own strip below.
-  const stats: Stat[] = [
-    {
-      key: "verification",
-      label: "Pending verifications",
-      value: queue.length,
-      hint:
-        queue.length === 0
-          ? "Queue clear"
-          : queue.length === 1
-            ? "1 list awaiting review"
-            : `${queue.length} lists awaiting review`,
-      tone: queue.length > 0 ? "attention" : "muted",
-    },
-    {
-      key: "safeguarding",
-      label: "Safeguarding flags",
-      value: safeguarding.length,
-      hint:
-        safeguarding.length === 0
-          ? "No open flags"
-          : `${safeguarding.length} pending review`,
-      tone: safeguarding.length > 0 ? "attention" : "muted",
-    },
-    {
-      key: "feedback",
-      label: "Open feedback",
-      value: openFeedback.length,
-      hint:
-        openFeedback.length === 0
-          ? "Inbox clear"
-          : openFeedback.length === 1
-            ? "1 open report"
-            : `${openFeedback.length} open reports`,
-      tone: openFeedback.length > 0 ? "attention" : "muted",
-    },
-    {
-      key: "crashes-7d",
-      label: "Crashes (7d)",
-      value: crashes.length,
-      hint: crashes.length === 0 ? "Quiet week" : "see /crashes",
-      tone: crashes.length > 0 ? "attention" : "muted",
-    },
-  ];
-
+  // One calm platform-health row — the underlying data shape at a glance.
   const platformStats: Stat[] = [
     {
       key: "users",
@@ -232,8 +181,7 @@ export default async function OverviewPage() {
       key: "courses",
       label: "Courses in catalogue",
       value: coursesTotal,
-      hint: `${coursesWithPolygon} with polygons (${polygonCoveragePct}%)`,
-      tone: polygonCoveragePct < 90 ? "attention" : "default",
+      hint: `${polygonCoveragePct}% with polygons`,
     },
     {
       key: "friendships",
@@ -242,16 +190,9 @@ export default async function OverviewPage() {
       hint:
         friendshipsTotal === 0
           ? "No friendships yet"
-          : "Mutual, single-row friendships",
+          : "Mutual connections",
     },
   ];
-
-  const queuePreview = queue.slice(0, 4).map((row) => ({
-    key: row.list_id,
-    primary: row.list_name,
-    secondary: `@${row.owner_username} · ${row.course_count} ${row.course_count === 1 ? "course" : "courses"}`,
-    trailing: relativeTime(row.verification_requested_at),
-  }));
 
   const curatedPreview = curated.slice(0, 4).map((row) => ({
     key: row.id,
@@ -261,68 +202,36 @@ export default async function OverviewPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10">
-      <HeroGreeting
-        name={adminDisplayLabel(admin)}
-        queueLen={queue.length}
-        flagsLen={safeguarding.length}
-        feedbackLen={openFeedback.length}
-        usersTotal={usersTotal}
+    <div className="mx-auto max-w-5xl space-y-8">
+      <SectionHeader
+        eyebrow="Dashboard"
+        title="Overview"
+        description="The state of Vestige at a glance — what needs your attention, and the numbers underneath it."
       />
 
-      <StatsStrip stats={stats} />
+      <StatsStrip stats={platformStats} />
 
       <section className="space-y-4">
-        <SectionLabel
-          title="Platform health"
-          subtitle="At-a-glance signal on the underlying data shape."
-          accent="insights"
-        />
-        <StatsStrip stats={platformStats} />
-      </section>
-
-      <section className="space-y-4">
-        <SectionLabel
-          title="Queues"
-          subtitle="Time-sensitive review work — clear these first."
-          accent="queues"
-        />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <OverviewCard
-            href="/lists"
-            title="List verification"
-            description="Public user lists awaiting the verified stamp. Approve to freeze, reject to clear and let the owner re-edit."
-            status="live"
-            count={queue.length}
-            accent={queue.length === 0 ? "All clear" : "in queue"}
-            ctaLabel={queue.length === 0 ? "Open queue" : `Review ${queue.length}`}
-          >
-            <PreviewList
-              items={queuePreview}
-              emptyLabel="No public lists are awaiting verification."
-            />
-          </OverviewCard>
-
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+          Needs attention
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <OverviewCard
             href="/feedback"
-            title="Feedback triage"
-            description="In-app feedback and bug reports awaiting acknowledgement. Reply, change status, tag, or block reporters."
+            title="Feedback"
+            description="In-app reports awaiting acknowledgement. Reply, change status, tag, or block reporters."
             status="live"
             count={openFeedback.length}
             accent={openFeedback.length === 0 ? "Inbox clear" : "open"}
             ctaLabel={
-              openFeedback.length === 0
-                ? "Open inbox"
-                : `Triage ${openFeedback.length}`
+              openFeedback.length === 0 ? "Open inbox" : `Triage ${openFeedback.length}`
             }
           >
             <PreviewList
               items={openFeedback.slice(0, 4).map((row) => ({
                 key: row.id,
                 primary: previewSentence(row.body),
-                secondary: `${feedbackKindLabel(row.kind)} · ${feedbackStatusLabel(row.status)}${
-                  row.severity ? ` · ${row.severity}` : ""
-                }`,
+                secondary: `${feedbackKindLabel(row.kind)} · ${feedbackStatusLabel(row.status)}`,
                 trailing: relativeTime(row.created_at),
               }))}
               emptyLabel="No open feedback reports."
@@ -330,16 +239,34 @@ export default async function OverviewPage() {
           </OverviewCard>
 
           <OverviewCard
+            href="/photos"
+            title="Photo moderation"
+            description="Round photos awaiting moderation before they show on course pages."
+            status="live"
+            count={photos.length}
+            accent={photos.length === 0 ? "All clear" : "pending"}
+            ctaLabel={photos.length === 0 ? "Open queue" : `Moderate ${photos.length}`}
+          >
+            <PreviewList
+              items={photos.slice(0, 4).map((row) => ({
+                key: row.id,
+                primary: "Pending photo",
+                secondary: row.taken_at ? `taken ${relativeTime(row.taken_at)}` : "no exif",
+                trailing: relativeTime(row.created_at),
+              }))}
+              emptyLabel="No photos awaiting moderation."
+            />
+          </OverviewCard>
+
+          <OverviewCard
             href="/safeguarding"
             title="Safeguarding"
-            description="Heuristic flags (same-day excess, impossible geography, velocity spike) from the round-log trigger. Triage to keep the leaderboards honest."
+            description="Heuristic flags from the round-log trigger. Triage to keep the leaderboards honest."
             status="live"
             count={safeguarding.length}
             accent={safeguarding.length === 0 ? "All clear" : "open flags"}
             ctaLabel={
-              safeguarding.length === 0
-                ? "Open queue"
-                : `Review ${safeguarding.length}`
+              safeguarding.length === 0 ? "Open queue" : `Review ${safeguarding.length}`
             }
           >
             <PreviewList
@@ -359,15 +286,11 @@ export default async function OverviewPage() {
           <OverviewCard
             href="/crashes"
             title="Crashes"
-            description="Sentry-issued events ingested via the sentry-webhook Edge Function. Local index; full traces live in Sentry."
+            description="Sentry events from the past 7 days. Local index; full traces live in Sentry."
             status="live"
             count={crashes.length}
             accent={crashes.length === 0 ? "Quiet" : "past 7 days"}
-            ctaLabel={
-              crashes.length === 0
-                ? "Open queue"
-                : `Open ${crashes.length}`
-            }
+            ctaLabel={crashes.length === 0 ? "Open queue" : `Open ${crashes.length}`}
           >
             <PreviewList
               items={crashes.slice(0, 4).map((row) => ({
@@ -379,44 +302,18 @@ export default async function OverviewPage() {
               emptyLabel="No crashes in the past 7 days."
             />
           </OverviewCard>
-
-          <OverviewCard
-            href="/photos"
-            title="Photo moderation"
-            description="User-uploaded round photos awaiting moderation before they show on course pages."
-            status="live"
-            count={photos.length}
-            accent={photos.length === 0 ? "All clear" : "pending"}
-            ctaLabel={
-              photos.length === 0
-                ? "Open queue"
-                : `Moderate ${photos.length}`
-            }
-          >
-            <PreviewList
-              items={photos.slice(0, 4).map((row) => ({
-                key: row.id,
-                primary: "Pending photo",
-                secondary: row.taken_at ? `taken ${relativeTime(row.taken_at)}` : "no exif",
-                trailing: relativeTime(row.created_at),
-              }))}
-              emptyLabel="No photos awaiting moderation."
-            />
-          </OverviewCard>
         </div>
       </section>
 
       <section className="space-y-4">
-        <SectionLabel
-          title="Editorial"
-          subtitle="Content under Vestige' own byline."
-          accent="editorial"
-        />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+          Editorial
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <OverviewCard
             href="/curated"
             title="Curated lists"
-            description="Editorial collections — title, bio, cover, courses, publish state. What users see in the app."
+            description="Editorial collections — title, bio, cover, courses, publish state."
             status="live"
             count={curated.length}
             accent="lists total"
@@ -432,37 +329,29 @@ export default async function OverviewPage() {
                   { key: "archived", label: "Archived", count: curatedByStatus.archived, tone: "archived" },
                 ]}
               />
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-                  Recently edited
-                </p>
-                <PreviewList
-                  items={curatedPreview}
-                  emptyLabel="No curated lists yet."
-                />
-              </div>
+              <PreviewList items={curatedPreview} emptyLabel="No curated lists yet." />
             </div>
           </OverviewCard>
 
           <OverviewCard
-            href="/courses"
-            title="Courses"
-            description="Master course catalogue — search, filter, edit editorial fields (par, yards, style, established), upload hero photos."
+            href="/announcements"
+            title="Announcements"
+            description="In-app pop-ups raised on launch. Author, target, and track seen / dismissed receipts."
             status="live"
-            count={coursesTotal}
-            accent={`${polygonCoveragePct}% polygons`}
-            ctaLabel="Open catalogue"
-          />
+            accent="messaging"
+            ctaLabel="Open announcements"
+          >
+            <p className="rounded-lg border border-dashed border-border/70 bg-paper-sunken/50 px-3 py-4 text-center text-xs text-ink-3">
+              {queue.length === 0
+                ? "No public lists are awaiting verification."
+                : `${queue.length} user ${queue.length === 1 ? "list is" : "lists are"} awaiting the verified stamp — see /lists.`}
+            </p>
+          </OverviewCard>
         </div>
       </section>
 
-      <OperatorTools
-        polygonGap={Math.max(coursesTotal - coursesWithPolygon, 0)}
-        usersTotal={usersTotal}
-      />
-
       {(queueRes.error || curatedRes.error || safeguardingRes.error) && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
           Some live data failed to load.
           {queueRes.error && <> Verification queue: {queueRes.error.message}.</>}
           {curatedRes.error && <> Curated: {curatedRes.error.message}.</>}
@@ -480,340 +369,35 @@ export default async function OverviewPage() {
           to publish.
         </p>
       )}
-    </div>
-  );
-}
 
-/**
- * Branded hero. Sets the tone for the whole dashboard with a deep
- * Atlas paper backdrop, an editorial serif greeting, and three
- * "what's hot today" pills keyed off live counts.
- */
-function HeroGreeting({
-  name,
-  queueLen,
-  flagsLen,
-  feedbackLen,
-  usersTotal,
-}: {
-  name: string;
-  queueLen: number;
-  flagsLen: number;
-  feedbackLen: number;
-  usersTotal: number;
-}) {
-  const greeting = greetingFor(new Date());
-  return (
-    <section className="surface-aurora relative rounded-3xl px-6 py-8 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.55)] sm:px-8 sm:py-10">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 92% 8%, color-mix(in oklab, var(--brand) 32%, transparent) 0%, transparent 45%)," +
-            "radial-gradient(circle at 10% 100%, color-mix(in oklab, var(--info) 25%, transparent) 0%, transparent 55%)",
-        }}
-      />
-      <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-3">
-            {greeting} · {todayLabel(new Date())}
-          </p>
-          <h1 className="display-serif text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-            Welcome back,{" "}
-            <span className="italic text-brand">{name}</span>.
-          </h1>
-          <p className="max-w-prose text-sm leading-relaxed text-ink-2">
-            {summaryLine(queueLen, flagsLen, feedbackLen, usersTotal)}
-          </p>
-        </div>
-        <ul className="flex shrink-0 flex-wrap gap-3">
-          <HeroPill label="In queue" value={queueLen} highlight={queueLen > 0} />
-          <HeroPill label="Flags" value={flagsLen} highlight={flagsLen > 0} tone="amber" />
-          <HeroPill label="Feedback" value={feedbackLen} highlight={feedbackLen > 0} />
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function HeroPill({
-  label,
-  value,
-  highlight,
-  tone = "mint",
-}: {
-  label: string;
-  value: number;
-  highlight?: boolean;
-  tone?: "mint" | "amber";
-}) {
-  const ringClass =
-    tone === "amber"
-      ? "ring-amber/55"
-      : "ring-brand/55";
-  return (
-    <li
-      className={
-        "flex min-w-[120px] flex-col gap-1 rounded-2xl border border-white/10 bg-paper-sunken/70 px-4 py-3 backdrop-blur-sm" +
-        (highlight ? ` ring-1 ${ringClass}` : "")
-      }
-    >
-      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-        {label}
-      </span>
-      <span
-        className={
-          "font-hero text-3xl leading-none tabular-nums " +
-          (highlight
-            ? tone === "amber"
-              ? "text-amber"
-              : "text-brand"
-            : "text-ink")
-        }
-      >
-        {value}
-      </span>
-    </li>
-  );
-}
-
-/**
- * The "Operator console" — the full library of external destinations
- * grouped by job-to-be-done, alongside two always-on operator widgets
- * (polygon hygiene callout + paste-able SQL snippets).
- *
- * Tool data comes from the central `TOOL_GROUPS` registry in
- * `lib/admin/tools.ts` — the same source the sidebar's bottom
- * shelf reads from, so adding a new tool in one place lights it up
- * in both surfaces.
- */
-function OperatorTools({
-  polygonGap,
-  usersTotal,
-}: {
-  polygonGap: number;
-  usersTotal: number;
-}) {
-  return (
-    <section className="space-y-4">
-      <SectionLabel
-        title="Operator console"
-        subtitle="Tools the team opens daily — grouped, in one place."
-        accent="insights"
-      />
-
-      {/* Two always-on operator widgets up top. These are local to
-          the dashboard — not external links. */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="surface-glass rounded-2xl p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
+      <details className="group rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+        <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-3 transition-colors hover:text-brand">
+          Developer tools
+        </summary>
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+          {TOOL_GROUPS.map((group) => (
+            <div key={group.key} className="space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                Data hygiene
+                {group.label}
               </p>
-              <h3 className="font-heading text-base font-semibold text-ink">
-                Polygon coverage
-              </h3>
-              <p className="text-xs leading-relaxed text-ink-2">
-                Courses without polygons don&apos;t shade on the Atlas map. The
-                ingest script lives in{" "}
-                <code className="rounded bg-paper-sunken px-1 py-px font-mono text-[11px] text-ink">
-                  Vestige-ios/scripts/
-                </code>
-                .
-              </p>
-            </div>
-            <span className="font-hero text-3xl leading-none tabular-nums text-ink">
-              {polygonGap}
-            </span>
-          </div>
-          <p className="mt-4 text-[11px] text-ink-3">
-            Courses still missing a polygon.{" "}
-            {usersTotal > 0
-              ? "Live users will not see these on the map."
-              : "Will block onboarding once users are live."}
-          </p>
-        </div>
-        <div className="surface-glass rounded-2xl p-5">
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-              Drop into a SQL prompt
-            </p>
-            <h3 className="font-heading text-base font-semibold text-ink">
-              Quick snippets
-            </h3>
-          </div>
-          <ul className="mt-3 space-y-2 text-xs text-ink-2">
-            <SnippetRow
-              icon={Terminal}
-              label="Verified-list leaderboard"
-              snippet="select * from admin_list_verification_queue();"
-            />
-            <SnippetRow
-              icon={FileTerminal}
-              label="Safeguard queue"
-              snippet="select * from admin_safeguarding_queue('pending');"
-            />
-            <SnippetRow
-              icon={ScrollText}
-              label="Active users (7d)"
-              snippet={"select count(distinct user_id) from logged_rounds where created_at > now() - interval '7 days';"}
-            />
-          </ul>
-        </div>
-      </div>
-
-      {/* External tool groups — one panel per group. Each panel
-          renders its links as compact rows with description + arrow
-          affordance. Lights up the same items the sidebar shows so
-          they're discoverable for new admins, not buried. */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {TOOL_GROUPS.map((group) => {
-          const GroupIcon = group.icon;
-          return (
-            <article
-              key={group.key}
-              className="surface-glass flex flex-col gap-3 rounded-2xl p-5"
-            >
-              <header className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-paper-sunken text-brand">
-                  <GroupIcon className="size-4" />
-                </span>
-                <div className="min-w-0 space-y-0.5">
-                  <h3 className="font-heading text-base font-semibold text-ink">
-                    {group.label}
-                  </h3>
-                  <p className="text-[11px] leading-relaxed text-ink-2">
-                    {group.description}
-                  </p>
-                </div>
-              </header>
               <ul className="space-y-1">
-                {group.links.map((tool) => {
-                  const Icon = tool.icon;
-                  return (
-                    <li key={tool.href}>
-                      <a
-                        href={tool.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group/tool flex items-start gap-2.5 rounded-lg border border-transparent px-2.5 py-2 transition-all hover:border-border/60 hover:bg-paper-sunken/40"
-                      >
-                        <Icon
-                          aria-hidden
-                          className="mt-0.5 size-3.5 shrink-0 text-ink-3 group-hover/tool:text-brand"
-                        />
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <p className="flex items-center gap-1 text-[13px] font-medium text-ink">
-                            {tool.label}
-                            <ExternalLink
-                              aria-hidden
-                              className="size-3 text-ink-3/60 transition-transform group-hover/tool:translate-x-0.5 group-hover/tool:-translate-y-0.5 group-hover/tool:text-brand"
-                            />
-                          </p>
-                          {tool.description && (
-                            <p className="text-[11px] leading-snug text-ink-3">
-                              {tool.description}
-                            </p>
-                          )}
-                        </div>
-                      </a>
-                    </li>
-                  );
-                })}
+                {group.links.map((tool) => (
+                  <li key={tool.href}>
+                    <a
+                      href={tool.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[13px] text-ink-2 transition-colors hover:text-brand"
+                    >
+                      {tool.label}
+                    </a>
+                  </li>
+                ))}
               </ul>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function SnippetRow({
-  icon: Icon,
-  label,
-  snippet,
-}: {
-  icon: LucideIcon;
-  label: string;
-  snippet: string;
-}) {
-  return (
-    <li className="space-y-1">
-      <p className="flex items-center gap-1.5 text-[11px] font-medium text-ink-2">
-        <Icon className="size-3 text-ink-3" /> {label}
-      </p>
-      <code className="block overflow-x-auto rounded-md border border-border/60 bg-paper-sunken/80 px-2 py-1.5 font-mono text-[10px] text-ink">
-        {snippet}
-      </code>
-    </li>
-  );
-}
-
-function summaryLine(
-  queueLen: number,
-  flagsLen: number,
-  feedbackLen: number,
-  usersTotal: number,
-): string {
-  const parts: string[] = [];
-  if (queueLen === 0 && flagsLen === 0 && feedbackLen === 0) {
-    parts.push("All queues are clear.");
-  } else {
-    if (queueLen > 0) parts.push(`${queueLen} list${queueLen === 1 ? "" : "s"} waiting on verification`);
-    if (flagsLen > 0) parts.push(`${flagsLen} safeguarding flag${flagsLen === 1 ? "" : "s"}`);
-    if (feedbackLen > 0) parts.push(`${feedbackLen} open feedback report${feedbackLen === 1 ? "" : "s"}`);
-  }
-  const head = parts.join(parts.length === 3 ? ", and " : " and ");
-  const tail =
-    usersTotal === 0
-      ? " The platform has no users yet — quiet by design."
-      : ` Serving ${usersTotal.toLocaleString()} registered ${usersTotal === 1 ? "user" : "users"}.`;
-  return head.endsWith(".") ? head + tail : head + "." + tail;
-}
-
-function greetingFor(date: Date): string {
-  const h = date.getHours();
-  if (h < 5) return "Late night";
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-function todayLabel(date: Date): string {
-  return date.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
-function SectionLabel({
-  title,
-  subtitle,
-  accent,
-}: {
-  title: string;
-  subtitle: string;
-  accent: "queues" | "editorial" | "insights";
-}) {
-  const dotClass =
-    accent === "queues"
-      ? "bg-brand"
-      : accent === "editorial"
-        ? "bg-info"
-        : "bg-amber";
-  return (
-    <div className="flex items-end justify-between gap-3 border-b border-border/60 pb-2">
-      <div className="flex items-center gap-2">
-        <span aria-hidden className={"size-2 rounded-full " + dotClass} />
-        <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
-          {title}
-        </h2>
-      </div>
-      <p className="hidden text-xs text-ink-3 sm:block">{subtitle}</p>
+            </div>
+          ))}
+        </div>
+      </details>
     </div>
   );
 }

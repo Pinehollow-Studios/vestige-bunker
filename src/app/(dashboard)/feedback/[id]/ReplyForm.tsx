@@ -38,13 +38,13 @@ export function ReplyForm({ reportId }: Props) {
   };
 
   return (
-    <article className="space-y-3 rounded-2xl border border-brand/30 bg-brand/5 p-5 ring-1 ring-foreground/5">
+    <article className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
       <header className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-deep dark:text-brand-soft">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">
           Reply
         </p>
         <p className="text-[11px] text-ink-3">
-          Plain text · the user reads it verbatim in-app
+          Plain text · read verbatim in-app
         </p>
       </header>
       <textarea
@@ -53,14 +53,14 @@ export function ReplyForm({ reportId }: Props) {
         rows={5}
         placeholder="Tell them what's happening — that you're looking into it, that it's fixed, that you need more info."
         disabled={isPending}
-        className="block w-full resize-y rounded-xl border border-border bg-paper-raised p-3 text-sm leading-relaxed text-ink shadow-inner focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:opacity-60"
+        className="block w-full resize-y rounded-lg border border-rule/70 bg-paper-sunken/40 p-3 text-sm leading-relaxed text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 disabled:opacity-60"
       />
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={submit}
           disabled={isPending || !body.trim()}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-deep px-4 py-2 text-sm font-semibold text-paper-raised shadow-sm transition-colors hover:bg-brand disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-fg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send aria-hidden className="size-3.5" />
           {isPending ? "Sending…" : "Send reply"}

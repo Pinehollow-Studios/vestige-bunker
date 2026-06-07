@@ -182,7 +182,7 @@ export function AnnouncementEditor({
             </select>
           </Field>
           {actionKind !== "dismiss" && (
-            <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-paper-sunken/30 p-3">
+            <div className="grid grid-cols-2 gap-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
               <Field label="Button label">
                 <Input value={actionLabel} onChange={(e) => setActionLabel(e.target.value)} placeholder={actionKind === "external_url" ? "Read more" : "Open"} />
               </Field>
@@ -277,8 +277,8 @@ function PreviewCard({
   const hasAction = actionKind !== "dismiss" && actionLabel.trim().length > 0;
   const primaryLabel = hasAction ? actionLabel : dismissLabel || "Got it";
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
-      <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
         Live preview
       </h3>
       {/* Dimmed backdrop the app raises the card over. */}
@@ -431,7 +431,7 @@ function TargetingBuilder({
         <IndividualsPicker row={row} initialTargetUsers={initialTargetUsers} />
       )}
 
-      <div className="space-y-2 rounded-lg border border-border bg-paper-sunken/30 p-3">
+      <div className="space-y-2 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
           App-version window (optional)
         </p>
@@ -480,7 +480,7 @@ function FilteredCohort({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-paper-sunken/30 p-3">
+    <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         Cohort filters — all conditions must match
       </p>
@@ -526,8 +526,8 @@ function FilteredCohort({
                 className={cn(
                   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
                   active
-                    ? "border-brand/40 bg-brand/10 text-brand-deep ring-2 ring-brand/40 dark:text-brand-soft"
-                    : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
+                    ? "border-brand/40 bg-brand/10 text-brand ring-2 ring-brand/40"
+                    : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
                 )}
               >
                 {p.label}
@@ -547,7 +547,7 @@ function FilteredCohort({
                 key={id}
                 type="button"
                 onClick={() => toggleCounty(id)}
-                className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand-deep transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert dark:text-brand-soft"
+                className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert"
               >
                 {countyName[id] ?? "county"}
                 <span aria-hidden>×</span>
@@ -603,8 +603,8 @@ function TristateRow({
               className={cn(
                 "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
                 active
-                  ? "border-brand/40 bg-brand/10 text-brand-deep ring-1 ring-brand/40 dark:text-brand-soft"
-                  : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
+                  ? "border-brand/40 bg-brand/10 text-brand ring-1 ring-brand/40"
+                  : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
               )}
             >
               {o.l}
@@ -666,7 +666,7 @@ function IndividualsPicker({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-paper-sunken/30 p-3">
+    <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         Hand-picked recipients
       </p>
@@ -678,7 +678,7 @@ function IndividualsPicker({
               key={u.id}
               type="button"
               onClick={() => remove(u.id)}
-              className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand-deep transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert dark:text-brand-soft"
+              className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert"
             >
               {userLabel(u)}
               <span aria-hidden>×</span>
@@ -687,7 +687,7 @@ function IndividualsPicker({
         </div>
       )}
 
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-paper-sunken/40 px-3 py-1.5">
+      <div className="flex items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 py-1.5">
         <Search aria-hidden className="size-3.5 text-ink-3" />
         <input
           type="text"
@@ -706,14 +706,14 @@ function IndividualsPicker({
           type="button"
           onClick={runSearch}
           disabled={searching || query.trim().length < 2}
-          className="rounded-md bg-brand-deep px-2.5 py-1 text-[11px] font-semibold text-paper-raised disabled:opacity-60"
+          className="rounded-md bg-brand px-2.5 py-1 text-[11px] font-semibold text-brand-fg disabled:opacity-60"
         >
           {searching ? "…" : "Search"}
         </button>
       </div>
 
       {results.length > 0 && (
-        <ul className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-border bg-paper-raised p-1">
+        <ul className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-rule/70 bg-paper-raised p-1">
           {results.map((u) => {
             const already = picked.some((p) => p.id === u.id);
             return (
@@ -817,11 +817,11 @@ function Lifecycle({
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Lifecycle</h3>
-        <p className="text-xs text-muted-foreground">
-          Currently <span className="font-medium">{STATUS_LABELS[status]}</span>.
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Lifecycle</h3>
+        <p className="text-xs text-ink-3">
+          Currently <span className="font-medium text-ink-2">{STATUS_LABELS[status]}</span>.
           {status === "live" && row.unpublished_at && (
             <> Sunsets {new Date(row.unpublished_at).toLocaleString()}.</>
           )}
@@ -891,12 +891,12 @@ function HeroCard({ row, heroURL }: { row: AnnouncementRow; heroURL: string | nu
   }
 
   return (
-    <section className="space-y-2 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <h3 className="font-heading text-xs font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Hero image</h3>
-      <p className="text-xs text-muted-foreground">
+    <section className="space-y-2 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Hero image</h3>
+      <p className="text-xs text-ink-3">
         Optional banner at the top of the card. Upload a pre-sized JPEG / PNG (wide, ~16:9).
       </p>
-      <div className="aspect-video w-full overflow-hidden rounded-md bg-muted">
+      <div className="aspect-video w-full overflow-hidden rounded-lg border border-rule/70 bg-paper-sunken/40">
         {heroURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={heroURL} alt="" className="h-full w-full object-cover" />
@@ -970,12 +970,12 @@ function RecipientsSection({
   const filters: (RecipientState | "all")[] = ["all", "acted", "dismissed", "seen", "not_seen"];
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
           Who&apos;s seen it
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ink-3">
           Per-user receipts. Reach is{" "}
           {stats?.is_reach_estimate
             ? "an estimate (a version window is set — based on each user's last-seen app version)"
@@ -1003,8 +1003,8 @@ function RecipientsSection({
             className={cn(
               "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
               state === f
-                ? "border-brand/40 bg-brand/10 text-brand-deep ring-2 ring-brand/40 dark:text-brand-soft"
-                : "border-border bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
+                ? "border-brand/40 bg-brand/10 text-brand ring-2 ring-brand/40"
+                : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
             )}
           >
             {RECIPIENT_STATE_LABELS[f]}
@@ -1013,11 +1013,11 @@ function RecipientsSection({
       </div>
 
       {recipients.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-lg border border-rule/70 p-6 text-center text-sm text-muted-foreground">
           {state === "all" ? "No receipts yet." : `Nobody in the "${RECIPIENT_STATE_LABELS[state]}" state yet.`}
         </p>
       ) : (
-        <ul className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 overflow-hidden rounded-lg border border-rule/70">
           {recipients.map((r) => (
             <li key={r.user_id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span className="min-w-0 truncate">
@@ -1051,7 +1051,7 @@ function RecipientsSection({
 
 function StatTile({ label, value }: { label: string; value: number | undefined }) {
   return (
-    <div className="rounded-lg border border-border bg-paper-sunken/40 p-3">
+    <div className="rounded-lg border border-rule/70 bg-paper-sunken/40 p-3">
       <p className="font-heading text-2xl font-semibold tabular-nums text-ink">{value ?? "—"}</p>
       <p className="text-[11px] uppercase tracking-wider text-ink-3">{label}</p>
     </div>
@@ -1060,8 +1060,8 @@ function StatTile({ label, value }: { label: string; value: number | undefined }
 
 function RecipientStateChip({ state }: { state: RecipientState }) {
   const map: Record<RecipientState, string> = {
-    acted: "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft",
-    dismissed: "border-border bg-paper-sunken/70 text-ink-2",
+    acted: "border-brand/40 bg-brand/10 text-brand",
+    dismissed: "border-rule/70 bg-paper-sunken/70 text-ink-2",
     seen: "border-info/30 bg-info/10 text-info",
     not_seen: "border-ink-3/30 bg-ink-3/10 text-ink-3",
   };
@@ -1076,10 +1076,10 @@ function RecipientStateChip({ state }: { state: RecipientState }) {
 
 function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-5 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">{title}</h3>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">{title}</h3>
+        {hint && <p className="text-xs text-ink-3">{hint}</p>}
       </header>
       {children}
     </section>

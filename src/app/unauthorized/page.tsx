@@ -16,7 +16,7 @@ export default function UnauthorizedPage() {
             "radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--alert) 8%, transparent) 0%, transparent 55%)",
         }}
       />
-      <div className="relative w-full max-w-md space-y-6 rounded-3xl border border-border bg-paper-raised p-8 text-center ring-1 ring-foreground/5 shadow-[0_24px_48px_-24px_rgba(31,42,36,0.25)]">
+      <div className="relative w-full max-w-md space-y-6 rounded-3xl border border-border bg-paper-raised p-8 text-center">
         <div className="flex flex-col items-center gap-3">
           <BrandMark className="size-10" />
           <span

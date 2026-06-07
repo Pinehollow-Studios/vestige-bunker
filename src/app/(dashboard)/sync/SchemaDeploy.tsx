@@ -211,7 +211,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "brand" | 
       className={cn(
         "inline-flex items-center rounded-full border px-2 py-0.5 font-medium tabular-nums",
         tone === "brand"
-          ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft"
+          ? "border-brand/40 bg-brand/10 text-brand"
           : tone === "amber"
             ? "border-amber/40 bg-amber/10 text-amber"
             : "border-border bg-paper-sunken/60 text-ink-2",

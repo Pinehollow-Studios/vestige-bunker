@@ -90,27 +90,29 @@ export default async function UsersPage({
   const hiddenCount = hiddenRes.count ?? 0;
   const foundingCount = foundingRes.count ?? 0;
 
+  const filtering = q.length > 0 || Boolean(status);
+
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
         eyebrow="People &amp; safety · Users"
         title="Users"
-        description="Directory of every registered profile. Surface state at a glance; per-user controls (account status, hide from leaderboards, outreach) land in the detail slice."
+        description="Directory of every registered profile — per-user controls land in the detail slice."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <StatTile label="Total" value={totalCount} />
         <StatTile label="Founding" value={foundingCount} tone="brand" />
-        <StatTile label="Restricted" value={restrictedCount} tone={restrictedCount > 0 ? "amber" : undefined} />
-        <StatTile label="Suspended" value={suspendedCount} tone={suspendedCount > 0 ? "alert" : undefined} />
-        <StatTile label="Hidden" value={hiddenCount} tone={hiddenCount > 0 ? "amber" : undefined} />
+        <StatTile label="Restricted" value={restrictedCount} tone="amber" />
+        <StatTile label="Suspended" value={suspendedCount} tone="alert" />
+        <StatTile label="Hidden" value={hiddenCount} tone="amber" />
       </div>
 
       <form
         action="/users"
-        className="surface-glass flex flex-wrap items-center gap-2 rounded-2xl p-3"
+        className="flex flex-wrap items-center gap-2 rounded-xl border border-rule/70 bg-paper-raised/50 p-3"
       >
-        <label className="flex flex-1 items-center gap-2 rounded-xl border border-border/60 bg-paper-sunken/60 px-3 py-2 focus-within:border-brand/40">
+        <label className="flex flex-1 items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 focus-within:border-brand/40">
           <Search className="size-4 text-ink-3" aria-hidden />
           <input
             name="q"
@@ -122,7 +124,7 @@ export default async function UsersPage({
         <select
           name="status"
           defaultValue={status ?? ""}
-          className="rounded-xl border border-border/60 bg-paper-sunken/60 px-3 py-2 text-xs text-ink-2 focus:border-brand/40 focus:outline-none"
+          className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-xs text-ink-2 focus:border-brand/40 focus:outline-none"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -131,14 +133,14 @@ export default async function UsersPage({
         </select>
         <button
           type="submit"
-          className="rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-brand-fg hover:bg-brand-deep"
+          className="rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-brand-fg hover:bg-brand-deep"
         >
           Search
         </button>
-        {(q.length > 0 || status) && (
+        {filtering && (
           <Link
             href="/users"
-            className="rounded-xl border border-border/60 px-3 py-2 text-xs text-ink-2 hover:bg-paper-sunken/60"
+            className="rounded-lg border border-rule/70 px-3 py-2 text-xs text-ink-2 hover:bg-paper-raised/40"
           >
             Clear
           </Link>
@@ -146,67 +148,69 @@ export default async function UsersPage({
       </form>
 
       <section className="space-y-3">
-        <header className="flex items-end justify-between border-b border-border/60 pb-2">
+        <div className="flex items-end justify-between gap-3">
           <div className="flex items-center gap-2">
-            <UsersIcon className="size-4 text-brand" aria-hidden />
-            <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.14em] text-ink">
-              {q.length > 0 || status ? "Results" : "Recently joined"}
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">
+              {filtering ? "Results" : "Recently joined"}
             </h2>
-            <span className="text-[10px] tabular-nums text-ink-3">
+            <span className="text-[11px] tabular-nums text-ink-3">
               {usersRes.count !== null && usersRes.count !== undefined
                 ? `${rows.length} of ${usersRes.count}`
                 : rows.length}
             </span>
           </div>
-          <p className="hidden text-xs text-ink-3 sm:block">
-            Read-only — per-user controls ship next.
-          </p>
-        </header>
+          <p className="text-xs text-ink-3">Read-only — controls ship next.</p>
+        </div>
 
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 px-4 py-10 text-center text-sm text-ink-3">
-            {q || status ? "No users match that filter." : "No users registered yet."}
-          </p>
+          <EmptyState
+            title={filtering ? "No matches" : "No users yet"}
+            subtitle={
+              filtering
+                ? "No users match that filter."
+                : "No users have registered yet."
+            }
+          />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-paper-raised">
-            <table className="w-full text-xs">
-              <thead className="border-b border-border/60 bg-paper-sunken/50 text-left text-[10px] uppercase tracking-wider text-ink-3">
+          <div className="overflow-hidden rounded-xl border border-rule/70 bg-paper-raised/50">
+            <table className="w-full text-sm">
+              <thead className="border-b border-rule/60 text-left text-[10px] uppercase tracking-wider text-ink-3">
                 <tr>
-                  <th className="px-3 py-2 font-semibold">User</th>
-                  <th className="px-3 py-2 font-semibold">Privacy</th>
-                  <th className="px-3 py-2 font-semibold">Status</th>
-                  <th className="px-3 py-2 font-semibold">Flags</th>
-                  <th className="px-3 py-2 text-right font-semibold">Joined</th>
+                  <th className="px-4 py-3 font-semibold">User</th>
+                  <th className="px-4 py-3 font-semibold">Privacy</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Flags</th>
+                  <th className="px-4 py-3 text-right font-semibold">Joined</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
+              <tbody className="divide-y divide-rule/60">
                 {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-paper-sunken/40">
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
+                  <tr key={row.id} className="hover:bg-paper-raised/40">
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-ink">{row.display_name}</span>
-                        <span className="text-[11px] text-ink-3">@{row.username}</span>
+                        <span className="text-xs text-ink-3">@{row.username}</span>
                         {row.is_founding_member && (
-                          <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
+                          <span className="rounded-full border border-brand/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
                             FM
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-ink-2">{prettyPrivacy(row.privacy)}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3 text-ink-2">{prettyPrivacy(row.privacy)}</td>
+                    <td className="px-4 py-3">
                       <StatusChip status={row.account_status} />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       {row.is_admin_hidden_from_public_leaderboards ? (
-                        <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
+                        <span className="inline-flex rounded-full border border-amber/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
                           Hidden
                         </span>
                       ) : (
                         <span className="text-ink-3">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-ink-3">
+                    <td className="px-4 py-3 text-right tabular-nums text-ink-3">
                       {relativeTime(row.created_at)}
                     </td>
                   </tr>
@@ -218,7 +222,7 @@ export default async function UsersPage({
       </section>
 
       {usersRes.error && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-xs text-alert">
           Failed to load users: {usersRes.error.message}.
         </div>
       )}
@@ -236,19 +240,19 @@ function StatTile({
   tone?: "brand" | "amber" | "alert";
 }) {
   const numClass =
-    tone === "brand"
+    tone === "brand" && value > 0
       ? "text-brand"
-      : tone === "amber"
+      : tone === "amber" && value > 0
         ? "text-amber"
-        : tone === "alert"
+        : tone === "alert" && value > 0
           ? "text-alert"
           : "text-ink";
   return (
-    <div className="surface-glass flex flex-col gap-2 rounded-2xl p-4">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
         {label}
       </p>
-      <p className={"font-hero text-3xl leading-none tabular-nums " + numClass}>
+      <p className={"mt-2 font-hero text-3xl leading-none tabular-nums " + numClass}>
         {value.toLocaleString()}
       </p>
     </div>
@@ -258,14 +262,31 @@ function StatTile({
 function StatusChip({ status }: { status: AccountStatus }) {
   const cls =
     status === "active"
-      ? "bg-paper-sunken text-ink-2"
+      ? "border-brand/40 text-brand"
       : status === "restricted"
-        ? "bg-amber/15 text-amber"
-        : "bg-alert/15 text-alert";
+        ? "border-amber/40 text-amber"
+        : "border-alert/40 text-alert";
   return (
-    <span className={"inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " + cls}>
+    <span
+      className={
+        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
+        cls
+      }
+    >
       {status}
     </span>
+  );
+}
+
+function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 px-4 py-12 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+        <UsersIcon className="size-5" aria-hidden />
+      </span>
+      <p className="display-serif text-lg text-ink">{title}</p>
+      <p className="text-sm text-ink-2">{subtitle}</p>
+    </div>
   );
 }
 

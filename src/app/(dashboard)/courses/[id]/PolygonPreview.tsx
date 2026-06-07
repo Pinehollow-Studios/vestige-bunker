@@ -23,7 +23,7 @@ export function PolygonPreview({
 }) {
   if (!polygon) {
     return (
-      <div className="flex h-32 w-full items-center justify-center rounded-md border border-dashed border-border bg-paper-sunken/40 text-xs text-ink-3">
+      <div className="flex h-32 w-full items-center justify-center rounded-lg border border-rule/70 bg-paper-sunken/40 text-xs text-ink-3">
         No polygon — pin only.
       </div>
     );
@@ -32,7 +32,7 @@ export function PolygonPreview({
   const url = staticImageURL(polygon, centerLat, centerLng);
   if (!url) {
     return (
-      <div className="flex h-32 w-full flex-col items-center justify-center gap-1 rounded-md border border-border bg-paper-sunken/40 text-xs text-ink-2">
+      <div className="flex h-32 w-full flex-col items-center justify-center gap-1 rounded-lg border border-rule/70 bg-paper-sunken/40 text-xs text-ink-2">
         <MapIcon aria-hidden className="size-5 text-ink-3" />
         <span>Polygon present</span>
         <span className="text-[10px] text-ink-3">
@@ -47,7 +47,7 @@ export function PolygonPreview({
     <img
       src={url}
       alt="Course polygon preview"
-      className="h-32 w-full rounded-md border border-border object-cover"
+      className="h-32 w-full rounded-lg border border-rule/70 object-cover"
     />
   );
 }

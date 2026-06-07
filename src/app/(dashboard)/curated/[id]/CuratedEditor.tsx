@@ -107,16 +107,15 @@ function CoverEditor({
   }
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Cover image</h3>
-        <p className="text-xs text-muted-foreground">
+    <section className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Cover image</h3>
+        <p className="text-xs text-ink-3">
           16:9 JPEG. Pick any photo — the cropper opens so you
-          can frame it exactly the way the iOS app crops user
-          covers (drag to reframe, scroll / pinch to zoom).
+          can frame it (drag to reframe, scroll / pinch to zoom).
         </p>
       </header>
-      <div className="aspect-video w-full overflow-hidden rounded-md bg-muted">
+      <div className="aspect-video w-full overflow-hidden rounded-lg border border-rule/70 bg-paper-sunken/40">
         {coverURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -239,10 +238,10 @@ function EditorialForm({ row }: { row: CuratedListRow }) {
     isOrdered !== row.is_ordered;
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Editorial</h3>
-        <p className="text-xs text-muted-foreground">
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Editorial</h3>
+        <p className="text-xs text-ink-3">
           Everything users see in the app — title, summary, bio,
           tags, region, tier.
         </p>
@@ -319,7 +318,7 @@ function EditorialForm({ row }: { row: CuratedListRow }) {
                   key={tag}
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand-deep transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert dark:text-brand-soft"
+                  className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert"
                 >
                   {tag}
                   <span aria-hidden>×</span>
@@ -463,11 +462,11 @@ function PublishControls({ row }: { row: CuratedListRow }) {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header>
-        <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Publish</h3>
-        <p className="text-xs text-muted-foreground">
-          Currently <span className="font-medium">{STATUS_LABELS[status]}</span>.
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="space-y-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Publish</h3>
+        <p className="text-xs text-ink-3">
+          Currently <span className="font-medium text-ink-2">{STATUS_LABELS[status]}</span>.
           {status === "live" && row.unpublished_at && (
             <>
               {" "}
@@ -587,19 +586,18 @@ function CourseSection({
 }) {
   const onListIds = useMemo(() => new Set(courses.map((c) => c.course_id)), [courses]);
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5">
-      <header className="flex items-center justify-between">
-        <div>
-          <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-brand-deep dark:text-brand-soft">Courses</h3>
-          <p className="text-xs text-muted-foreground">
-            Drag to reorder, swipe to remove (use the row buttons).
-            Add courses from the picker.
+    <section className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-5">
+      <header className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Courses</h3>
+          <p className="text-xs text-ink-3">
+            Reorder with the row arrows. Add courses from the picker.
           </p>
         </div>
         <CoursePicker listId={row.id} catalog={catalog} alreadyOnList={onListIds} />
       </header>
       {courses.length === 0 ? (
-        <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-rule/70 bg-paper-sunken/30 p-6 text-center text-sm text-ink-3">
           No courses on this list yet — add some from the picker.
         </div>
       ) : (

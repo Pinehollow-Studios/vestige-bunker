@@ -64,7 +64,7 @@ export function CoursePicker({
   }
 
   return (
-    <div className="space-y-2 rounded-md border bg-background p-3">
+    <div className="space-y-2 rounded-lg border border-rule/70 bg-paper-raised/50 p-3">
       <div className="flex items-center gap-2">
         <Input
           autoFocus

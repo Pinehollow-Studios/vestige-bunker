@@ -5,9 +5,7 @@ import { toast } from "sonner";
 import {
   type FeedbackSeverity,
   type FeedbackStatus,
-  severityChipClasses,
   severityLabel,
-  statusChipClasses,
   statusLabel,
 } from "@/lib/feedback/types";
 import {
@@ -28,6 +26,51 @@ const STATUSES: FeedbackStatus[] = [
   "wontFix",
 ];
 const SEVERITIES: FeedbackSeverity[] = ["low", "medium", "high", "critical"];
+
+// Calm single-tone pill styling, matching the queue + detail pages.
+const PILL_BASE =
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed";
+
+function severityPillTone(severity: FeedbackSeverity, active: boolean): string {
+  const tone =
+    severity === "critical"
+      ? "alert"
+      : severity === "high"
+        ? "amber"
+        : severity === "medium"
+          ? "brand"
+          : "neutral";
+  return pillToneClasses(tone, active);
+}
+
+function statusPillTone(status: FeedbackStatus, active: boolean): string {
+  const tone =
+    status === "new" || status === "resolved"
+      ? "brand"
+      : status === "inProgress"
+        ? "amber"
+        : "neutral";
+  return pillToneClasses(tone, active);
+}
+
+function pillToneClasses(
+  tone: "brand" | "amber" | "alert" | "neutral",
+  active: boolean,
+): string {
+  if (active) {
+    switch (tone) {
+      case "brand":
+        return "border-brand bg-brand/15 text-brand";
+      case "amber":
+        return "border-amber bg-amber/15 text-amber";
+      case "alert":
+        return "border-alert bg-alert/15 text-alert";
+      case "neutral":
+        return "border-ink-3 bg-paper-sunken/60 text-ink-2";
+    }
+  }
+  return "border-rule/70 text-ink-3 hover:border-brand/40 hover:text-ink-2";
+}
 
 /**
  * Right-side panel that bundles every admin control on a single
@@ -53,16 +96,42 @@ export function SidePanelControls({
   isSuperAdmin: boolean;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+        Triage
+      </p>
       <StatusControl reportId={reportId} initial={initialStatus} />
+      <Divider />
       <SeverityControl reportId={reportId} initial={initialSeverity} />
+      <Divider />
       <TagsControl reportId={reportId} initial={initialTags} />
+      <Divider />
       <DuplicateOfControl reportId={reportId} initial={initialDuplicateOf} />
       {reporterUserId && (
-        <BlockReporterControl userId={reporterUserId} />
+        <>
+          <Divider />
+          <BlockReporterControl userId={reporterUserId} />
+        </>
       )}
-      {isSuperAdmin && <DeleteReportControl reportId={reportId} />}
+      {isSuperAdmin && (
+        <>
+          <Divider />
+          <DeleteReportControl reportId={reportId} />
+        </>
+      )}
     </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-rule/60" />;
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+      {children}
+    </p>
   );
 }
 
@@ -78,9 +147,8 @@ function StatusControl({
   initial: FeedbackStatus;
 }) {
   const [pending, startTransition] = useTransition();
-  const [showResolutionFor, setShowResolutionFor] = useState<FeedbackStatus | null>(
-    null,
-  );
+  const [showResolutionFor, setShowResolutionFor] =
+    useState<FeedbackStatus | null>(null);
   const [resolutionNote, setResolutionNote] = useState("");
 
   const fire = (next: FeedbackStatus, note: string | null) => {
@@ -97,7 +165,8 @@ function StatusControl({
   };
 
   return (
-    <Panel title="Status">
+    <div className="space-y-2">
+      <FieldLabel>Status</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {STATUSES.map((status) => {
           const isActive = status === initial;
@@ -114,7 +183,7 @@ function StatusControl({
                   fire(status, null);
                 }
               }}
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${statusChipClasses(status)} ${isActive ? "ring-2 ring-brand/40" : "opacity-80 hover:opacity-100"} disabled:cursor-not-allowed`}
+              className={`${PILL_BASE} ${statusPillTone(status, isActive)}`}
             >
               {statusLabel(status)}
             </button>
@@ -122,22 +191,20 @@ function StatusControl({
         })}
       </div>
       {showResolutionFor && (
-        <div className="mt-3 space-y-2 rounded-xl border border-border bg-paper-sunken/40 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-            Resolution note (required) — shown to the reporter verbatim
-          </p>
+        <div className="mt-2 space-y-2 rounded-lg border border-rule/70 bg-paper-sunken/40 p-3">
+          <FieldLabel>Resolution note — shown to the reporter</FieldLabel>
           <textarea
             value={resolutionNote}
             onChange={(e) => setResolutionNote(e.target.value)}
             rows={3}
             placeholder="e.g. Fixed in 1.3.2 — please update the app."
-            className="block w-full resize-y rounded-lg border border-border bg-paper-raised p-2 text-xs text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="block w-full resize-y rounded-lg border border-rule/70 bg-paper-raised/60 p-2 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30"
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowResolutionFor(null)}
-              className="rounded-md border border-border bg-paper-raised px-2.5 py-1 text-[11px] font-semibold text-ink-2"
+              className="rounded-md border border-rule/70 px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition-colors hover:text-ink"
             >
               Cancel
             </button>
@@ -145,14 +212,14 @@ function StatusControl({
               type="button"
               disabled={pending || !resolutionNote.trim()}
               onClick={() => fire(showResolutionFor, resolutionNote)}
-              className="rounded-md bg-brand-deep px-2.5 py-1 text-[11px] font-semibold text-paper-raised disabled:opacity-60"
+              className="rounded-md bg-brand px-2.5 py-1 text-[11px] font-semibold text-brand-fg transition-opacity disabled:opacity-60"
             >
               {pending ? "Saving…" : `Mark ${statusLabel(showResolutionFor)}`}
             </button>
           </div>
         </div>
       )}
-    </Panel>
+    </div>
   );
 }
 
@@ -180,7 +247,8 @@ function SeverityControl({
   };
 
   return (
-    <Panel title="Severity">
+    <div className="space-y-2">
+      <FieldLabel>Severity</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {SEVERITIES.map((severity) => {
           const isActive = severity === initial;
@@ -190,14 +258,14 @@ function SeverityControl({
               type="button"
               disabled={pending}
               onClick={() => fire(isActive ? null : severity)}
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${severityChipClasses(severity)} ${isActive ? "ring-2 ring-brand/40" : "opacity-80 hover:opacity-100"} disabled:cursor-not-allowed`}
+              className={`${PILL_BASE} ${severityPillTone(severity, isActive)}`}
             >
               {severityLabel(severity)}
             </button>
           );
         })}
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -229,10 +297,7 @@ function TagsControl({
   };
 
   const addTag = (raw: string) => {
-    const cleaned = raw
-      .replace(/^#+/, "")
-      .toLowerCase()
-      .trim();
+    const cleaned = raw.replace(/^#+/, "").toLowerCase().trim();
     if (!cleaned) return;
     if (tags.includes(cleaned)) return;
     const next = [...tags, cleaned];
@@ -248,7 +313,8 @@ function TagsControl({
   };
 
   return (
-    <Panel title="Tags">
+    <div className="space-y-2">
+      <FieldLabel>Tags</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {tags.map((tag) => (
           <button
@@ -256,10 +322,10 @@ function TagsControl({
             type="button"
             disabled={pending}
             onClick={() => removeTag(tag)}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-paper-sunken/60 px-2 py-0.5 text-[11px] text-ink-2 transition hover:border-alert/40 hover:text-alert"
+            className="inline-flex items-center gap-1 rounded-full border border-rule/70 px-2 py-0.5 text-[11px] text-ink-2 transition-colors hover:border-alert/40 hover:text-alert"
           >
             {tag}
-            <span aria-hidden className="text-ink-3 group-hover:text-alert">
+            <span aria-hidden className="text-ink-3">
               ×
             </span>
           </button>
@@ -275,10 +341,10 @@ function TagsControl({
             }
           }}
           placeholder="add tag…"
-          className="min-w-24 rounded-full border border-dashed border-border bg-transparent px-2 py-0.5 text-[11px] text-ink-2 placeholder:text-ink-3 focus:border-brand focus:outline-none"
+          className="min-w-24 rounded-full border border-dashed border-rule/70 bg-transparent px-2 py-0.5 text-[11px] text-ink-2 placeholder:text-ink-3 focus:border-brand focus:outline-none"
         />
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -308,25 +374,26 @@ function DuplicateOfControl({
   };
 
   return (
-    <Panel title="Duplicate of">
+    <div className="space-y-2">
+      <FieldLabel>Duplicate of</FieldLabel>
       <div className="space-y-2">
         <input
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="canonical report id (uuid)…"
-          className="block w-full rounded-md border border-border bg-paper-raised px-2 py-1 text-[11px] font-mono text-ink-2 focus:border-brand focus:outline-none"
+          className="block w-full rounded-lg border border-rule/70 bg-paper-sunken/40 px-2 py-1.5 text-[11px] font-mono text-ink-2 placeholder:text-ink-3 focus:border-brand focus:outline-none"
         />
         <button
           type="button"
           disabled={pending || !draft.trim()}
           onClick={fire}
-          className="rounded-md bg-paper-sunken px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition hover:bg-paper-raised disabled:opacity-60"
+          className="rounded-md border border-rule/70 px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition-colors hover:border-brand/40 hover:text-ink disabled:opacity-60"
         >
           {pending ? "Linking…" : "Mark duplicate"}
         </button>
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -358,21 +425,22 @@ function BlockReporterControl({ userId }: { userId: string }) {
     });
   };
   return (
-    <Panel title="Block reporter">
+    <div className="space-y-2">
+      <FieldLabel>Block reporter</FieldLabel>
       <div className="space-y-2">
         <input
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="reason (admin-only)…"
-          className="block w-full rounded-md border border-border bg-paper-raised px-2 py-1 text-[11px] text-ink-2 focus:border-brand focus:outline-none"
+          className="block w-full rounded-lg border border-rule/70 bg-paper-sunken/40 px-2 py-1.5 text-[11px] text-ink-2 placeholder:text-ink-3 focus:border-brand focus:outline-none"
         />
         <div className="flex gap-2">
           <button
             type="button"
             disabled={pending}
             onClick={block}
-            className="rounded-md border border-alert/40 bg-alert/10 px-2.5 py-1 text-[11px] font-semibold text-alert transition hover:bg-alert/20 disabled:opacity-60"
+            className="rounded-md border border-alert/40 px-2.5 py-1 text-[11px] font-semibold text-alert transition-colors hover:bg-alert/10 disabled:opacity-60"
           >
             Block
           </button>
@@ -380,13 +448,13 @@ function BlockReporterControl({ userId }: { userId: string }) {
             type="button"
             disabled={pending}
             onClick={unblock}
-            className="rounded-md border border-border bg-paper-raised px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition hover:bg-paper-sunken disabled:opacity-60"
+            className="rounded-md border border-rule/70 px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition-colors hover:text-ink disabled:opacity-60"
           >
             Unblock
           </button>
         </div>
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -397,7 +465,11 @@ function BlockReporterControl({ userId }: { userId: string }) {
 function DeleteReportControl({ reportId }: { reportId: string }) {
   const [pending, startTransition] = useTransition();
   const fire = () => {
-    if (!confirm("Hard delete this report and every reply / screenshot? This cannot be undone.")) {
+    if (
+      !confirm(
+        "Hard delete this report and every reply / screenshot? This cannot be undone.",
+      )
+    ) {
       return;
     }
     startTransition(async () => {
@@ -409,36 +481,16 @@ function DeleteReportControl({ reportId }: { reportId: string }) {
     });
   };
   return (
-    <Panel title="Danger zone">
+    <div className="space-y-2">
+      <FieldLabel>Danger zone</FieldLabel>
       <button
         type="button"
         disabled={pending}
         onClick={fire}
-        className="w-full rounded-md border border-alert/40 bg-alert/10 px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-alert transition hover:bg-alert/20 disabled:opacity-60"
+        className="w-full rounded-lg border border-alert/40 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-alert transition-colors hover:bg-alert/10 disabled:opacity-60"
       >
         {pending ? "Deleting…" : "Delete report"}
       </button>
-    </Panel>
-  );
-}
-
-// --------------------------------------------------------------
-// Shared panel wrapper
-// --------------------------------------------------------------
-
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2 rounded-2xl border border-border bg-paper-raised p-3 ring-1 ring-foreground/5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-        {title}
-      </p>
-      {children}
     </div>
   );
 }

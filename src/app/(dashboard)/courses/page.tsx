@@ -134,11 +134,11 @@ export default async function CoursesPage(props: { searchParams: SearchParams })
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-6">
       <SectionHeader
         eyebrow="Editorial"
         title="Courses"
-        description="The master course catalogue. Edit editorial fields — par, yards, style, established, description — and upload the hero photo. Polygons stay in the import script for now."
+        description="The master course catalogue — editorial fields and hero photos."
       />
 
       <Filters
@@ -194,7 +194,7 @@ function Filters({
     <form
       action="/courses"
       method="get"
-      className="space-y-3 rounded-2xl border border-border bg-paper-raised p-4 ring-1 ring-foreground/5"
+      className="space-y-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-4"
     >
       <div className="flex items-center gap-2">
         <span aria-hidden className="text-ink-3">
@@ -286,7 +286,7 @@ function CourseRowCard({ row }: { row: CourseRow }) {
   return (
     <Link
       href={`/courses/${row.id}`}
-      className="group/card relative flex gap-3 overflow-hidden rounded-2xl border border-border bg-paper-raised p-3 ring-1 ring-foreground/5 transition-all hover:-translate-y-px hover:border-brand/40 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--brand)_30%,transparent)] hover:ring-brand/15"
+      className="group/card flex gap-3 rounded-xl border border-rule/70 bg-paper-raised/50 p-4 transition-colors hover:border-brand/40"
     >
       <CoverThumb url={cover} title={row.name} />
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
@@ -346,18 +346,12 @@ function CoverThumb({ url, title }: { url: string | null; title: string }) {
       <img
         src={url}
         alt={`Cover for ${title}`}
-        className="h-20 w-32 shrink-0 rounded-xl bg-paper-sunken object-cover ring-1 ring-foreground/5"
+        className="h-20 w-32 shrink-0 rounded-lg bg-paper-sunken object-cover"
       />
     );
   }
   return (
-    <div
-      className="flex h-20 w-32 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--paper-sunken) 0%, color-mix(in oklab, var(--paper-sunken) 60%, var(--paper-raised)) 100%)",
-      }}
-    >
+    <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-lg border border-rule/70 bg-paper-sunken/60">
       <MapPin aria-hidden className="size-5 text-ink-3" />
     </div>
   );
@@ -365,23 +359,15 @@ function CoverThumb({ url, title }: { url: string | null; title: string }) {
 
 function EmptyState() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 60%)",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-2">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <div className="flex flex-col items-center gap-2">
         <span
           aria-hidden
-          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft"
+          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand"
         >
           <MapPin className="size-5" />
         </span>
-        <p className="font-heading text-base font-semibold text-ink">
+        <p className="font-display text-base font-semibold text-ink">
           No courses match the filters
         </p>
         <p className="text-sm text-ink-2">

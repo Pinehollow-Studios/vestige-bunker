@@ -219,7 +219,7 @@ export function severityChipClasses(
     case "high":
       return "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300";
     case "medium":
-      return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+      return "border-brand/30 bg-brand/10 text-brand";
     case "low":
       return "border-border bg-paper-sunken/60 text-ink-2";
     default:
@@ -230,7 +230,7 @@ export function severityChipClasses(
 export function statusChipClasses(status: FeedbackStatus): string {
   switch (status) {
     case "new":
-      return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+      return "border-brand/30 bg-brand/10 text-brand";
     case "triaged":
       return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
     case "inProgress":
@@ -269,7 +269,7 @@ export function userSeverityChipClasses(
     case "major":
       return "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300";
     case "minor":
-      return "border-brand/30 bg-brand/10 text-brand-deep dark:text-brand-soft";
+      return "border-brand/30 bg-brand/10 text-brand";
     case "cosmetic":
       return "border-border bg-paper-sunken/60 text-ink-2";
     default:

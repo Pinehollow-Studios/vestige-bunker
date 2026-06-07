@@ -62,11 +62,11 @@ export default async function CuratedListsPage() {
   const buckets = bucketRows(rows);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-6">
       <SectionHeader
         eyebrow="Editorial"
         title="Curated lists"
-        description="Editorial collections owned by Vestige. Surface what users see in the app — title, bio, cover, tags, courses — and control when each list goes live, gets archived, or sunsets."
+        description="Editorial collections owned by Vestige — what users see in the app."
         actions={<NewCuratedListButton />}
       />
 
@@ -95,23 +95,15 @@ export default async function CuratedListsPage() {
 
 function EmptyState() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 p-12 text-center">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 60%)",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-2">
+    <div className="rounded-xl border border-rule/70 bg-paper-raised/50 p-12 text-center">
+      <div className="flex flex-col items-center gap-2">
         <span
           aria-hidden
-          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand-deep dark:text-brand-soft"
+          className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand"
         >
           <Sparkles className="size-5" />
         </span>
-        <p className="font-heading text-base font-semibold text-ink">
+        <p className="font-display text-base font-semibold text-ink">
           No curated lists yet
         </p>
         <p className="text-sm text-ink-2">
@@ -138,13 +130,13 @@ function CuratedSummary({
   ];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full border border-border bg-paper-raised px-3 py-1 text-xs font-medium text-ink-2">
+      <span className="rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs font-medium text-ink-2">
         {total} total
       </span>
       {order.map((key) => (
         <span
           key={key}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-paper-raised px-3 py-1 text-xs"
+          className="inline-flex items-center gap-2 rounded-full border border-rule/70 bg-paper-raised/50 px-3 py-1 text-xs"
         >
           <span aria-hidden className={cn("size-2 rounded-full", STATUS_DOT[key])} />
           <span className="text-ink-2">{STATUS_LABELS[key]}</span>
@@ -161,22 +153,15 @@ function CuratedRowCard({ row }: { row: CuratedListRow }) {
   return (
     <Link
       href={`/curated/${row.id}`}
-      className="group/card relative flex gap-4 overflow-hidden rounded-2xl border border-border bg-paper-raised p-3 ring-1 ring-foreground/5 transition-all hover:-translate-y-px hover:border-brand/40 hover:shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--brand)_30%,transparent)] hover:ring-brand/15"
+      className="group/card flex gap-4 rounded-xl border border-rule/70 bg-paper-raised/50 p-4 transition-colors hover:border-brand/40"
     >
-      {/* Status accent stripe. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-0 left-0 w-[3px]",
-          STATUS_DOT[status],
-        )}
-      />
       <CoverThumb url={cover} title={row.name} />
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 py-1 pr-1">
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 py-0.5 pr-1">
         <div className="space-y-1.5">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="truncate font-heading text-base font-semibold leading-snug text-ink">
-              {row.name}
+            <h2 className="flex min-w-0 items-center gap-2 truncate font-heading text-base font-semibold leading-snug text-ink">
+              <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", STATUS_DOT[status])} />
+              <span className="truncate">{row.name}</span>
             </h2>
             <span
               className={cn(
@@ -199,7 +184,7 @@ function CuratedRowCard({ row }: { row: CuratedListRow }) {
               className={cn(
                 "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold uppercase tracking-wider",
                 row.tier === "flagship"
-                  ? "border-brand/40 bg-brand/10 text-brand-deep dark:text-brand-soft"
+                  ? "border-brand/40 bg-brand/10 text-brand"
                   : "border-border bg-paper-sunken/60 text-ink-2",
               )}
             >
@@ -222,7 +207,7 @@ function CuratedRowCard({ row }: { row: CuratedListRow }) {
           {row.tags.length > 3 && (
             <span className="text-ink-3">+{row.tags.length - 3}</span>
           )}
-          <span className="ml-auto inline-flex items-center gap-1 text-brand-deep opacity-0 transition-opacity group-hover/card:opacity-100 dark:text-brand-soft">
+          <span className="ml-auto inline-flex items-center gap-1 text-brand opacity-0 transition-opacity group-hover/card:opacity-100">
             Edit
             <ArrowUpRight aria-hidden className="size-3" />
           </span>
@@ -239,17 +224,13 @@ function CoverThumb({ url, title }: { url: string | null; title: string }) {
       <img
         src={url}
         alt={`Cover for ${title}`}
-        className="h-24 w-32 shrink-0 rounded-xl bg-paper-sunken object-cover ring-1 ring-foreground/5"
+        className="h-24 w-32 shrink-0 rounded-lg bg-paper-sunken object-cover"
       />
     );
   }
   return (
     <div
-      className="flex h-24 w-32 shrink-0 items-center justify-center rounded-xl text-[10px] font-semibold uppercase tracking-wider text-paper-raised/80 ring-1 ring-foreground/5"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 100%)",
-      }}
+      className="flex h-24 w-32 shrink-0 items-center justify-center rounded-lg border border-rule/70 bg-paper-sunken/60 text-[10px] font-semibold uppercase tracking-wider text-ink-3"
     >
       No cover
     </div>
