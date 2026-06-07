@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-06-07 — Users directory: full roster, per-user detail, avatar fix
+
+Three connected bugs on `/users`, all surfaced together ("users aren't being
+picked up", "can't click into an account", "pfps don't load").
+
+- **Full roster (RLS).** `public.users` has no admin SELECT policy — its three
+  SELECT policies are own-row / `privacy = 'everyone'` / friends (per
+  `Vestige-ios` `20260425200001_initial_schema.sql`). The page read users
+  through the admin's anon **session** client, so it only ever saw a
+  privacy-filtered *slice* (verified: an unauthenticated anon read returns 0 of
+  4 prod users). New **server-only service-role** module
+  `lib/supabase/admin.ts` (`createServiceClient` / `tryCreateServiceClient`,
+  same key source + `server-only` guard as `lib/sync/clients.ts`) reads the
+  full roster, bypassing RLS. Safe because every `(dashboard)` route already
+  sits behind the layout's `requireAdmin()` gate. The directory + the sidebar
+  "Users" count both read through it now (the count was undercounted too).
+  Privacy-gated *writes* still go through the session client + `is_admin()`
+  RPCs — service-role is reads-only here. No migration.
+- **Per-user detail.** New `/users/[id]` — avatar, bio, account status, privacy,
+  home club/county (name-resolved), settings (units, default round privacy,
+  analytics, shake-to-feedback, onboarding, last-seen version) and a timeline
+  (joined / updated / username-changed / hidden-at / id). Read-only; set-status
+  / hide / outreach controls land next via the existing RPCs. Directory rows are
+  now clickable links into it.
+- **Avatars (storage base URL).** `lib/storage.ts` hard-pinned every avatar /
+  cover / course / announcement URL to the **dev** project, but the data client
+  defaults to **prod** — so every image 404'd on prod data (regression from the
+  prod-default switch in #11). `resolveBase` now defaults to the active-env
+  default (prod when configured), and the users pages pass an explicit
+  `activeStorageBaseUrl()` for exact dev-switch parity. Verified: a prod avatar
+  URL now returns `200 image/jpeg`. Fixes avatars across lists/feedback/crashes
+  too. The directory also now selects `avatar_photo_id` and renders the avatar
+  (it didn't before), with initials fallback.
+- **Realtime.** Both pages stay `force-dynamic`, so every load reads the live DB
+  fresh. True client-side websocket updates aren't possible for the full roster
+  (an anon client is RLS-capped to 0, and service-role can't ship to the
+  browser), so server-rendered-fresh is the correct ceiling.
+
+`tsc` / `eslint` / `build` green. No migration.
+
 ## 2026-06-07 — Config/seed push (Phase 3) + read-only prod-view mode
 
 - **Phase 3 — config/seed push.** `safeguard_config` (the singleton safeguarding

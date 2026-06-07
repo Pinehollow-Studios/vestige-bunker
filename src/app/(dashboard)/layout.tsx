@@ -5,6 +5,7 @@ import { TopBar } from "@/components/admin/TopBar";
 import { AuroraBackdrop, ScrollProgress } from "@/components/admin/Motion";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { activeEnvKey, DEV_SWITCH_ENABLED, ENV_COOKIE } from "@/lib/supabase/env";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -25,6 +26,12 @@ export default async function DashboardLayout({
   // is independently nullable — a failed query just hides the
   // matching pip. None of these are blocking critical-path data.
   const supabase = await createClient();
+  // The users count is read through the service-role client when available:
+  // `public.users` has no admin SELECT policy, so the anon session would
+  // undercount to only public/friend profiles. Falls back to the session
+  // client when service-role isn't configured (pill just shows the slice).
+  const svc = await tryCreateServiceClient();
+  const usersClient = svc ?? supabase;
   const [
     queueRes,
     curatedRes,
@@ -56,7 +63,7 @@ export default async function DashboardLayout({
       .from("safeguarding_flags")
       .select("id", { count: "exact", head: true })
       .eq("state", "pending"),
-    supabase
+    usersClient
       .from("users")
       .select("id", { count: "exact", head: true }),
     supabase

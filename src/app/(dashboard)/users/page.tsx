@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Search, Users as UsersIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Users as UsersIcon } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
-import { createClient } from "@/lib/supabase/server";
+import { activeStorageBaseUrl, createServiceClient } from "@/lib/supabase/admin";
+import { avatarURL } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ type Row = {
   id: string;
   username: string;
   display_name: string;
+  avatar_photo_id: string | null;
   privacy: Privacy;
   account_status: AccountStatus;
   is_admin_hidden_from_public_leaderboards: boolean;
@@ -25,34 +27,61 @@ const PAGE_SIZE = 50;
 /**
  * User directory — read-only v1.
  *
- * Surfaces the `users` table so devs can spot-check moderation
- * state (account_status + is_admin_hidden) and find users by
- * username/display name. Set-status / hide / outreach actions
- * land with the per-user detail page in the next slice (RPCs
- * already exist: admin_set_account_status,
- * admin_hide_user_from_public_leaderboards,
+ * Surfaces every registered profile so devs can spot-check moderation state
+ * (account_status + is_admin_hidden), find users by username/display name, and
+ * click through to a per-user detail view. Reads through the SERVER-ONLY
+ * service-role client (`lib/supabase/admin.ts`) because `public.users` has no
+ * admin SELECT policy — an anon session would only see public/friend profiles,
+ * so the directory must bypass RLS to show the full roster. The page is gated
+ * by the dashboard layout's `requireAdmin()`.
+ *
+ * Set-status / hide / outreach actions land next (RPCs already exist:
+ * admin_set_account_status, admin_hide_user_from_public_leaderboards,
  * admin_unhide_user_from_public_leaderboards,
- * admin_message_user_about_safeguarding).
+ * admin_message_user_about_safeguarding) and run through the session client so
+ * they attribute to the real admin.
  */
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: AccountStatus }>;
+  searchParams: Promise<{ q?: string; status?: AccountStatus; page?: string }>;
 }) {
   const params = await searchParams;
   const q = (params.q ?? "").trim();
   const status = params.status;
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createServiceClient();
+  } catch (e) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <SectionHeader
+          eyebrow="People &amp; safety · Users"
+          title="Users"
+          description="Directory of every registered profile."
+        />
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+          {e instanceof Error ? e.message : "Service-role client unavailable."}
+        </div>
+      </div>
+    );
+  }
+
+  const baseUrl = await activeStorageBaseUrl();
+
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   let query = supabase
     .from("users")
     .select(
-      "id, username, display_name, privacy, account_status, is_admin_hidden_from_public_leaderboards, is_founding_member, created_at, home_club_id",
+      "id, username, display_name, avatar_photo_id, privacy, account_status, is_admin_hidden_from_public_leaderboards, is_founding_member, created_at, home_club_id",
       { count: "exact" },
     )
     .order("created_at", { ascending: false })
-    .limit(PAGE_SIZE);
+    .range(from, to);
 
   if (q.length > 0) {
     // citext + ilike — usernames are case-insensitive.
@@ -91,13 +120,27 @@ export default async function UsersPage({
   const foundingCount = foundingRes.count ?? 0;
 
   const filtering = q.length > 0 || Boolean(status);
+  const matched = usersRes.count ?? 0;
+  const rangeStart = matched === 0 ? 0 : from + 1;
+  const rangeEnd = from + rows.length;
+  const hasPrev = page > 1;
+  const hasNext = rangeEnd < matched;
+
+  const pageHref = (p: number) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (status) sp.set("status", status);
+    if (p > 1) sp.set("page", String(p));
+    const qs = sp.toString();
+    return qs ? `/users?${qs}` : "/users";
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
         eyebrow="People &amp; safety · Users"
         title="Users"
-        description="Directory of every registered profile — per-user controls land in the detail slice."
+        description="Directory of every registered profile — click a row for the full account."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -154,9 +197,7 @@ export default async function UsersPage({
               {filtering ? "Results" : "Recently joined"}
             </h2>
             <span className="text-[11px] tabular-nums text-ink-3">
-              {usersRes.count !== null && usersRes.count !== undefined
-                ? `${rows.length} of ${usersRes.count}`
-                : rows.length}
+              {matched > 0 ? `${rangeStart}–${rangeEnd} of ${matched}` : rows.length}
             </span>
           </div>
           <p className="text-xs text-ink-3">Read-only — controls ship next.</p>
@@ -173,50 +214,71 @@ export default async function UsersPage({
           />
         ) : (
           <div className="overflow-hidden rounded-xl glass-panel">
-            <table className="w-full text-sm">
-              <thead className="border-b border-rule/60 text-left text-[10px] uppercase tracking-wider text-ink-3">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">User</th>
-                  <th className="px-4 py-3 font-semibold">Privacy</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Flags</th>
-                  <th className="px-4 py-3 text-right font-semibold">Joined</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-rule/60">
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-paper-raised/40">
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-ink">{row.display_name}</span>
-                        <span className="text-xs text-ink-3">@{row.username}</span>
-                        {row.is_founding_member && (
-                          <span className="rounded-full border border-brand/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
-                            FM
-                          </span>
-                        )}
+            <ul className="divide-y divide-rule/60">
+              {rows.map((row) => {
+                const name = row.display_name?.trim() || row.username;
+                return (
+                  <li key={row.id}>
+                    <Link
+                      href={`/users/${row.id}`}
+                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-raised/40"
+                    >
+                      <Avatar
+                        url={avatarURL(row.id, row.avatar_photo_id, baseUrl)}
+                        name={name}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="truncate font-medium text-ink">{name}</span>
+                          <span className="text-xs text-ink-3">@{row.username}</span>
+                          {row.is_founding_member && (
+                            <span className="rounded-full border border-brand/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
+                              FM
+                            </span>
+                          )}
+                          {row.is_admin_hidden_from_public_leaderboards && (
+                            <span className="rounded-full border border-amber/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber">
+                              Hidden
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-ink-3">
+                          {prettyPrivacy(row.privacy)} · joined {relativeTime(row.created_at)}
+                        </p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-ink-2">{prettyPrivacy(row.privacy)}</td>
-                    <td className="px-4 py-3">
                       <StatusChip status={row.account_status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {row.is_admin_hidden_from_public_leaderboards ? (
-                        <span className="inline-flex rounded-full border border-amber/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
-                          Hidden
-                        </span>
-                      ) : (
-                        <span className="text-ink-3">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-ink-3">
-                      {relativeTime(row.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <ChevronRight className="size-4 shrink-0 text-ink-3" aria-hidden />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {(hasPrev || hasNext) && (
+          <div className="flex items-center justify-between gap-3">
+            {hasPrev ? (
+              <Link
+                href={pageHref(page - 1)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rule/70 px-3 py-2 text-xs text-ink-2 hover:bg-paper-raised/40"
+              >
+                <ChevronLeft className="size-4" aria-hidden /> Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-[11px] tabular-nums text-ink-3">Page {page}</span>
+            {hasNext ? (
+              <Link
+                href={pageHref(page + 1)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rule/70 px-3 py-2 text-xs text-ink-2 hover:bg-paper-raised/40"
+              >
+                Next <ChevronRight className="size-4" aria-hidden />
+              </Link>
+            ) : (
+              <span />
+            )}
           </div>
         )}
       </section>
@@ -228,6 +290,33 @@ export default async function UsersPage({
       )}
     </div>
   );
+}
+
+function Avatar({ url, name }: { url: string | null; name: string }) {
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={url}
+        alt={`${name}'s avatar`}
+        className="size-9 shrink-0 rounded-full bg-paper-sunken object-cover"
+      />
+    );
+  }
+  return (
+    <div
+      aria-hidden
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-semibold text-brand"
+    >
+      {initials(name)}
+    </div>
+  );
+}
+
+function initials(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
 }
 
 function StatTile({
@@ -269,7 +358,7 @@ function StatusChip({ status }: { status: AccountStatus }) {
   return (
     <span
       className={
-        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
+        "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
         cls
       }
     >

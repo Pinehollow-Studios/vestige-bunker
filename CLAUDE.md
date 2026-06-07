@@ -199,3 +199,15 @@ canonical write-up lives on disk.
   Covers direct-table surfaces; the `is_admin()`-gated feedback/
   safeguarding queues are a flagged follow-up (need service_role-accepting
   RPCs). Long-form in `CHANGELOG.md`.
+- **2026-06-07** — Users directory fixes: the `/users` page read the
+  roster through the admin's anon session, but `public.users` has no
+  admin SELECT policy (own-row / public / friends only), so it only saw
+  a privacy-filtered slice. New server-only service-role module
+  `lib/supabase/admin.ts` (`createServiceClient` / `tryCreateServiceClient`
+  / `activeStorageBaseUrl`, gated by the layout's `requireAdmin()`) reads
+  the full roster + powers the sidebar count. Added clickable rows + a
+  read-only `/users/[id]` detail page. Fixed `lib/storage.ts` pinning all
+  image URLs to dev while data defaults to prod (every avatar/cover
+  404'd) — `resolveBase` now follows the active env. Reads-only; writes
+  still use the session client + `is_admin()` RPCs. No migration.
+  Long-form in `CHANGELOG.md`.

@@ -15,9 +15,12 @@
  *                  (cover_storage_key on user_lists is the
  *                  full path + query)
  *
- * Dev-only dashboard: the `<supabase-url>` base is always the dev project.
- * The optional trailing `baseUrl` arg is retained for callers that need to
- * point at a specific project (none today).
+ * The base URL must match whichever Supabase project the page read its data
+ * from. The dashboard defaults to prod (dev only via the hidden developer
+ * switch), so the default base resolves to prod when configured — pinning it
+ * to dev made every prod-data image 404. Server components that honour the dev
+ * switch pass an explicit `baseUrl` from `activeStorageBaseUrl()`
+ * (`lib/supabase/admin.ts`) for exact parity with the active env.
  *
  * Mirrors the iOS-side `AvatarURLProvider` /
  * `LiveListCoverURLProvider` so admins see exactly what users see.
@@ -25,9 +28,11 @@
 
 import { envConfig } from "./supabase/env";
 
-/** Storage base URL. Dev-only dashboard → always the dev project. */
+/** Storage base URL. Defaults to the active-env default — prod when
+ *  configured, dev otherwise (`envConfig` falls back) — matching the data
+ *  client in `supabase/server.ts`. Pass `explicit` to target a specific env. */
 function resolveBase(explicit?: string): string {
-  return explicit ?? envConfig("dev").url;
+  return explicit ?? envConfig("prod").url;
 }
 
 export function avatarURL(
