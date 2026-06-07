@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createDevClient } from "@/lib/supabase/server";
 
 export type LoginState = {
   status: "idle" | "error";
@@ -18,7 +18,7 @@ export async function signIn(
     return { status: "error", message: "Enter email and password." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {

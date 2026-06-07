@@ -1,7 +1,9 @@
+import { cookies } from "next/headers";
+import { Eye } from "lucide-react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { TopBar } from "@/components/admin/TopBar";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, PROD_VIEW_COOKIE } from "@/lib/supabase/server";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -15,6 +17,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const admin = await requireAdmin();
+  const prodView = (await cookies()).get(PROD_VIEW_COOKIE)?.value === "1";
 
   // Lightweight counts in parallel for sidebar badges. Each result
   // is independently nullable — a failed query just hides the
@@ -29,6 +32,7 @@ export default async function DashboardLayout({
     safeguardingRes,
     usersRes,
     crashesRes,
+    announcementsRes,
   ] = await Promise.all([
     supabase.rpc("admin_list_verification_queue"),
     supabase
@@ -57,6 +61,16 @@ export default async function DashboardLayout({
       .from("crash_reports")
       .select("id", { count: "exact", head: true })
       .gte("last_seen", sevenDaysAgoIso()),
+    // Live announcements pill — published, not archived. The announcements
+    // tables may not exist in this env yet (prod before Tom's deploy); a
+    // missing-table query returns { count: null } here rather than throwing,
+    // so the pill silently hides — same resilience as every other count.
+    supabase
+      .from("announcements")
+      .select("id", { count: "exact", head: true })
+      .eq("is_archived", false)
+      .not("published_at", "is", null)
+      .lte("published_at", new Date().toISOString()),
   ]);
 
   const counts = {
@@ -68,6 +82,7 @@ export default async function DashboardLayout({
     safeguarding: safeguardingRes.count ?? 0,
     users: usersRes.count ?? 0,
     crashes: crashesRes.count ?? 0,
+    announcements: announcementsRes.count ?? 0,
   };
 
   return (
@@ -77,7 +92,18 @@ export default async function DashboardLayout({
           under it. On <lg the sidebar is hidden entirely. */}
       <Sidebar counts={counts} adminRole={admin.role} />
       <div className="flex min-h-dvh min-w-0 flex-col lg:pl-64">
-        <TopBar admin={admin} />
+        <TopBar admin={admin} prodView={prodView} />
+        {prodView && (
+          <div className="flex items-start gap-3 border-b border-alert/40 bg-alert/10 px-6 py-2.5 text-xs text-alert">
+            <Eye aria-hidden className="mt-0.5 size-4 shrink-0" />
+            <p className="leading-relaxed">
+              <strong className="font-semibold">Prod view — read-only.</strong> You&apos;re looking
+              at live prod data (what&apos;s on users&apos; phones). Edits aren&apos;t possible here;
+              exit prod view to make changes in dev. Some admin queues (feedback, safeguarding) aren&apos;t
+              available in prod view yet.
+            </p>
+          </div>
+        )}
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
     </div>

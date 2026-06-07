@@ -638,6 +638,52 @@ async function buildRefMaps(
   };
 }
 
+// ── entity 4: config / seed (singletons, no UUID remapping) ───────────
+
+// Server-tunable config singletons mirrored dev→prod. These carry no
+// cross-project UUID references (just tunable values keyed by a fixed id),
+// so it's a plain row compare + upsert.
+const CONFIG_TABLES: Array<{ table: string; idColumn: string; columns: readonly string[] }> = [
+  {
+    table: "safeguard_config",
+    idColumn: "id",
+    columns: [
+      "id",
+      "same_day_rounds_cap",
+      "impossible_geo_distance_km",
+      "velocity_spike_window_days",
+      "velocity_spike_rounds_cap",
+    ],
+  },
+];
+
+async function syncConfig(clients: SyncClients, mode: SyncMode): Promise<EntityReport> {
+  const report = emptyReport("Config & seed");
+  for (const cfg of CONFIG_TABLES) {
+    const [dev, prod] = await Promise.all([
+      fetchAll(clients.dev, cfg.table, cfg.columns.join(",")),
+      fetchAll(clients.prod, cfg.table, cfg.columns.join(",")),
+    ]);
+    const prodById = new Map<string, Row>();
+    for (const p of prod) prodById.set(String(p[cfg.idColumn]), p);
+
+    for (const d of dev) {
+      const key = String(d[cfg.idColumn]);
+      const existing = prodById.get(key);
+      const differs = !existing || stable(pick(d, cfg.columns)) !== stable(pick(existing, cfg.columns));
+      if (!differs) continue;
+      note(report, existing ? "update" : "create", `${cfg.table} #${key}`);
+      if (mode === "apply") {
+        const { error } = await clients.prod
+          .from(cfg.table)
+          .upsert(pick(d, cfg.columns), { onConflict: cfg.idColumn });
+        if (error) report.warnings.push(`${cfg.table} #${key}: upsert failed — ${error.message}`);
+      }
+    }
+  }
+  return report;
+}
+
 // ── orchestrator ──────────────────────────────────────────────────────
 
 export async function runSync(clients: SyncClients, mode: SyncMode): Promise<SyncReport> {
@@ -650,11 +696,13 @@ export async function runSync(clients: SyncClients, mode: SyncMode): Promise<Syn
     //    AFTER lists are mirrored so just-created prod lists resolve).
     const refMaps = await buildRefMaps(clients, courseMaps);
     const badgeReport = await syncBadgeDefinitions(clients, mode, refMaps);
+    // 4. Config / seed singletons.
+    const configReport = await syncConfig(clients, mode);
 
     return {
       mode,
       ok: true,
-      entities: [curatedReport, badgeReport, courseReport],
+      entities: [curatedReport, badgeReport, courseReport, configReport],
     };
   } catch (err) {
     return {

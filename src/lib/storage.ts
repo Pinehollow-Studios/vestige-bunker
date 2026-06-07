@@ -117,3 +117,39 @@ export function courseCoverStorageKey(
   const key = `${path}?v=${cacheBuster}`;
   return { path, key };
 }
+
+/**
+ * Announcement hero image public URL builder. Mirrors `courseCoverURL`'s
+ * shape but reads from the public `announcement-media` bucket (created by
+ * `20260607100000_announcements.sql`). The `image_storage_key` column carries
+ * the relative path with a `?v=<UUID>` cache-buster suffix so a fresh upload
+ * invalidates iOS's Nuke cache + browsers' HTTP caches.
+ */
+export function announcementMediaURL(
+  key: string | null | undefined,
+  baseUrl?: string,
+): string | null {
+  const base = resolveBase(baseUrl);
+  if (!key || !base) return null;
+  const [path, query] = key.split("?", 2);
+  const out = `${base}/storage/v1/object/public/announcement-media/${path}`;
+  return query ? `${out}?${query}` : out;
+}
+
+/**
+ * Storage path layout for announcement hero images. Each announcement has at
+ * most one hero at the canonical path
+ * `announcement-media/<announcement_id>/hero.jpg`; uploads overwrite via
+ * `upsert: true`, with a fresh `?v=<UUID>` cache-buster query suffix so iOS
+ * Nuke + browsers refetch.
+ *
+ * The whole bucket is admin-write per `20260607100000_announcements.sql`.
+ */
+export function announcementMediaStorageKey(
+  announcementId: string,
+  cacheBuster: string = crypto.randomUUID(),
+): { path: string; key: string } {
+  const path = `${announcementId.toLowerCase()}/hero.jpg`;
+  const key = `${path}?v=${cacheBuster}`;
+  return { path, key };
+}

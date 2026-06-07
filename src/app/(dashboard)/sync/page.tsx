@@ -49,14 +49,8 @@ export default async function SyncPage() {
         <SchemaDeploy initial={{ status: schema, githubReady, latestRun }} />
       </Section>
 
-      <Section title="Editorial content" subtitle="Curated lists, badge definitions, and course editorial fields — mirrored dev→prod by slug. Dry-run first, then apply.">
+      <Section title="Editorial &amp; config" subtitle="Curated lists, badge definitions, course editorial fields, and server-tunable config (safeguard thresholds) — mirrored dev→prod by slug/key. Dry-run first, then apply.">
         <SyncRunner status={syncStatus} prodConfigured={prodConfigured} />
-      </Section>
-
-      <Section title="Config & seed" subtitle="Server-tunable config + seed tables.">
-        <div className="rounded-2xl border border-dashed border-border/70 bg-paper-raised/60 px-4 py-6 text-center text-sm text-ink-2">
-          Config + seed-table promotion is coming next.
-        </div>
       </Section>
     </div>
   );

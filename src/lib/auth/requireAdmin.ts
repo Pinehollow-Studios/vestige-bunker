@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createDevClient } from "@/lib/supabase/server";
 
 export type AdminRole = "super_admin" | "moderator" | "editor";
 
@@ -22,7 +22,7 @@ export type AdminUser = {
 // Bootstrap a first super_admin via docs/admin-runbook.md → "Setup —
 // admin roster" before anyone can sign in.
 export async function requireAdmin(): Promise<AdminUser> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

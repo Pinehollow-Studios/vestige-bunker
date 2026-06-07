@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createDevClient } from "@/lib/supabase/server";
 import { courseCoverStorageKey } from "@/lib/storage";
 import type { CourseLayout, CourseTier } from "./types";
 
@@ -38,7 +38,7 @@ export async function updateCourse(
     hole_count?: number;
   },
 ): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
 
   const {
     data: { user },
@@ -108,7 +108,7 @@ export async function uploadCourseCover(
   if (!(file instanceof File)) return { ok: false, message: "No file provided." };
   if (file.size === 0) return { ok: false, message: "File is empty." };
 
-  const supabase = await createClient();
+  const supabase = await createDevClient();
 
   const {
     data: { user },
@@ -145,7 +145,7 @@ export async function uploadCourseCover(
 }
 
 export async function removeCourseCover(courseId: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
 
   const {
     data: { user },

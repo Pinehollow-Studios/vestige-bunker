@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createDevClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 
 /**
@@ -29,7 +29,7 @@ export async function postReply(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const body = (formData.get("body") as string | null)?.trim();
   const attachmentPath = formData.get("attachment_storage_path") as
     | string
@@ -59,7 +59,7 @@ export async function transitionStatus(
   resolutionNote: string | null,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("transition_status", {
     p_report_id: reportId,
     p_new_status: newStatus,
@@ -79,7 +79,7 @@ export async function setSeverity(
   severity: string | null,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("set_severity", {
     p_report_id: reportId,
     p_severity: severity ?? "",
@@ -98,7 +98,7 @@ export async function setTags(
   tags: string[],
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("set_tags", {
     p_report_id: reportId,
     p_tags: tags,
@@ -117,7 +117,7 @@ export async function markDuplicateOf(
   canonicalReportId: string,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("mark_duplicate_of", {
     p_report_id: reportId,
     p_canonical_report_id: canonicalReportId,
@@ -137,7 +137,7 @@ export async function blockReporter(
   reason: string | null,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("block_reporter", {
     p_user_id: userId,
     p_reason: reason || null,
@@ -154,7 +154,7 @@ export async function unblockReporter(
   userId: string,
 ): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("unblock_reporter", {
     p_user_id: userId,
   });
@@ -177,7 +177,7 @@ export async function bulkResolve(
   if (!resolutionNote.trim()) {
     return { error: "Resolution note is required for bulk-resolve." };
   }
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("bulk_resolve_reports", {
     p_report_ids: reportIds,
     p_resolution_note: resolutionNote,
@@ -197,7 +197,7 @@ export async function deleteReport(
   if (admin.role !== "super_admin") {
     return { error: "Delete requires super_admin." };
   }
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("delete_feedback_report", {
     p_report_id: reportId,
   });

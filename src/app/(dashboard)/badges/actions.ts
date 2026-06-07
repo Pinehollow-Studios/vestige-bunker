@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createDevClient } from "@/lib/supabase/server";
 import type {
   BadgeCategory, BadgeEffect, BadgeShape, BadgeTheme, BadgeTier, Criteria,
 } from "./types";
@@ -20,7 +20,7 @@ export async function createBadge(name: string): Promise<ActionResult<string>> {
   const trimmed = name.trim();
   if (!trimmed) return { ok: false, message: "Name is required." };
 
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const slug = await uniqueSlug(supabase, slugify(trimmed));
 
   const { data, error } = await supabase
@@ -66,7 +66,7 @@ export type BadgePatch = {
 };
 
 export async function updateBadge(id: string, patch: BadgePatch): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const update: Record<string, unknown> = {};
 
   if (patch.name !== undefined) {
@@ -105,7 +105,7 @@ export async function updateBadge(id: string, patch: BadgePatch): Promise<Action
 }
 
 export async function setBadgePublished(id: string, published: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase
     .from("badge_definitions")
     .update({ is_published: published, is_archived: false })
@@ -117,7 +117,7 @@ export async function setBadgePublished(id: string, published: boolean): Promise
 }
 
 export async function setBadgeArchived(id: string, archived: boolean): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase
     .from("badge_definitions")
     .update({ is_archived: archived })
@@ -129,7 +129,7 @@ export async function setBadgeArchived(id: string, archived: boolean): Promise<A
 }
 
 export async function deleteBadge(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.from("badge_definitions").delete().eq("id", id);
   if (error) return { ok: false, message: error.message };
   revalidatePath("/badges");
@@ -141,7 +141,7 @@ export async function deleteBadge(id: string): Promise<ActionResult> {
  * Wraps the `admin_backfill_badge_definition` RPC. Returns the grant count.
  */
 export async function backfillBadge(id: string): Promise<ActionResult<number>> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { data, error } = await supabase.rpc("admin_backfill_badge_definition", {
     p_definition: id,
   });
@@ -157,7 +157,7 @@ export async function grantBadgeToUser(
 ): Promise<ActionResult> {
   const trimmed = userId.trim();
   if (!isUuid(trimmed)) return { ok: false, message: "Enter a valid user UUID." };
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("admin_grant_badge", {
     p_user: trimmed,
     p_definition: definitionId,
@@ -172,7 +172,7 @@ export async function revokeBadgeFromUser(
 ): Promise<ActionResult> {
   const trimmed = userId.trim();
   if (!isUuid(trimmed)) return { ok: false, message: "Enter a valid user UUID." };
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const { error } = await supabase.rpc("admin_revoke_badge", {
     p_user: trimmed,
     p_definition: definitionId,
@@ -190,7 +190,7 @@ export async function uploadBadgeArt(id: string, formData: FormData): Promise<Ac
   if (!(file instanceof File)) return { ok: false, message: "No file provided." };
   if (file.size === 0) return { ok: false, message: "File is empty." };
 
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   const path = `badges/${id}/art.png`;
   const bytes = await file.arrayBuffer();
 
@@ -211,7 +211,7 @@ export async function uploadBadgeArt(id: string, formData: FormData): Promise<Ac
 }
 
 export async function removeBadgeArt(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
+  const supabase = await createDevClient();
   await supabase.storage.from("badge-art").remove([`badges/${id}/art.png`]);
   const { error } = await supabase
     .from("badge_definitions")
@@ -229,7 +229,7 @@ function slugify(input: string): string {
 }
 
 async function uniqueSlug(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Awaited<ReturnType<typeof createDevClient>>,
   base: string,
 ): Promise<string> {
   if (!base) return crypto.randomUUID().slice(0, 8);

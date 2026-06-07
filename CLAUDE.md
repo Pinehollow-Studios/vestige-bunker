@@ -188,3 +188,14 @@ canonical write-up lives on disk.
   `prod-deploy` GitHub Action (held migrations excluded via
   `prod-migration-hold.txt`); editorial via the service-role mirror;
   TopBar sync-status chip. Long-form in `CHANGELOG.md`.
+- **2026-06-07** — Config/seed push (Phase 3) + read-only prod-view
+  mode: `safeguard_config` folded into the sync engine as a "Config &
+  seed" entity (shown in the editorial dry-run/apply). New read-only
+  **prod view** (`vestige_prod_view` cookie, no relogin) — page reads
+  come from prod via the prod service-role while the admin gate + all
+  writes stay on dev (new `createDevClient`; `createClient` is
+  prod-view-aware; `requireAdmin` + every write/session file switched to
+  `createDevClient`). TopBar `View prod`/`Exit` toggle + claret banner.
+  Covers direct-table surfaces; the `is_admin()`-gated feedback/
+  safeguarding queues are a flagged follow-up (need service_role-accepting
+  RPCs). Long-form in `CHANGELOG.md`.

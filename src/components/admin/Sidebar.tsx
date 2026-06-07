@@ -12,6 +12,7 @@ import {
   ListChecks,
   type LucideIcon,
   MapPin,
+  Megaphone,
   MessageSquareWarning,
   RefreshCw,
   Shield,
@@ -86,6 +87,14 @@ const NAV: NavItem[] = [
   },
   { href: "/curated", label: "Curated lists", group: "editorial", ready: true, icon: Sparkles, countKey: "curated" },
   { href: "/badges", label: "Badges", group: "editorial", ready: true, icon: Award },
+  {
+    href: "/announcements",
+    label: "Announcements",
+    group: "editorial",
+    ready: true,
+    icon: Megaphone,
+    countKey: "announcements",
+  },
   { href: "/courses", label: "Courses", group: "editorial", ready: true, icon: MapPin, countKey: "courses" },
   {
     href: "/sync",

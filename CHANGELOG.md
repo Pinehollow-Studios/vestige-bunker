@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-06-07 — Config/seed push (Phase 3) + read-only prod-view mode
+
+- **Phase 3 — config/seed push.** `safeguard_config` (the singleton safeguarding
+  thresholds) folded into `lib/sync/engine.ts` as a "Config & seed" entity —
+  plain row compare + upsert by id (no UUID remapping). Surfaced in the existing
+  editorial dry-run/apply (the console's separate Config stub is gone; the
+  Editorial section is now "Editorial & config").
+- **Read-only prod-view mode.** A quick way to see live prod data ("what's on
+  users' phones") with **no relogin**. A `vestige_prod_view` cookie flips the
+  dashboard into read-only prod view: page *reads* come from prod (via the prod
+  service-role), while the admin gate + every write stay on dev — so it's gated
+  by the existing dev session and can only ever READ prod.
+  - `server.ts`: `createClient()` is now prod-view-aware (prod service-role when
+    the cookie is set, else the dev session client); new `createDevClient()` is
+    always-dev. `requireAdmin` + all nine write/session files
+    (curated/badges/courses/feedback/lists/announcements actions, signOut,
+    login, auth callback) switched to `createDevClient`.
+  - TopBar `View prod` / `Exit prod view` toggle (`ProdViewToggle` +
+    `setProdView` action) + a claret "Prod view · read-only" pill; a prominent
+    layout banner while active.
+  - Covers the direct-table surfaces (users, photos, crashes, and the editorial
+    state on prod). The two `is_admin()`-gated queues (feedback, safeguarding)
+    don't appear in prod view yet — that needs those read RPCs to also accept
+    `service_role` (a follow-up; deliberately not rewriting live RPCs here).
+
+`tsc` / `eslint` / `build` green. No migration.
+
 ## 2026-06-07 — Dev-only dashboard + dev→prod promotion console
 
 Reframe (supersedes the 2026-06-06 env toggle): the dashboard is a **dev-only

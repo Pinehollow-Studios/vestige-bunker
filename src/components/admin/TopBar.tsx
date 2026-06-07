@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, Check, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowUpRight, Check, Eye, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/admin/ModeToggle";
+import { ProdViewToggle } from "@/components/admin/ProdViewToggle";
 import { signOut } from "@/app/(dashboard)/actions";
 import {
   type AdminRole,
@@ -14,10 +15,12 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   admin: AdminUser;
+  prodView: boolean;
 };
 
-export async function TopBar({ admin }: Props) {
-  const sync = await syncSummary();
+export async function TopBar({ admin, prodView }: Props) {
+  // In prod-view the sync chip is hidden, so skip its (dev+prod) reads.
+  const sync = prodView ? null : await syncSummary();
   const sha = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
   const branch = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
 
@@ -31,7 +34,15 @@ export async function TopBar({ admin }: Props) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/75 px-6 backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-3">
-        <SyncChip sync={sync} canSync={admin.role === "super_admin"} />
+        {prodView ? (
+          <span className="inline-flex items-center gap-2 rounded-full border border-alert/50 bg-alert/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-alert">
+            <Eye aria-hidden className="size-3" />
+            Prod view · read-only
+          </span>
+        ) : (
+          sync && <SyncChip sync={sync} canSync={admin.role === "super_admin"} />
+        )}
+        <ProdViewToggle active={prodView} />
         {(sha || branch) && (
           <span className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-paper-sunken/60 px-2.5 py-1 text-[10px] font-medium text-ink-3 md:inline-flex">
             {branch && (
