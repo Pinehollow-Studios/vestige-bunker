@@ -5,6 +5,66 @@
 
 ---
 
+## 2026-06-08 — Feedback work-tracking layer (stage + priority + owner)
+
+The feedback queue (`/feedback`) already shipped read + triage. What was
+missing for actually *working through* reports was a finer operator pipeline,
+a do-next signal, and an assignee — so the open question "what am I on?" has an
+answer in the UI rather than in someone's head.
+
+- **Dev wipe first.** Cleared leftover dev feedback (1 report + 2 messages + 1
+  screenshot row + the orphaned `feedback-screenshots` storage object) so dev
+  starts from zero. Prod's 10 real beta reports untouched (different project).
+
+- **Admin-only work layer (no iOS change).** `status` is shared with the iOS
+  app — the reporter sees it — so the new states do **not** go on that enum.
+  iOS migration `20260608120000_feedback_admin_workflow.sql` adds an admin-only
+  layer that the iOS DTO never reads:
+  - `work_stage` enum — the operator pipeline, a **superset** of `status` with
+    four internal states (`backlog` / `needsInfo` / `fixed` / `released`). The
+    reporter-facing `status` is **derived** from it:
+    `backlog`/`needsInfo` ⇒ `triaged`, `fixed` ⇒ `inProgress`, `released` ⇒
+    `resolved`; the five shared labels map 1:1.
+  - `priority` enum (`low` / `normal` / `high`) — do-next ordering, distinct
+    from admin `severity` and reporter `user_severity`. Queue now sorts
+    priority-first.
+  - `owner_user_id` — **revived** the column the feedback-v2 slice deprecated
+    ("assigned-owner field rejected"); with two operators it earns its place
+    back. Constrained to admins by `set_owner`.
+  - RPCs: `set_work_stage` (the operator's one control — sets the fine stage
+    and, when the *derived* status changes, delegates to `transition_status`
+    so the reporter still gets the right notification + timeline entry +
+    resolution note; internal-only moves like `inProgress`→`fixed` are silent),
+    `set_priority`, `set_owner`. `transition_status` now keeps `work_stage` in
+    sync on direct drives (e.g. `bulk_resolve`). `admin_feedback_queue` /
+    `admin_feedback_thread` extended to return + filter the new fields (queue
+    gains `p_work_stage_filter` / `p_priority_filter` / `p_owner_filter`; thread
+    gains a resolved `owner` object). Backfill maps existing `status`→`work_stage`.
+
+- **Dashboard.** `lib/feedback/types.ts` gains `FeedbackWorkStage` /
+  `FeedbackPriority` + labels, tones, lists, and the `workStageDerivedStatus`
+  mirror of the SQL derivation. New `setWorkStage` / `setPriority` / `setOwner`
+  server actions. Side panel: **Stage** replaces the raw Status control (9
+  pills, terminal stages prompt the resolution note, caption shows "Reporter
+  sees: …"), plus **Priority** and **Owner** pickers. Queue rows show the stage
+  + priority chips and the owner; filter bar swaps the redundant Status row for
+  **Stage** / **Priority** / **Owner**. Owner roster comes from a new
+  server-only `lib/feedback/owners.ts` (service-role read of `admins` ⋈ `users`,
+  same pattern as the users directory — RLS hides admin profiles otherwise).
+
+- **Verification.** `tsc` / `eslint` / `build` green. Plus a live end-to-end
+  smoke test against dev (minted a real admin session via
+  `generateLink`→`verifyOtp`, no email sent): 14/14 assertions — every
+  stage→status derivation, silent internal moves, note-required gating,
+  `resolved_at` set/clear on release/reopen, priority set/unset, owner
+  assign / non-admin-rejection / unassign, and the anon forbidden gate. Test
+  report cleaned up; dev back to zero.
+
+- **Coordinated deploy.** Migration is applied to **dev** only and sits in the
+  iOS repo for the normal prod promotion. The dashboard sends the new queue
+  filters only when active, so it stays compatible with a project that predates
+  the migration (e.g. prod / prod-view before its push).
+
 ## 2026-06-07 — Users directory: full roster, per-user detail, avatar fix
 
 Three connected bugs on `/users`, all surfaced together ("users aren't being

@@ -18,12 +18,14 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { avatarURL } from "@/lib/storage";
 import { getCrashForFeedback } from "@/lib/crashes/queries";
 import { feedbackScreenshotSignedURLs } from "@/lib/feedback/signedUrl";
+import { listAdminOwners } from "@/lib/feedback/owners";
 import { Screenshots } from "./Screenshots";
 import { ReplyForm } from "./ReplyForm";
 import { SidePanelControls } from "./SidePanelControls";
 import {
   type FeedbackDuplicateLink,
   type FeedbackMessage,
+  type FeedbackOwner,
   type FeedbackReport,
   type FeedbackReporter,
   type FeedbackScreenshot,
@@ -32,10 +34,14 @@ import {
   type FeedbackUserSeverity,
   areaSlugLabel,
   kindLabel,
+  priorityLabel,
+  priorityTone,
   reproducibilityLabel,
   severityLabel,
   statusLabel,
   userSeverityLabel,
+  workStageLabel,
+  workStageTone,
 } from "@/lib/feedback/types";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +49,7 @@ export const dynamic = "force-dynamic";
 type ThreadResponse = {
   report: FeedbackReport | null;
   reporter: FeedbackReporter | null;
+  owner: FeedbackOwner | null;
   messages: FeedbackMessage[] | null;
   screenshots: FeedbackScreenshot[] | null;
   duplicates: FeedbackDuplicateLink[] | null;
@@ -129,9 +136,12 @@ export default async function FeedbackThreadPage({
   const admin = await requireAdmin();
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .rpc("admin_feedback_thread", { p_report_id: id })
-    .single<ThreadResponse>();
+  const [{ data, error }, owners] = await Promise.all([
+    supabase
+      .rpc("admin_feedback_thread", { p_report_id: id })
+      .single<ThreadResponse>(),
+    listAdminOwners(),
+  ]);
 
   if (error) {
     return (
@@ -155,6 +165,7 @@ export default async function FeedbackThreadPage({
 
   const report = data.report;
   const reporter = data.reporter;
+  const owner = data.owner;
   const messages = data.messages ?? [];
   const screenshots = data.screenshots ?? [];
   const duplicates = data.duplicates ?? [];
@@ -175,7 +186,7 @@ export default async function FeedbackThreadPage({
     <div className="mx-auto max-w-5xl space-y-6">
       <BackLink />
 
-      <ReportHeader report={report} reporter={reporter} />
+      <ReportHeader report={report} reporter={reporter} owner={owner} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
         <div className="min-w-0 space-y-4">
@@ -190,10 +201,14 @@ export default async function FeedbackThreadPage({
           <SidePanelControls
             reportId={report.id}
             reporterUserId={report.user_id}
-            initialStatus={report.status}
+            initialWorkStage={report.work_stage}
+            initialPriority={report.priority}
+            initialOwnerUserId={report.owner_user_id}
             initialSeverity={report.severity}
             initialTags={report.tags ?? []}
             initialDuplicateOf={report.duplicate_of_report_id}
+            owners={owners}
+            currentAdminId={admin.id}
             isSuperAdmin={admin.role === "super_admin"}
           />
           <ReportDetailsMeta report={report} />
@@ -218,9 +233,11 @@ export default async function FeedbackThreadPage({
 function ReportHeader({
   report,
   reporter,
+  owner,
 }: {
   report: FeedbackReport;
   reporter: FeedbackReporter | null;
+  owner: FeedbackOwner | null;
 }) {
   const reporterAvatar = reporter
     ? avatarURL(reporter.id, reporter.avatar_photo_id)
@@ -250,14 +267,30 @@ function ReportHeader({
         {previewSentence(report.body)}
       </h1>
       <div className="flex flex-wrap items-center gap-2">
-        <span className={`${CHIP_BASE} ${toneClasses(statusTone(report.status))}`}>
-          {statusLabel(report.status)}
+        <span
+          className={`${CHIP_BASE} ${toneClasses(workStageTone(report.work_stage))}`}
+        >
+          {workStageLabel(report.work_stage)}
         </span>
+        {report.priority && (
+          <span
+            className={`${CHIP_BASE} ${toneClasses(priorityTone(report.priority))}`}
+          >
+            {priorityLabel(report.priority)} priority
+          </span>
+        )}
         <span
           className={`${CHIP_BASE} ${toneClasses(severityTone(report.severity))}`}
         >
           Severity · {severityLabel(report.severity)}
         </span>
+        {owner && (
+          <span className={`${CHIP_BASE} border-rule/70 text-ink-2`}>
+            Owner ·{" "}
+            {owner.display_name ??
+              (owner.username ? `@${owner.username}` : "admin")}
+          </span>
+        )}
         {reporter ? (
           <div className="ml-auto flex items-center gap-2 text-xs text-ink-2">
             {reporterAvatar ? (

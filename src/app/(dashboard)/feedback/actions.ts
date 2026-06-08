@@ -74,6 +74,65 @@ export async function transitionStatus(
   return { ok: true };
 }
 
+export async function setWorkStage(
+  reportId: string,
+  stage: string,
+  resolutionNote: string | null,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createWriteClient();
+  const { error } = await supabase.rpc("set_work_stage", {
+    p_report_id: reportId,
+    p_stage: stage,
+    p_resolution_note: resolutionNote || null,
+  });
+  if (error) {
+    console.error("setWorkStage", error);
+    return { error: error.message };
+  }
+  revalidatePath(`/feedback/${reportId}`);
+  revalidatePath("/feedback");
+  return { ok: true };
+}
+
+export async function setPriority(
+  reportId: string,
+  priority: string | null,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createWriteClient();
+  const { error } = await supabase.rpc("set_priority", {
+    p_report_id: reportId,
+    p_priority: priority ?? "",
+  });
+  if (error) {
+    console.error("setPriority", error);
+    return { error: error.message };
+  }
+  revalidatePath(`/feedback/${reportId}`);
+  revalidatePath("/feedback");
+  return { ok: true };
+}
+
+export async function setOwner(
+  reportId: string,
+  ownerUserId: string | null,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createWriteClient();
+  const { error } = await supabase.rpc("set_owner", {
+    p_report_id: reportId,
+    p_owner_user_id: ownerUserId,
+  });
+  if (error) {
+    console.error("setOwner", error);
+    return { error: error.message };
+  }
+  revalidatePath(`/feedback/${reportId}`);
+  revalidatePath("/feedback");
+  return { ok: true };
+}
+
 export async function setSeverity(
   reportId: string,
   severity: string | null,

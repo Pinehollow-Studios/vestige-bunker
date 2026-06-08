@@ -3,27 +3,25 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTransition, useState } from "react";
 import { Search, X } from "lucide-react";
+import type { AdminOption } from "@/lib/feedback/owners";
 import {
   type FeedbackKind,
+  type FeedbackPriority,
   type FeedbackSeverity,
-  type FeedbackStatus,
   type FeedbackUserSeverity,
+  type FeedbackWorkStage,
   FEEDBACK_AREAS,
   FEEDBACK_KINDS,
+  FEEDBACK_PRIORITIES,
   FEEDBACK_USER_SEVERITIES,
+  FEEDBACK_WORK_STAGES,
   kindLabel,
+  priorityLabel,
   severityLabel,
-  statusLabel,
   userSeverityLabel,
+  workStageLabel,
 } from "@/lib/feedback/types";
 
-const STATUSES: FeedbackStatus[] = [
-  "new",
-  "triaged",
-  "inProgress",
-  "resolved",
-  "wontFix",
-];
 const SEVERITIES: FeedbackSeverity[] = ["low", "medium", "high", "critical"];
 const KINDS: FeedbackKind[] = FEEDBACK_KINDS;
 
@@ -39,8 +37,10 @@ const KINDS: FeedbackKind[] = FEEDBACK_KINDS;
  */
 export function QueueFilters({
   initialSearch,
+  owners,
 }: {
   initialSearch: string;
+  owners: AdminOption[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,7 +48,11 @@ export function QueueFilters({
   const [pending, startTransition] = useTransition();
   const [search, setSearch] = useState(initialSearch);
 
-  const selectedStatuses = (params.getAll("status") as FeedbackStatus[]) ?? [];
+  const selectedWorkStages =
+    (params.getAll("workStage") as FeedbackWorkStage[]) ?? [];
+  const selectedPriorities =
+    (params.getAll("priority") as FeedbackPriority[]) ?? [];
+  const selectedOwners = params.getAll("owner") ?? [];
   const selectedSeverities =
     (params.getAll("severity") as FeedbackSeverity[]) ?? [];
   const selectedKinds = (params.getAll("kind") as FeedbackKind[]) ?? [];
@@ -97,7 +101,9 @@ export function QueueFilters({
   };
 
   const hasFilters =
-    selectedStatuses.length > 0 ||
+    selectedWorkStages.length > 0 ||
+    selectedPriorities.length > 0 ||
+    selectedOwners.length > 0 ||
     selectedSeverities.length > 0 ||
     selectedKinds.length > 0 ||
     selectedAreas.length > 0 ||
@@ -146,24 +152,64 @@ export function QueueFilters({
       </div>
 
       <div className="space-y-3">
-        <FilterRow label="Status">
-          {STATUSES.map((status) => (
+        <FilterRow label="Stage">
+          {FEEDBACK_WORK_STAGES.map((stage) => (
             <FilterChip
-              key={status}
-              active={selectedStatuses.includes(status)}
+              key={stage}
+              active={selectedWorkStages.includes(stage)}
               disabled={pending}
               onClick={() =>
                 updateParam(
-                  "status",
-                  status,
-                  !selectedStatuses.includes(status),
+                  "workStage",
+                  stage,
+                  !selectedWorkStages.includes(stage),
                 )
               }
             >
-              {statusLabel(status)}
+              {workStageLabel(stage)}
             </FilterChip>
           ))}
         </FilterRow>
+
+        <FilterRow label="Priority">
+          {FEEDBACK_PRIORITIES.map((priority) => (
+            <FilterChip
+              key={priority}
+              active={selectedPriorities.includes(priority)}
+              disabled={pending}
+              onClick={() =>
+                updateParam(
+                  "priority",
+                  priority,
+                  !selectedPriorities.includes(priority),
+                )
+              }
+            >
+              {priorityLabel(priority)}
+            </FilterChip>
+          ))}
+        </FilterRow>
+
+        {owners.length > 0 && (
+          <FilterRow label="Owner">
+            {owners.map((owner) => (
+              <FilterChip
+                key={owner.id}
+                active={selectedOwners.includes(owner.id)}
+                disabled={pending}
+                onClick={() =>
+                  updateParam(
+                    "owner",
+                    owner.id,
+                    !selectedOwners.includes(owner.id),
+                  )
+                }
+              >
+                {owner.label}
+              </FilterChip>
+            ))}
+          </FilterRow>
+        )}
 
         <FilterRow label="Severity">
           {SEVERITIES.map((severity) => (
