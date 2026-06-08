@@ -12,24 +12,32 @@ import {
   MessageSquare,
   Paintbrush,
   Repeat,
+  UserRound,
   Zap,
 } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { listAdminOwners } from "@/lib/feedback/owners";
 import { avatarURL } from "@/lib/storage";
 import {
   type FeedbackKind,
+  type FeedbackPriority,
   type FeedbackQueueRow,
   type FeedbackSeverity,
   type FeedbackStatus,
   type FeedbackUserSeverity,
+  type FeedbackWorkStage,
   areaSlugLabel,
   kindLabel,
+  priorityLabel,
+  priorityTone,
   reproducibilityLabel,
   severityLabel,
   statusLabel,
   userSeverityLabel,
+  workStageLabel,
+  workStageTone,
 } from "@/lib/feedback/types";
 import { QueueFilters } from "./QueueFilters";
 
@@ -70,6 +78,9 @@ export default async function FeedbackQueuePage({
   const tags = asArray<string>(params.tag);
   const areas = asArray<string>(params.area);
   const userSeverities = asArray<string>(params.userSeverity);
+  const workStages = asArray<FeedbackWorkStage>(params.workStage);
+  const priorities = asArray<FeedbackPriority>(params.priority);
+  const ownerFilter = asArray<string>(params.owner);
   const query =
     typeof params.q === "string"
       ? params.q
@@ -100,8 +111,17 @@ export default async function FeedbackQueuePage({
   };
   if (areas) queueArgs.p_area_filter = areas;
   if (userSeverities) queueArgs.p_user_severity_filter = userSeverities;
+  // Admin work-tracking filters (2026-06-08). Only sent when active so
+  // base browsing still resolves against a project that predates the
+  // admin-workflow migration (e.g. prod before its coordinated deploy).
+  if (workStages) queueArgs.p_work_stage_filter = workStages;
+  if (priorities) queueArgs.p_priority_filter = priorities;
+  if (ownerFilter) queueArgs.p_owner_filter = ownerFilter;
 
-  const { data, error } = await supabase.rpc("admin_feedback_queue", queueArgs);
+  const [{ data, error }, owners] = await Promise.all([
+    supabase.rpc("admin_feedback_queue", queueArgs),
+    listAdminOwners(),
+  ]);
   const queue = (data as FeedbackQueueRow[] | null) ?? [];
 
   const byStatus = bucketByStatus(queue);
@@ -114,7 +134,7 @@ export default async function FeedbackQueuePage({
         description="In-app reports — bugs, data errors, requests, and notes. Highest severity first."
       />
 
-      <QueueFilters initialSearch={query} />
+      <QueueFilters initialSearch={query} owners={owners} />
 
       {error && (
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
@@ -433,13 +453,31 @@ function ReportRow({ row }: { row: FeedbackQueueRow }) {
                 {reproducibilityLabel(row.reproducibility)}
               </span>
             )}
+            {row.owner_user_id && (
+              <span className="inline-flex items-center gap-1 text-ink-2">
+                <UserRound aria-hidden className="size-3" />
+                {row.owner_display_name ??
+                  (row.owner_username ? `@${row.owner_username}` : "assigned")}
+              </span>
+            )}
           </div>
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className={`${CHIP_BASE} ${toneClasses(statusTone(row.status))}`}>
-            {statusLabel(row.status)}
+          <span
+            className={`${CHIP_BASE} ${toneClasses(
+              row.work_stage ? workStageTone(row.work_stage) : statusTone(row.status),
+            )}`}
+          >
+            {row.work_stage ? workStageLabel(row.work_stage) : statusLabel(row.status)}
           </span>
+          {row.priority && (
+            <span
+              className={`${CHIP_BASE} ${toneClasses(priorityTone(row.priority))}`}
+            >
+              {priorityLabel(row.priority)}
+            </span>
+          )}
           {row.severity && (
             <span
               className={`${CHIP_BASE} ${toneClasses(severityTone(row.severity))}`}

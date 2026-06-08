@@ -211,3 +211,20 @@ canonical write-up lives on disk.
   404'd) — `resolveBase` now follows the active env. Reads-only; writes
   still use the session client + `is_admin()` RPCs. No migration.
   Long-form in `CHANGELOG.md`.
+- **2026-06-08** — Feedback work-tracking layer: an admin-only pipeline
+  on top of the (iOS-shared, reporter-facing) `status` so operators can
+  track fixing work without changing what the reporter sees. iOS
+  migration `20260608120000_feedback_admin_workflow.sql` adds a
+  `work_stage` enum (superset of status with internal `backlog` /
+  `needsInfo` / `fixed` / `released`; status is *derived* from it), a
+  `priority` enum (low/normal/high), and revives `owner_user_id`
+  (assignee, admin-constrained). New `set_work_stage` (drives status +
+  notifications via `transition_status` on derived-status change, silent
+  on internal moves) / `set_priority` / `set_owner` RPCs;
+  `admin_feedback_queue` + `admin_feedback_thread` extended to return +
+  filter the new fields. Dashboard: Stage replaces the Status control,
+  + Priority + Owner pickers/filters/queue chips; owner roster via new
+  service-role `lib/feedback/owners.ts`. Dev wiped to zero first;
+  migration applied to dev only (prod via normal promotion). Verified
+  `tsc`/`eslint`/`build` + a 14-assertion live smoke test. Long-form in
+  `CHANGELOG.md`.

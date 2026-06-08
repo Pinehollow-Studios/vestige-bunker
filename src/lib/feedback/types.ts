@@ -29,6 +29,25 @@ export type FeedbackStatus =
   | "resolved"
   | "wontFix";
 export type FeedbackSeverity = "low" | "medium" | "high" | "critical";
+/**
+ * Admin-only operator pipeline (Vestige-ios 2026-06-08 admin-workflow
+ * slice). A superset of `FeedbackStatus` with four internal-only states
+ * (backlog / needsInfo / fixed / released). The reporter-facing
+ * `FeedbackStatus` is derived from this — see `workStageDerivedStatus`.
+ * Never surfaced in the iOS app. */
+export type FeedbackWorkStage =
+  | "new"
+  | "triaged"
+  | "backlog"
+  | "needsInfo"
+  | "inProgress"
+  | "fixed"
+  | "released"
+  | "resolved"
+  | "wontFix";
+/** Admin-only do-next ordering, distinct from `FeedbackSeverity` (triage
+ * scale) and `FeedbackUserSeverity` (reporter impact). */
+export type FeedbackPriority = "low" | "normal" | "high";
 /** Reporter's own impact read (beta depth) — distinct from the
  * admin-set `FeedbackSeverity` triage scale. */
 export type FeedbackUserSeverity = "blocker" | "major" | "minor" | "cosmetic";
@@ -55,6 +74,14 @@ export type FeedbackQueueRow = {
   is_founder: boolean;
   kind: FeedbackKind;
   status: FeedbackStatus;
+  // Admin work-tracking layer (Vestige-ios 2026-06-08). work_stage is the
+  // operator pipeline; status is derived from it for the reporter.
+  work_stage: FeedbackWorkStage;
+  priority: FeedbackPriority | null;
+  owner_user_id: string | null;
+  owner_username: string | null;
+  owner_display_name: string | null;
+  owner_avatar_photo_id: string | null;
   severity: FeedbackSeverity | null;
   // Beta-depth fields (nullable for pre-2026-06-06 reports + reports
   // filed before the beta flow existed).
@@ -84,6 +111,10 @@ export type FeedbackReport = {
   user_id: string | null;
   kind: FeedbackKind;
   status: FeedbackStatus;
+  // Admin work-tracking layer (Vestige-ios 2026-06-08).
+  work_stage: FeedbackWorkStage;
+  priority: FeedbackPriority | null;
+  owner_user_id: string | null;
   severity: FeedbackSeverity | null;
   body: string;
   expected_behaviour: string | null;
@@ -118,6 +149,14 @@ export type FeedbackReporter = {
   display_name: string | null;
   avatar_photo_id: string | null;
   is_founding_member: boolean | null;
+};
+
+/** Assignee (an admin), resolved by `admin_feedback_thread`. */
+export type FeedbackOwner = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_photo_id: string | null;
 };
 
 export type FeedbackMessage = {
@@ -155,6 +194,7 @@ export type FeedbackDuplicateLink = {
 export type FeedbackThread = {
   report: FeedbackReport;
   reporter: FeedbackReporter | null;
+  owner: FeedbackOwner | null;
   messages: FeedbackMessage[];
   screenshots: FeedbackScreenshot[];
   duplicates: FeedbackDuplicateLink[];
@@ -239,6 +279,123 @@ export function statusChipClasses(status: FeedbackStatus): string {
       return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
     case "wontFix":
       return "border-border bg-paper-sunken/60 text-ink-2";
+  }
+}
+
+// MARK: - Work stage / priority / owner (admin work-tracking layer)
+
+/** Shared calm-chip tone union — the feedback UI keys every pill to one of
+ * these four families (brand / amber / alert / neutral). */
+export type FeedbackChipTone = "brand" | "amber" | "alert" | "neutral";
+
+/** Operator-pipeline order — drives the side-panel stage picker + the
+ * queue filter. Mirrors the `feedback_work_stage` enum order. */
+export const FEEDBACK_WORK_STAGES: FeedbackWorkStage[] = [
+  "new",
+  "triaged",
+  "backlog",
+  "needsInfo",
+  "inProgress",
+  "fixed",
+  "released",
+  "resolved",
+  "wontFix",
+];
+
+export const FEEDBACK_PRIORITIES: FeedbackPriority[] = ["high", "normal", "low"];
+
+export function workStageLabel(stage: FeedbackWorkStage): string {
+  switch (stage) {
+    case "new":
+      return "New";
+    case "triaged":
+      return "Triaged";
+    case "backlog":
+      return "Backlog";
+    case "needsInfo":
+      return "Needs info";
+    case "inProgress":
+      return "In progress";
+    case "fixed":
+      return "Fixed";
+    case "released":
+      return "Released";
+    case "resolved":
+      return "Resolved";
+    case "wontFix":
+      return "Won't fix";
+  }
+}
+
+export function priorityLabel(priority: FeedbackPriority | null): string {
+  switch (priority) {
+    case "high":
+      return "High";
+    case "normal":
+      return "Normal";
+    case "low":
+      return "Low";
+    default:
+      return "Unset";
+  }
+}
+
+/** The reporter-facing status this stage maps to. Mirrors the SQL
+ * derivation in `set_work_stage` — keep both in sync. */
+export function workStageDerivedStatus(stage: FeedbackWorkStage): FeedbackStatus {
+  switch (stage) {
+    case "new":
+      return "new";
+    case "triaged":
+    case "backlog":
+    case "needsInfo":
+      return "triaged";
+    case "inProgress":
+    case "fixed":
+      return "inProgress";
+    case "released":
+    case "resolved":
+      return "resolved";
+    case "wontFix":
+      return "wontFix";
+  }
+}
+
+/** Stages whose derived status is terminal (resolved / wontFix) and so
+ * require a resolution note — the note is shown to the reporter. */
+export function workStageNeedsResolutionNote(stage: FeedbackWorkStage): boolean {
+  const derived = workStageDerivedStatus(stage);
+  return derived === "resolved" || derived === "wontFix";
+}
+
+export function workStageTone(stage: FeedbackWorkStage): FeedbackChipTone {
+  switch (stage) {
+    case "new":
+      return "brand";
+    case "inProgress":
+    case "fixed":
+    case "needsInfo":
+      return "amber";
+    case "released":
+    case "resolved":
+      return "brand";
+    case "triaged":
+    case "backlog":
+    case "wontFix":
+      return "neutral";
+  }
+}
+
+export function priorityTone(priority: FeedbackPriority | null): FeedbackChipTone {
+  switch (priority) {
+    case "high":
+      return "alert";
+    case "normal":
+      return "amber";
+    case "low":
+      return "neutral";
+    default:
+      return "neutral";
   }
 }
 

@@ -2,29 +2,34 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import type { AdminOption } from "@/lib/feedback/owners";
 import {
+  type FeedbackPriority,
   type FeedbackSeverity,
-  type FeedbackStatus,
+  type FeedbackWorkStage,
+  FEEDBACK_PRIORITIES,
+  FEEDBACK_WORK_STAGES,
+  priorityLabel,
+  priorityTone,
   severityLabel,
   statusLabel,
+  workStageLabel,
+  workStageDerivedStatus,
+  workStageNeedsResolutionNote,
+  workStageTone,
 } from "@/lib/feedback/types";
 import {
   blockReporter,
   deleteReport,
   markDuplicateOf,
+  setOwner,
+  setPriority,
   setSeverity,
   setTags,
-  transitionStatus,
+  setWorkStage,
   unblockReporter,
 } from "../actions";
 
-const STATUSES: FeedbackStatus[] = [
-  "new",
-  "triaged",
-  "inProgress",
-  "resolved",
-  "wontFix",
-];
 const SEVERITIES: FeedbackSeverity[] = ["low", "medium", "high", "critical"];
 
 // Calm single-tone pill styling, matching the queue + detail pages.
@@ -40,16 +45,6 @@ function severityPillTone(severity: FeedbackSeverity, active: boolean): string {
         : severity === "medium"
           ? "brand"
           : "neutral";
-  return pillToneClasses(tone, active);
-}
-
-function statusPillTone(status: FeedbackStatus, active: boolean): string {
-  const tone =
-    status === "new" || status === "resolved"
-      ? "brand"
-      : status === "inProgress"
-        ? "amber"
-        : "neutral";
   return pillToneClasses(tone, active);
 }
 
@@ -81,18 +76,26 @@ function pillToneClasses(
 export function SidePanelControls({
   reportId,
   reporterUserId,
-  initialStatus,
+  initialWorkStage,
+  initialPriority,
+  initialOwnerUserId,
   initialSeverity,
   initialTags,
   initialDuplicateOf,
+  owners,
+  currentAdminId,
   isSuperAdmin,
 }: {
   reportId: string;
   reporterUserId: string | null;
-  initialStatus: FeedbackStatus;
+  initialWorkStage: FeedbackWorkStage;
+  initialPriority: FeedbackPriority | null;
+  initialOwnerUserId: string | null;
   initialSeverity: FeedbackSeverity | null;
   initialTags: string[];
   initialDuplicateOf: string | null;
+  owners: AdminOption[];
+  currentAdminId: string;
   isSuperAdmin: boolean;
 }) {
   return (
@@ -100,7 +103,16 @@ export function SidePanelControls({
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
         Triage
       </p>
-      <StatusControl reportId={reportId} initial={initialStatus} />
+      <StageControl reportId={reportId} initial={initialWorkStage} />
+      <Divider />
+      <PriorityControl reportId={reportId} initial={initialPriority} />
+      <Divider />
+      <OwnerControl
+        reportId={reportId}
+        initial={initialOwnerUserId}
+        owners={owners}
+        currentAdminId={currentAdminId}
+      />
       <Divider />
       <SeverityControl reportId={reportId} initial={initialSeverity} />
       <Divider />
@@ -136,74 +148,83 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 // --------------------------------------------------------------
-// Status
+// Work stage — the operator pipeline. Drives the reporter-facing
+// status under the hood (see set_work_stage). A caption shows what
+// the reporter will see.
 // --------------------------------------------------------------
 
-function StatusControl({
+function StageControl({
   reportId,
   initial,
 }: {
   reportId: string;
-  initial: FeedbackStatus;
+  initial: FeedbackWorkStage;
 }) {
   const [pending, startTransition] = useTransition();
-  const [showResolutionFor, setShowResolutionFor] =
-    useState<FeedbackStatus | null>(null);
+  const [showNoteFor, setShowNoteFor] = useState<FeedbackWorkStage | null>(
+    null,
+  );
   const [resolutionNote, setResolutionNote] = useState("");
 
-  const fire = (next: FeedbackStatus, note: string | null) => {
+  const fire = (next: FeedbackWorkStage, note: string | null) => {
     startTransition(async () => {
-      const result = await transitionStatus(reportId, next, note);
+      const result = await setWorkStage(reportId, next, note);
       if ("error" in result) {
         toast.error(result.error);
         return;
       }
-      toast.success(`Status → ${statusLabel(next)}`);
-      setShowResolutionFor(null);
+      toast.success(`Stage → ${workStageLabel(next)}`);
+      setShowNoteFor(null);
       setResolutionNote("");
     });
   };
 
   return (
     <div className="space-y-2">
-      <FieldLabel>Status</FieldLabel>
+      <FieldLabel>Stage</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
-        {STATUSES.map((status) => {
-          const isActive = status === initial;
-          const isTerminal = status === "resolved" || status === "wontFix";
+        {FEEDBACK_WORK_STAGES.map((stage) => {
+          const isActive = stage === initial;
+          const needsNote = workStageNeedsResolutionNote(stage);
           return (
             <button
-              key={status}
+              key={stage}
               type="button"
               disabled={pending || isActive}
               onClick={() => {
-                if (isTerminal) {
-                  setShowResolutionFor(status);
+                if (needsNote) {
+                  setShowNoteFor(stage);
                 } else {
-                  fire(status, null);
+                  fire(stage, null);
                 }
               }}
-              className={`${PILL_BASE} ${statusPillTone(status, isActive)}`}
+              className={`${PILL_BASE} ${pillToneClasses(workStageTone(stage), isActive)}`}
             >
-              {statusLabel(status)}
+              {workStageLabel(stage)}
             </button>
           );
         })}
       </div>
-      {showResolutionFor && (
+      <p className="text-[10px] text-ink-3">
+        Reporter sees:{" "}
+        <span className="text-ink-2">
+          {statusLabel(workStageDerivedStatus(initial))}
+        </span>
+      </p>
+      {showNoteFor && (
         <div className="mt-2 space-y-2 rounded-lg border border-rule/70 bg-paper-sunken/40 p-3">
           <FieldLabel>Resolution note — shown to the reporter</FieldLabel>
           <textarea
             value={resolutionNote}
             onChange={(e) => setResolutionNote(e.target.value)}
             rows={3}
-            placeholder="e.g. Fixed in 1.3.2 — please update the app."
+            placeholder="e.g. Fixed in 0.1.2 — please update the app."
             className="block w-full resize-y rounded-lg border border-rule/70 bg-paper-raised/60 p-2 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30"
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setShowResolutionFor(null)}
+              onClick={() => setShowNoteFor(null)}
               className="rounded-md border border-rule/70 px-2.5 py-1 text-[11px] font-semibold text-ink-2 transition-colors hover:text-ink"
             >
               Cancel
@@ -211,14 +232,134 @@ function StatusControl({
             <button
               type="button"
               disabled={pending || !resolutionNote.trim()}
-              onClick={() => fire(showResolutionFor, resolutionNote)}
+              onClick={() => fire(showNoteFor, resolutionNote)}
               className="rounded-md bg-brand px-2.5 py-1 text-[11px] font-semibold text-brand-fg transition-opacity disabled:opacity-60"
             >
-              {pending ? "Saving…" : `Mark ${statusLabel(showResolutionFor)}`}
+              {pending ? "Saving…" : `Mark ${workStageLabel(showNoteFor)}`}
             </button>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// Priority
+// --------------------------------------------------------------
+
+function PriorityControl({
+  reportId,
+  initial,
+}: {
+  reportId: string;
+  initial: FeedbackPriority | null;
+}) {
+  const [pending, startTransition] = useTransition();
+  const fire = (priority: FeedbackPriority | null) => {
+    startTransition(async () => {
+      const result = await setPriority(reportId, priority);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(`Priority → ${priorityLabel(priority)}`);
+    });
+  };
+
+  return (
+    <div className="space-y-2">
+      <FieldLabel>Priority</FieldLabel>
+      <div className="flex flex-wrap gap-1.5">
+        {FEEDBACK_PRIORITIES.map((priority) => {
+          const isActive = priority === initial;
+          return (
+            <button
+              key={priority}
+              type="button"
+              disabled={pending}
+              onClick={() => fire(isActive ? null : priority)}
+              className={`${PILL_BASE} ${pillToneClasses(priorityTone(priority), isActive)}`}
+            >
+              {priorityLabel(priority)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// Owner (assignee — admins only)
+// --------------------------------------------------------------
+
+function OwnerControl({
+  reportId,
+  initial,
+  owners,
+  currentAdminId,
+}: {
+  reportId: string;
+  initial: string | null;
+  owners: AdminOption[];
+  currentAdminId: string;
+}) {
+  const [pending, startTransition] = useTransition();
+  const fire = (ownerUserId: string | null, label: string) => {
+    startTransition(async () => {
+      const result = await setOwner(reportId, ownerUserId);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(ownerUserId ? `Owner → ${label}` : "Unassigned");
+    });
+  };
+
+  // If the roster came back empty (service-role not configured), keep
+  // a quick assign-to-me / unassign pair so the control still works.
+  const options =
+    owners.length > 0
+      ? owners
+      : [{ id: currentAdminId, label: "Me", username: null }];
+
+  return (
+    <div className="space-y-2">
+      <FieldLabel>Owner</FieldLabel>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((owner) => {
+          const isActive = owner.id === initial;
+          const label =
+            owner.id === currentAdminId && owner.label !== "Me"
+              ? `${owner.label} (me)`
+              : owner.label;
+          return (
+            <button
+              key={owner.id}
+              type="button"
+              disabled={pending}
+              onClick={() => fire(isActive ? null : owner.id, owner.label)}
+              className={`${PILL_BASE} normal-case tracking-normal ${pillToneClasses(
+                "brand",
+                isActive,
+              )}`}
+            >
+              {label}
+            </button>
+          );
+        })}
+        {initial && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => fire(null, "")}
+            className={`${PILL_BASE} ${pillToneClasses("neutral", false)}`}
+          >
+            Unassign
+          </button>
+        )}
+      </div>
     </div>
   );
 }
