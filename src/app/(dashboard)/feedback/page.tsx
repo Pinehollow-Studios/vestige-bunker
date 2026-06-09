@@ -187,7 +187,15 @@ export default async function FeedbackQueuePage({
             <ol className="divide-y divide-rule/60 overflow-hidden rounded-xl glass-panel">
               {queue.map((row) => (
                 <li key={row.report_id}>
-                  <ReportRow row={row} shippedVersion={shippedByReport.get(row.report_id)} />
+                  <ReportRow
+                    row={row}
+                    shippedVersion={shippedByReport.get(row.report_id)}
+                    ownerLabel={
+                      row.owner_user_id
+                        ? owners.find((o) => o.id === row.owner_user_id)?.label
+                        : undefined
+                    }
+                  />
                 </li>
               ))}
             </ol>
@@ -462,9 +470,11 @@ function EmptyQueue() {
 function ReportRow({
   row,
   shippedVersion,
+  ownerLabel,
 }: {
   row: FeedbackQueueRow;
   shippedVersion?: string;
+  ownerLabel?: string;
 }) {
   const reporterAvatar = avatarURL(row.user_id, row.reporter_avatar_photo_id);
   const reporterDisplay =
@@ -552,6 +562,7 @@ function ReportRow({
               <span className="inline-flex items-center gap-1 text-ink-2">
                 <UserRound aria-hidden className="size-3" />
                 {row.owner_display_name ??
+                  ownerLabel ??
                   (row.owner_username ? `@${row.owner_username}` : "assigned")}
               </span>
             )}

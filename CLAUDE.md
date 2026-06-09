@@ -288,3 +288,14 @@ canonical write-up lives on disk.
   `create or replace`s `admin_announcement_recipients` aliasing the `tgt` CTE as
   `t`. Both iOS migrations deploy to prod via `prod-deploy`. Verified
   `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-06-10** — Admin names moved off `public.users`. The names fix above put
+  Tom/Jack in `public.users` so a name would render — which wrongly added them
+  to the **user pool**. Corrected: iOS migration
+  `20260610120000_admin_display_name.sql` adds `admins.display_name` (set Tom/
+  Jack) and **deletes** those two user rows (guarded by exact id + username).
+  The dashboard reads the name from the admin record — `listAdminOwners` +
+  `requireAdmin` coalesce `users.display_name → admins.display_name → @username
+  → short id` (the `admins_select` RLS policy lets an admin session read it),
+  and the feedback queue owner chip resolves from the loaded owners list so the
+  row chip doesn't regress. Admin accounts are no longer users. Verified
+  `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.

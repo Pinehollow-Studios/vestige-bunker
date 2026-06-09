@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-06-10 — Admin display names moved off public.users (admins aren't users)
+
+The earlier same-day names fix gave the two admin-login accounts `public.users`
+rows so a name would render — which dropped them into the user pool. They aren't
+app users and shouldn't be. Moved the name to where admin identity belongs.
+
+- iOS migration `20260610120000_admin_display_name.sql`: adds
+  `admins.display_name` (Tom / Jack) and **deletes** the two seeded user rows
+  (guarded by exact id + username, so a real user is never touched). Idempotent
+  and env-safe (a no-op where those accounts don't exist).
+- `listAdminOwners` + `requireAdmin` now read the name from the `admins` record,
+  preferring a real `users.display_name` when an admin is also a full user
+  (coalesce: `users.display_name → admins.display_name → @username → short id`).
+  The pre-existing `admins_select` RLS policy already lets an admin session read
+  it, so no new RPC was needed.
+- The feedback queue owner chip resolves the assignee's name from the loaded
+  owners list, so removing the user rows doesn't regress the row display (the
+  thread already resolved owner names from that list).
+
+Verified `tsc` / `eslint` / `next build` clean.
+
 ## 2026-06-10 — Three operator fixes (open-ticket count, admin names, announcement recipients)
 
 - **Sidebar feedback count = open tickets.** It counted reporter-facing `status`

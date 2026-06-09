@@ -31,16 +31,22 @@ export async function requireAdmin(): Promise<AdminUser> {
     redirect("/login");
   }
 
-  // Two queries in parallel: the role check (auth gate) and the
-  // optional profile fetch (cosmetic). The profile lookup is
-  // best-effort — admin-only accounts don't always have a
-  // matching `public.users` row, and that's fine.
-  const [roleRes, profileRes] = await Promise.all([
+  // Three queries in parallel: the role check (auth gate), the optional
+  // public.users profile (cosmetic), and the admin record's display name.
+  // Admin-only accounts have no `public.users` row by design (they aren't
+  // app users — see migration 20260610120000), so their name lives on the
+  // `admins` record; `admins_select` RLS lets an admin session read it.
+  const [roleRes, profileRes, adminRes] = await Promise.all([
     supabase.rpc("admin_role"),
     supabase
       .from("users")
       .select("display_name, username")
       .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("admins")
+      .select("display_name")
+      .eq("user_id", user.id)
       .maybeSingle(),
   ]);
 
@@ -48,11 +54,14 @@ export async function requireAdmin(): Promise<AdminUser> {
     redirect("/unauthorized");
   }
 
+  const profileName = (profileRes.data?.display_name as string | undefined) ?? null;
+  const adminName = (adminRes.data?.display_name as string | undefined) ?? null;
+
   return {
     id: user.id,
     email: user.email ?? null,
     role: roleRes.data as AdminRole,
-    displayName: (profileRes.data?.display_name as string | undefined) ?? null,
+    displayName: profileName ?? adminName,
     username: (profileRes.data?.username as string | undefined) ?? null,
   };
 }
