@@ -264,3 +264,13 @@ canonical write-up lives on disk.
   Stage + Priority + Severity; dead `transitionStatus` action removed. Ships via
   the iOS migration deploy flow; not applied here. Verified `tsc`/`eslint`/
   `build`. Long-form in `CHANGELOG.md`.
+- **2026-06-09** — Changelog view mode: `/changelog` is now the full read-only
+  release log (every version + its change lines grouped by added/changed/
+  improved/fixed/removed, newest first, current-version banner, per-version Edit
+  link); `/changelog/[id]` defaults to a read-only **View** with a View⇄Edit
+  toggle (`?mode=edit`, server-rendered both ways) — the editor moved behind it.
+  New shared `ChangeLinesView` + `VersionView`; "report" chips on linked lines
+  deep-link to the feedback thread. No role gating (any admin can edit; View is
+  just the default presentation). No schema/data change — pure UI over the
+  already-seeded prod tables. Verified `tsc`/`eslint`/`build`. Long-form in
+  `CHANGELOG.md`.

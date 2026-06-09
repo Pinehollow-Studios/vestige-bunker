@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-06-09 — Changelog view mode (read-only viewing + View/Edit toggle)
+
+The `/changelog` detail surface was edit-only — the only way to read a release's
+notes was to stare at the editor's input fields. Added a proper read mode so
+viewers (Jack) can actually read the changelog, with editing one toggle away.
+
+- **`/changelog` is now the full read-only release log.** Every version, newest
+  first, with its change lines grouped by Added / Changed / Improved / Fixed /
+  Removed, the current-version banner on top — the whole history in one scroll.
+  Each version links to its View page and carries a small Edit link. (Replaces
+  the old compact card list, which only showed counts.)
+- **Per-version View/Edit toggle.** `/changelog/[id]` defaults to a read-only
+  View (release-notes layout: version, title, status, date, grouped lines); a
+  View⇄Edit segmented control flips to the existing editor. Driven by a
+  `?mode=edit` URL param so each mode renders server-side with fresh data (no
+  stale client state when switching back from an edit). No role gating — any
+  admin can edit (per Tom); View is just the default presentation.
+- **Shared rendering.** New `ChangeLinesView` (grouped read-only lines, reused by
+  both surfaces) + `VersionView` (single-version read). A linked change line
+  shows a "report" chip deep-linking to its feedback thread, body in the tooltip.
+
+No schema or data change — pure UI over the prod tables seeded earlier today.
+Verified `tsc` / `eslint` / `next build` clean.
+
 ## 2026-06-09 — Feedback: external/internal split + attachable notifications + Done area
 
 The work-tracking layer shipped on 2026-06-08 gave operators a finer pipeline,
