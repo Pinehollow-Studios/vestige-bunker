@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { ArrowUpRight, Rocket, Tag } from "lucide-react";
+import { Pencil, Rocket } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { cn } from "@/lib/utils";
 import { NewVersionButton } from "./NewVersionButton";
+import { ChangeLinesView } from "./ChangeLinesView";
 import {
   type AppVersion,
-  type AppVersionWithCounts,
+  type AppVersionChange,
+  type LinkedFeedback,
   compareVersionsDesc,
   currentVersion,
   VERSION_STATUS_LABELS,
@@ -16,14 +18,13 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Version changelog index. Admin RLS sees every version (draft + released).
- * Each card links to `/changelog/[id]` for the change-line editor + feedback
- * tagging. A prominent banner derives the current shipped version (highest
- * released).
+ * Changelog — the full, read-only release log: every version with its change
+ * lines, newest first, in one scroll (what a viewer reads). A prominent banner
+ * derives the current shipped version (highest released). Each version links to
+ * its focused View page; an Edit affordance jumps straight to the editor.
  *
- * Forward-compat: the tables don't exist on prod until the
- * 20260609100000_app_version_changelog.sql migration is pushed, so a
- * missing-relation error renders the unconfigured state rather than throwing.
+ * Forward-compat: a missing-relation error (tables not deployed) renders the
+ * unconfigured state rather than throwing.
  */
 export default async function ChangelogPage() {
   await requireAdmin();
@@ -36,36 +37,43 @@ export default async function ChangelogPage() {
       .order("major", { ascending: false })
       .order("minor", { ascending: false })
       .order("patch", { ascending: false }),
-    supabase.from("app_version_changes").select("version_id, feedback_report_id"),
+    supabase
+      .from("app_version_changes")
+      .select("id, version_id, kind, summary, feedback_report_id, sort_index, created_at, updated_at")
+      .order("sort_index", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   const notConfigured =
     !!versionsRes.error && isMissingRelation(versionsRes.error.message);
 
-  const versions = (versionsRes.data as AppVersion[] | null) ?? [];
-  const changeRows =
-    (changesRes.data as Array<{
-      version_id: string;
-      feedback_report_id: string | null;
-    }> | null) ?? [];
+  const versions = ((versionsRes.data as AppVersion[] | null) ?? [])
+    .slice()
+    .sort(compareVersionsDesc);
+  const changes = (changesRes.data as AppVersionChange[] | null) ?? [];
 
-  // Aggregate change + linked-report counts per version in JS (the set is small).
-  const counts = new Map<string, { change: number; linked: number }>();
-  for (const row of changeRows) {
-    const entry = counts.get(row.version_id) ?? { change: 0, linked: 0 };
-    entry.change += 1;
-    if (row.feedback_report_id) entry.linked += 1;
-    counts.set(row.version_id, entry);
+  // Group change lines by version (already globally sorted by sort_index).
+  const changesByVersion = new Map<string, AppVersionChange[]>();
+  for (const c of changes) {
+    const list = changesByVersion.get(c.version_id) ?? [];
+    list.push(c);
+    changesByVersion.set(c.version_id, list);
   }
 
-  const rows: AppVersionWithCounts[] = versions
-    .slice()
-    .sort(compareVersionsDesc)
-    .map((v) => ({
-      ...v,
-      change_count: counts.get(v.id)?.change ?? 0,
-      linked_count: counts.get(v.id)?.linked ?? 0,
-    }));
+  // Hydrate the linked feedback reports in one batch for the "report" chips.
+  const linkedIds = Array.from(
+    new Set(changes.map((c) => c.feedback_report_id).filter(Boolean) as string[]),
+  );
+  const linkedFeedback: Record<string, LinkedFeedback> = {};
+  if (linkedIds.length > 0) {
+    const { data: reports } = await supabase
+      .from("feedback_reports")
+      .select("id, kind, status, body")
+      .in("id", linkedIds);
+    for (const r of (reports as LinkedFeedback[] | null) ?? []) {
+      linkedFeedback[r.id] = r;
+    }
+  }
 
   const current = currentVersion(versions);
 
@@ -88,16 +96,20 @@ export default async function ChangelogPage() {
 
       {!notConfigured && current && <CurrentVersionBanner version={current} />}
 
-      {!versionsRes.error && rows.length === 0 && <EmptyState />}
+      {!versionsRes.error && versions.length === 0 && <EmptyState />}
 
-      {!notConfigured && rows.length > 0 && (
-        <ol className="space-y-3">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <VersionRowCard row={row} isCurrent={current?.id === row.id} />
-            </li>
+      {!notConfigured && versions.length > 0 && (
+        <div className="space-y-4">
+          {versions.map((version) => (
+            <VersionSection
+              key={version.id}
+              version={version}
+              changes={changesByVersion.get(version.id) ?? []}
+              linkedFeedback={linkedFeedback}
+              isCurrent={current?.id === version.id}
+            />
           ))}
-        </ol>
+        </div>
       )}
     </div>
   );
@@ -131,76 +143,60 @@ function CurrentVersionBanner({ version }: { version: AppVersion }) {
   );
 }
 
-function VersionRowCard({
-  row,
+function VersionSection({
+  version,
+  changes,
+  linkedFeedback,
   isCurrent,
 }: {
-  row: AppVersionWithCounts;
+  version: AppVersion;
+  changes: AppVersionChange[];
+  linkedFeedback: Record<string, LinkedFeedback>;
   isCurrent: boolean;
 }) {
-  const released = row.status === "released";
+  const released = version.status === "released";
   return (
-    <Link
-      href={`/changelog/${row.id}`}
-      className="group/card block rounded-xl glass-panel p-5 transition-colors hover:border-brand/40"
-    >
-      <article className="flex flex-col gap-3">
-        <header className="flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-heading text-lg font-semibold leading-snug text-ink">
-                v{row.version}
+    <section className="space-y-4 rounded-xl glass-panel p-5">
+      <header className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/changelog/${version.id}`}
+              className="font-heading text-lg font-semibold leading-snug text-ink transition-colors hover:text-brand"
+            >
+              v{version.version}
+            </Link>
+            {isCurrent && (
+              <span className="inline-flex items-center rounded-full border border-brand/35 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
+                Current
               </span>
-              {isCurrent && (
-                <span className="inline-flex items-center rounded-full border border-brand/35 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
-                  Current
-                </span>
+            )}
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                released ? "border-brand/35 text-brand" : "border-rule/70 text-ink-3",
               )}
-            </div>
-            {row.title && <p className="text-sm text-ink-2">{row.title}</p>}
-            {row.summary && (
-              <p className="line-clamp-1 text-xs text-ink-3">{row.summary}</p>
+            >
+              {VERSION_STATUS_LABELS[version.status]}
+            </span>
+            {version.released_at && (
+              <span className="text-xs text-ink-3">{formatDate(version.released_at)}</span>
             )}
           </div>
-          <span
-            className={cn(
-              "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-              released
-                ? "border-brand/35 text-brand"
-                : "border-rule/70 text-ink-3",
-            )}
-          >
-            {VERSION_STATUS_LABELS[row.status]}
-          </span>
-        </header>
+          {version.title && <p className="text-sm text-ink-2">{version.title}</p>}
+          {version.summary && <p className="text-xs text-ink-3">{version.summary}</p>}
+        </div>
+        <Link
+          href={`/changelog/${version.id}?mode=edit`}
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-rule/60 px-2 py-1 text-[11px] text-ink-3 transition-colors hover:border-brand/40 hover:text-brand"
+        >
+          <Pencil aria-hidden className="size-3" />
+          Edit
+        </Link>
+      </header>
 
-        <footer className="flex flex-wrap items-center gap-4 text-xs text-ink-3">
-          <Stat label={row.change_count === 1 ? "change" : "changes"} value={row.change_count} />
-          {row.linked_count > 0 && (
-            <span className="inline-flex items-center gap-1 text-ink-2">
-              <Tag aria-hidden className="size-3 text-brand" />
-              <span className="font-semibold tabular-nums text-ink">{row.linked_count}</span>
-              linked {row.linked_count === 1 ? "report" : "reports"}
-            </span>
-          )}
-          {row.released_at && (
-            <span className="text-ink-3">shipped {formatDate(row.released_at)}</span>
-          )}
-          <span className="ml-auto inline-flex items-center gap-1 text-brand opacity-0 transition-opacity group-hover/card:opacity-100">
-            Edit <ArrowUpRight aria-hidden className="size-3" />
-          </span>
-        </footer>
-      </article>
-    </Link>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <span className="inline-flex items-baseline gap-1">
-      <span className="font-semibold tabular-nums text-ink">{value}</span>
-      <span className="text-ink-3">{label}</span>
-    </span>
+      <ChangeLinesView changes={changes} linkedFeedback={linkedFeedback} />
+    </section>
   );
 }
 

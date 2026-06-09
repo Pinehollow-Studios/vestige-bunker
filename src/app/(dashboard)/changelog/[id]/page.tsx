@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { VersionEditor } from "./VersionEditor";
+import { VersionView } from "./VersionView";
 import {
   type AppVersion,
   type AppVersionChange,
@@ -12,12 +14,15 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function VersionEditorPage({
+export default async function VersionDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   const { id } = await params;
+  const mode = (await searchParams).mode === "edit" ? "edit" : "view";
   const admin = await requireAdmin();
   const supabase = await createClient();
 
@@ -65,13 +70,24 @@ export default async function VersionEditorPage({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackLink />
-      <VersionEditor
-        version={version as AppVersion}
-        initialChanges={changes}
-        initialLinkedFeedback={linkedFeedback}
-        isSuperAdmin={admin.role === "super_admin"}
-      />
+      <div className="flex items-center justify-between gap-3">
+        <BackLink />
+        <ModeToggle id={id} mode={mode} />
+      </div>
+      {mode === "edit" ? (
+        <VersionEditor
+          version={version as AppVersion}
+          initialChanges={changes}
+          initialLinkedFeedback={linkedFeedback}
+          isSuperAdmin={admin.role === "super_admin"}
+        />
+      ) : (
+        <VersionView
+          version={version as AppVersion}
+          changes={changes}
+          linkedFeedback={linkedFeedback}
+        />
+      )}
     </div>
   );
 }
@@ -85,5 +101,37 @@ function BackLink() {
       <ArrowLeft aria-hidden className="size-3.5" />
       Back to changelog
     </Link>
+  );
+}
+
+/** View ↔ Edit segmented toggle. View is the default; switching is plain
+ *  navigation (?mode=edit), so each mode renders server-side with fresh data. */
+function ModeToggle({ id, mode }: { id: string; mode: "view" | "edit" }) {
+  const tab = "px-3 py-1.5 text-xs font-medium transition-colors";
+  return (
+    <div className="inline-flex overflow-hidden rounded-lg border border-rule/70">
+      <Link
+        href={`/changelog/${id}`}
+        className={cn(
+          tab,
+          mode === "view"
+            ? "bg-brand text-brand-fg"
+            : "bg-paper-sunken/40 text-ink-2 hover:text-ink",
+        )}
+      >
+        View
+      </Link>
+      <Link
+        href={`/changelog/${id}?mode=edit`}
+        className={cn(
+          tab,
+          mode === "edit"
+            ? "bg-brand text-brand-fg"
+            : "bg-paper-sunken/40 text-ink-2 hover:text-ink",
+        )}
+      >
+        Edit
+      </Link>
+    </div>
   );
 }
