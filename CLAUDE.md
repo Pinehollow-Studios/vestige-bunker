@@ -320,3 +320,8 @@ canonical write-up lives on disk.
   overview. New helpers `getSignupSeries` / `rollupByVersion` / active-user
   windowing. No chart lib, no schema changes. Verified `tsc`/`eslint`/`build`.
   Long-form in `CHANGELOG.md`.
+- **2026-06-10** — Analytics B2B + Events readability pass + nav promotion. B2B
+  leads with a big conversion `BigStat` + `ProportionBar` catchment; Events gets
+  a summary row + events-per-day `AreaChart` (`rollupEventsPerDay`). Moved the
+  Analytics sidebar entry from the collapsed "Advanced" group into the everyday
+  nav (under Overview) so it's one click for devs. Verified `tsc`/`eslint`/`build`.

@@ -103,6 +103,18 @@ export function rollupDAU(rows: AppEventRow[], days: number): { day: string; cou
   return out;
 }
 
+/** Total events per day for the trailing window (gaps filled) — ingest trend. */
+export function rollupEventsPerDay(rows: AppEventRow[], days: number): { day: string; count: number }[] {
+  const byDay = new Map<string, number>();
+  for (const r of rows) byDay.set(dayKey(r.created_at), (byDay.get(dayKey(r.created_at)) ?? 0) + 1);
+  const out: { day: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = dayKey(isoDaysAgo(i));
+    out.push({ day: d, count: byDay.get(d) ?? 0 });
+  }
+  return out;
+}
+
 /** Activation funnel: distinct users reaching each stage of onboarding. */
 export function rollupOnboardingFunnel(rows: AppEventRow[]): NamedCount[] {
   const usersAt = (pred: (r: AppEventRow) => boolean) => {

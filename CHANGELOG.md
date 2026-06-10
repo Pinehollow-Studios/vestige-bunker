@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-06-10 — Analytics: B2B + Events readability pass; nav promoted
+
+Extends the overview redesign to the other two tabs, and makes the surface
+easier to reach.
+
+- **B2B preview**: leads with a big conversion-rate `BigStat`; catchment is now
+  a `ProportionBar` (player share by county); conversion supporting figures as
+  metric cards; tightened the internal-preview banner.
+- **Events**: a summary row (events · types · active users · last event) + an
+  events-per-day `AreaChart` above the filter chips + feed (new
+  `rollupEventsPerDay` helper).
+- **Sidebar**: moved the Analytics entry out of the collapsed "Advanced" group
+  into the everyday nav (right under Overview) so it's one click for devs.
+
+Verified `tsc` / `eslint` / `next build` clean.
+
 ## 2026-06-10 — Analytics dashboard redesign (readability pass)
 
 Same-day rework of the analytics surface for legibility — the first cut was
