@@ -2,21 +2,28 @@ import Link from "next/link";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { AnalyticsNav } from "@/components/admin/analytics/AnalyticsNav";
 import { EventFeed } from "@/components/admin/analytics/EventFeed";
-import { SectionLabel } from "@/components/admin/analytics/viz";
+import { SectionLabel, MetricCard, AreaChart, EmptyHint } from "@/components/admin/analytics/viz";
 import { cn } from "@/lib/utils";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { eventLabel } from "@/lib/analytics/config";
-import { getEvents, rollupVolume, isoDaysAgo } from "@/lib/analytics/queries";
+import { getEvents, rollupVolume, rollupEventsPerDay, distinctUsers, isoDaysAgo } from "@/lib/analytics/queries";
 
 export const dynamic = "force-dynamic";
 
 const FEED_LIMIT = 200;
 
-export default async function EventExplorerPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ event?: string }>;
-}) {
+function relTime(iso?: string): string {
+  if (!iso) return "—";
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+export default async function EventExplorerPage({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
   const { event } = await searchParams;
   const supabase = await tryCreateServiceClient();
 
@@ -37,11 +44,25 @@ export default async function EventExplorerPage({
     getEvents(supabase, { sinceIso: since, limit: 10000 }),
   ]);
   const volume = rollupVolume(windowEvents);
+  const perDay = rollupEventsPerDay(windowEvents, 14);
+  const perDayPeak = Math.max(...perDay.map((d) => d.count), 0);
 
   return (
     <Shell>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MetricCard label="Events · 30d" value={windowEvents.length.toLocaleString()} tone="brand" />
+        <MetricCard label="Event types" value={volume.length.toLocaleString()} />
+        <MetricCard label="Active users" value={distinctUsers(windowEvents).toLocaleString()} />
+        <MetricCard label="Last event" value={relTime(windowEvents[0]?.created_at)} />
+      </div>
+
+      <section className="space-y-2 rounded-xl glass-panel p-4">
+        <SectionLabel>Events per day · 14d</SectionLabel>
+        {perDayPeak > 0 ? <AreaChart data={perDay} height={120} /> : <EmptyHint>No events in the window yet.</EmptyHint>}
+      </section>
+
       <section className="space-y-3">
-        <SectionLabel>Filter by event · last 30 days</SectionLabel>
+        <SectionLabel>Filter by event</SectionLabel>
         <div className="flex flex-wrap gap-1.5">
           <FilterChip href="/analytics/events" label={`All (${windowEvents.length})`} active={!event} />
           {volume.map((v) => (
@@ -59,7 +80,8 @@ export default async function EventExplorerPage({
         <div className="flex items-center justify-between">
           <SectionLabel>{event ? eventLabel(event) : "All events"}</SectionLabel>
           <span className="text-[11px] tabular-nums text-ink-3">
-            {feed.length}{feed.length >= FEED_LIMIT ? "+" : ""} shown
+            {feed.length}
+            {feed.length >= FEED_LIMIT ? "+" : ""} shown
           </span>
         </div>
         <EventFeed

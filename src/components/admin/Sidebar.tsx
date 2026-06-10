@@ -33,6 +33,7 @@ type NavItem = {
 /** Jack's day-to-day — the surfaces he actually touches, in priority order. */
 const EVERYDAY: NavItem[] = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/feedback", label: "Feedback", icon: MessageSquareWarning, countKey: "feedback" },
   { href: "/announcements", label: "Announcements", icon: Megaphone, countKey: "announcements" },
   { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
@@ -49,7 +50,6 @@ const ADVANCED: NavItem[] = [
   { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification" },
   { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
   { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export function Sidebar({
