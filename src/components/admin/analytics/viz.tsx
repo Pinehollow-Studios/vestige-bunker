@@ -180,3 +180,122 @@ export function MetricCard({
     </div>
   );
 }
+
+/** A large hero number with an optional trend delta + sub-line. The biggest
+ *  thing on the page — reserved for the one metric in focus. */
+export function BigStat({
+  label,
+  value,
+  delta,
+  sub,
+}: {
+  label: string;
+  value: string;
+  delta?: { text: string; dir: "up" | "down" | "flat" };
+  sub?: string;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">{label}</p>
+      <p className="mt-1.5 font-display text-[44px] font-medium leading-none tabular-nums tracking-[-0.02em] text-ink">
+        {value}
+      </p>
+      {delta && (
+        <span
+          className={cn(
+            "mt-3 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold",
+            delta.dir === "up"
+              ? "bg-brand/15 text-brand"
+              : delta.dir === "down"
+                ? "bg-alert/15 text-alert"
+                : "bg-paper-sunken text-ink-3",
+          )}
+        >
+          {delta.text}
+        </span>
+      )}
+      {sub && <p className="mt-3 text-[11px] leading-relaxed text-ink-3">{sub}</p>}
+    </div>
+  );
+}
+
+/** SVG area chart for a daily series — gridlines + a mint area fill, no chart
+ *  lib. Stretches to its container; the line stays crisp via non-scaling-stroke.
+ *  Only one renders at a time (it's the hero), so a fixed gradient id is safe. */
+export function AreaChart({
+  data,
+  height = 150,
+  gradientId = "area-fill",
+}: {
+  data: { day: string; count: number }[];
+  height?: number;
+  gradientId?: string;
+}) {
+  const max = Math.max(...data.map((d) => d.count), 1);
+  const n = data.length;
+  const xy = data.map((d, i) => {
+    const x = n <= 1 ? 0 : (i / (n - 1)) * 100;
+    const y = 96 - (d.count / max) * 88;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  });
+  const line = xy.join(" ");
+  return (
+    <div>
+      <div className="relative" style={{ height }}>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full" aria-hidden>
+          {[4, 27, 50, 73].map((y) => (
+            <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="var(--rule)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          ))}
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon points={`0,100 ${line} 100,100`} fill={`url(#${gradientId})`} />
+          <polyline
+            points={line}
+            fill="none"
+            stroke="var(--brand)"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <span className="absolute right-1 top-0 text-[10px] tabular-nums text-ink-3">{max.toLocaleString()}</span>
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] tabular-nums text-ink-3">
+        <span>{data[0]?.day.slice(5)}</span>
+        <span>{data[data.length - 1]?.day.slice(5)}</span>
+      </div>
+    </div>
+  );
+}
+
+const RAMP = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
+
+/** A single proportional stacked bar + legend — parts of a whole (discovery
+ *  sources, event groups). Reads cleaner than many tiny bars. */
+export function ProportionBar({ segments }: { segments: { label: string; value: number }[] }) {
+  const total = segments.reduce((s, x) => s + x.value, 0);
+  if (total === 0) return <EmptyHint>No data yet.</EmptyHint>;
+  return (
+    <div className="space-y-3">
+      <div className="flex h-2.5 overflow-hidden rounded-full bg-paper-sunken">
+        {segments.map((s, i) => (
+          <div key={s.label} className={RAMP[i % RAMP.length]} style={{ width: `${(s.value / total) * 100}%` }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+        {segments.map((s, i) => (
+          <div key={s.label} className="flex items-center gap-2 text-xs">
+            <span className={cn("size-2 shrink-0 rounded-full", RAMP[i % RAMP.length])} />
+            <span className="truncate text-ink-2">{s.label}</span>
+            <span className="ml-auto tabular-nums text-ink-3">{Math.round((s.value / total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

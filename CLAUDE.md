@@ -311,3 +311,12 @@ canonical write-up lives on disk.
   sparkline (`src/components/admin/analytics/*`). Replaces the holding page;
   Metabase embed slot kept. No schema changes. Verified `tsc`/`eslint`/`build`.
   Long-form in `CHANGELOG.md`.
+- **2026-06-10** — Analytics dashboard redesign (readability). Same-day rework
+  for hierarchy after the first cut read flat/dense. Persisted **hero switcher**
+  atop the overview (Pulse / Activation / Growth / Data health, saved to the
+  `analytics_hero` cookie, server-read for first paint); real SVG charts
+  (`AreaChart`) + `BigStat` numerals + `ProportionBar`; 4 tabs collapsed to 3
+  (Product folded into Overview); B2B conversion now a headline strip on the
+  overview. New helpers `getSignupSeries` / `rollupByVersion` / active-user
+  windowing. No chart lib, no schema changes. Verified `tsc`/`eslint`/`build`.
+  Long-form in `CHANGELOG.md`.

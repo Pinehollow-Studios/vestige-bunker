@@ -118,7 +118,6 @@ export const DISCOVERY_SOURCE_LABEL: Record<string, string> = {
 /** The analytics sub-routes, in tab order. */
 export const ANALYTICS_TABS = [
   { href: "/analytics", label: "Overview" },
-  { href: "/analytics/product", label: "Product" },
   { href: "/analytics/b2b", label: "B2B preview" },
   { href: "/analytics/events", label: "Events" },
 ] as const;

@@ -149,6 +149,58 @@ export function distinctUsers(rows: AppEventRow[]): number {
   return s.size;
 }
 
+/** Distinct active users within the trailing `days` window (for the pulse). */
+export function activeUsersInWindow(rows: AppEventRow[], days: number): number {
+  const since = isoDaysAgo(days);
+  const s = new Set<string>();
+  for (const r of rows) if (r.user_id && r.created_at >= since) s.add(r.user_id);
+  return s.size;
+}
+
+/** Distinct active users in the *previous* window [2·days, days) — the delta base. */
+export function activeUsersPriorWindow(rows: AppEventRow[], days: number): number {
+  const start = isoDaysAgo(days * 2);
+  const end = isoDaysAgo(days);
+  const s = new Set<string>();
+  for (const r of rows) if (r.user_id && r.created_at >= start && r.created_at < end) s.add(r.user_id);
+  return s.size;
+}
+
+/** Events by app version — the health/adoption read. */
+export function rollupByVersion(rows: AppEventRow[]): NamedCount[] {
+  const m = new Map<string, number>();
+  for (const r of rows) {
+    const v = r.app_version ?? "unknown";
+    m.set(v, (m.get(v) ?? 0) + 1);
+  }
+  return [...m.entries()]
+    .map(([key, count]) => ({ key, label: key, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** New signups per day for the trailing window (gaps filled) — the growth lens. */
+export async function getSignupSeries(
+  supabase: SupabaseClient,
+  days: number,
+): Promise<{ day: string; count: number }[]> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("created_at")
+    .gte("created_at", isoDaysAgo(days))
+    .limit(ROW_CAP);
+  if (error) console.error("analytics.getSignupSeries", error.message);
+  const byDay = new Map<string, number>();
+  for (const u of (data as { created_at: string }[] | null) ?? []) {
+    byDay.set(dayKey(u.created_at), (byDay.get(dayKey(u.created_at)) ?? 0) + 1);
+  }
+  const out: { day: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = dayKey(isoDaysAgo(i));
+    out.push({ day: d, count: byDay.get(d) ?? 0 });
+  }
+  return out;
+}
+
 export function distinctSessions(rows: AppEventRow[]): number {
   const s = new Set<string>();
   for (const r of rows) if (r.session_id) s.add(r.session_id);

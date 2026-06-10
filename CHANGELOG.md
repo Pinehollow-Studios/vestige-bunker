@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-06-10 — Analytics dashboard redesign (readability pass)
+
+Same-day rework of the analytics surface for legibility — the first cut was
+dense and flat (every section the same small bar-list, no hierarchy). Rebuilt
+around what a dev checks first.
+
+- **Persisted hero switcher** atop the overview: a little toggle picks the lens
+  — Pulse (DAU trend), Activation (onboarding funnel), Growth (signups), Data
+  health (events / last-event / by version) — and the choice sticks via an
+  `analytics_hero` cookie the server reads for the first paint (no flash).
+- **Real charts, bigger numbers:** a hand-rolled SVG `AreaChart` (trend),
+  `BigStat` hero numerals, a `ProportionBar` for the discovery mix, cleaner
+  ranked bars. Still no chart library.
+- **Simpler IA:** collapsed 4 tabs → 3 (Overview · B2B preview · Events); the
+  dense "Product" tab folds into the overview. B2B conversion now surfaces as a
+  headline strip on the overview, linking to the full preview.
+- New data helpers: `getSignupSeries`, `rollupByVersion`, and active-users
+  windowing for the week-over-week delta.
+
+Verified `tsc` / `eslint` / `next build` clean.
+
 ## 2026-06-10 — Analytics consumption surface (Phase 3): the dashboard side
 
 Built the full read surface for the app analytics programme — the consumption
