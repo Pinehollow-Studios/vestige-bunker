@@ -247,6 +247,33 @@ export default async function OverviewPage() {
         description="The state of Vestige at a glance — what needs your attention, and the numbers underneath it."
       />
 
+      <figure className="relative overflow-hidden rounded-2xl glass-panel px-6 py-8 sm:px-10 sm:py-10">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 12% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 55%)," +
+              "radial-gradient(circle at 88% 100%, color-mix(in oklab, var(--brand-soft) 8%, transparent) 0%, transparent 55%)",
+          }}
+        />
+        <span
+          aria-hidden
+          className="display-serif absolute left-3 top-1 select-none text-6xl leading-none text-brand/20 sm:left-5 sm:text-7xl"
+        >
+          &ldquo;
+        </span>
+        <blockquote className="relative">
+          <p className="display-serif text-balance text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-[1.85rem] sm:leading-[1.25]">
+            If you don&rsquo;t open one of our apps for a month, that is a
+            successful outcome — for both of us.
+          </p>
+        </blockquote>
+        <figcaption className="relative mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+          The Vestige doctrine
+        </figcaption>
+      </figure>
+
       <StatsStrip stats={platformStats} />
 
       <section className="space-y-4">
