@@ -118,7 +118,7 @@ export default async function DashboardLayout({
           under it. On <lg the sidebar is hidden entirely. */}
       <Sidebar counts={counts} adminRole={admin.role} />
       <div className="relative z-10 flex min-h-dvh min-w-0 flex-col lg:pl-64">
-        <TopBar admin={admin} env={env} devSwitchEnabled={DEV_SWITCH_ENABLED} />
+        <TopBar admin={admin} env={env} devSwitchEnabled={DEV_SWITCH_ENABLED} counts={counts} />
         {DEV_SWITCH_ENABLED && env === "dev" && (
           <div className="flex items-start gap-3 border-b border-amber/40 bg-amber/10 px-6 py-2.5 text-xs text-amber">
             <FlaskConical aria-hidden className="mt-0.5 size-4 shrink-0" />
@@ -129,7 +129,7 @@ export default async function DashboardLayout({
             </p>
           </div>
         )}
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

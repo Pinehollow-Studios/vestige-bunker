@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { EnvToggle } from "@/components/admin/EnvToggle";
+import { MobileNav } from "@/components/admin/MobileNav";
 import { signOut } from "@/app/(dashboard)/actions";
 import {
   type AdminRole,
@@ -13,9 +14,11 @@ type Props = {
   admin: AdminUser;
   env: AdminEnvKey;
   devSwitchEnabled: boolean;
+  /** Sidebar badge counts — forwarded to the mobile drawer's nav. */
+  counts?: Record<string, number | undefined>;
 };
 
-export async function TopBar({ admin, env, devSwitchEnabled }: Props) {
+export async function TopBar({ admin, env, devSwitchEnabled, counts }: Props) {
   const sha = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
   const branch = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
 
@@ -27,8 +30,9 @@ export async function TopBar({ admin, env, devSwitchEnabled }: Props) {
       : admin.email ?? null;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/75 px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-paper-raised/75 px-4 backdrop-blur-md sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
+        <MobileNav counts={counts} />
         <EnvToggle current={env} enabled={devSwitchEnabled} />
         {(sha || branch) && (
           <span className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-paper-sunken/60 px-2.5 py-1 text-[10px] font-medium text-ink-3 md:inline-flex">

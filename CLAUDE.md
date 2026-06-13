@@ -389,3 +389,19 @@ canonical write-up lives on disk.
   moves silent). Verified `tsc`/`eslint`/`build` (web) + iOS Debug build
   `BUILD SUCCEEDED`. Migration ships to prod via iOS `prod-deploy`. Long-form
   in `CHANGELOG.md`.
+- **2026-06-13** — Mobile navigation: the dashboard was unnavigable on a phone
+  (the nav rail is `position: fixed` at `lg+`, `hidden` below — no nav at all),
+  so Jack couldn't check things from the bar at his course. Lifted the nav body
+  out of `Sidebar` into a shared `components/admin/nav.tsx` (`NavContent` — brand
+  + everyday list + Advanced group + footer, container-agnostic, self-computing
+  active state); `Sidebar` is now the `lg+` `<aside>` shell around it (still
+  re-exports `BrandMark` for login/unauthorized). New `MobileNav` = a hamburger
+  (`lg:hidden`) in the TopBar opening a portalled slide-in drawer (`z-50`) with
+  the same `NavContent` — so the two navs can't drift. Drawer closes on link tap
+  / backdrop / Escape / route change (render-time path-change reset, no effect),
+  locks body scroll, `tw-animate-css` enter anims, `py-2.5` rows for touch.
+  TopBar gains the trigger + `px-4 sm:px-6`; main `p-4 sm:p-6 lg:p-8`; `counts`
+  flow through to the drawer pips. Scoped to navigate-and-read, not editing
+  parity (heavy editors stay desktop-first); content pages already reflow. No
+  schema/deps. Verified `tsc`/`eslint`/`build`; not yet device-eyeballed.
+  Long-form in `CHANGELOG.md`.

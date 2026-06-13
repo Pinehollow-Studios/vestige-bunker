@@ -5,6 +5,56 @@
 
 ---
 
+## 2026-06-13 — Mobile navigation (the dashboard works from a phone)
+
+The dashboard was desktop-only in the most literal sense: the navigation rail is
+`position: fixed` at `lg+` and `hidden` below it, so on a phone there was no way
+to move between pages at all. Jack works the bar at his course and needs to glance
+at how things are going from his phone — open feedback, the latest analytics,
+what's in the changelog — without being at a desktop. This makes the app navigable
+and readable on a small screen. It is deliberately scoped to *getting around and
+seeing things*, not parity of editing power — the heavy editors (course/curated/
+version) are unchanged and remain desktop-first.
+
+### Shared nav, two containers
+
+The nav body (brand header, the everyday list, the collapsed **Advanced** group,
+the footer) moved out of `Sidebar.tsx` into a new shared `components/admin/nav.tsx`
+as `NavContent` — container-agnostic, computes its own active state from the path.
+Two thin shells wrap it:
+
+- **`Sidebar`** is now just the `<aside>` chrome (`hidden … lg:fixed lg:flex
+  lg:w-64`) around `NavContent`. Same desktop rail as before. `BrandMark` is
+  re-exported from here so the `login`/`unauthorized` imports keep working.
+- **`MobileNav`** (new) is a hamburger button (`lg:hidden`) in the TopBar that
+  opens a slide-in drawer (portalled to `document.body`, `z-50` over everything)
+  carrying the same `NavContent`. So the two navs can never drift — one source of
+  truth for routes, counts, and active styling.
+
+### Drawer behaviour — built for one-handed phone use
+
+Tapping a link closes the drawer (`onNavigate` threaded into every `NavRow` +
+the brand link); the backdrop and **Escape** dismiss it; body scroll locks while
+it's open; and a route change (back button, programmatic nav) closes it as a
+safety net — done via render-time state adjustment off `usePathname()` rather
+than an effect, so it doesn't trip `react-hooks/set-state-in-effect`. Enter
+animations use the existing `tw-animate-css` (`fade-in` / `slide-in-from-left`).
+Nav rows went from `py-2` to `py-2.5` for ~44px touch targets (a wash on desktop).
+
+### Layout / TopBar responsive tidy
+
+- The TopBar gained the hamburger at the far left (before the dev-only
+  `EnvToggle`, which is null in prod). Its `aria-expanded` tracks the drawer.
+- TopBar padding `px-6` → `px-4 sm:px-6`; main content `p-6` → `p-4 sm:p-6 lg:p-8`
+  — a bit more room on a phone. `counts` now flow layout → TopBar → `MobileNav`
+  so the drawer shows the same badge pips as the rail.
+
+Content pages already reflow (responsive `grid-cols-1 sm:grid-cols-2 …`; the one
+fixed grid is 2-col on mobile), so no per-page work was needed for the
+read-and-navigate goal. No schema changes, no new deps. Verified
+`tsc`/`eslint`/`build`. **Not yet eyeballed on a real device** — Tom/Jack to
+confirm on a phone.
+
 ## 2026-06-12 — Release-driven "Fixed" + reporter notification rewrite
 
 Closes the long-standing mismatch in the feedback→changelog loop and fixes the
