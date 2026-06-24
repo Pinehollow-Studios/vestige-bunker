@@ -16,6 +16,7 @@ import {
   MessageSquareWarning,
   Rocket,
   Shield,
+  Smartphone,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -57,6 +58,7 @@ export const ADVANCED: NavItem[] = [
   { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification" },
   { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
   { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
+  { href: "/app-version", label: "App version", icon: Smartphone },
 ];
 
 /**
