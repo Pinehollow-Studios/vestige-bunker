@@ -66,7 +66,6 @@ export default async function CuratedListsPage() {
       <SectionHeader
         eyebrow="Editorial"
         title="Curated lists"
-        description="Editorial collections owned by Vestige — what users see in the app."
         actions={<NewCuratedListButton />}
       />
 

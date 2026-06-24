@@ -1,13 +1,12 @@
 type Props = {
   title: string;
-  description?: string;
   /** Optional eyebrow shown above the title (e.g. "Editorial"). */
   eyebrow?: string;
   /** Right-side actions slot (buttons, filters). */
   actions?: React.ReactNode;
 };
 
-export function SectionHeader({ title, description, eyebrow, actions }: Props) {
+export function SectionHeader({ title, eyebrow, actions }: Props) {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="space-y-2">
@@ -29,11 +28,6 @@ export function SectionHeader({ title, description, eyebrow, actions }: Props) {
         <h1 className="display-serif text-[2rem] font-semibold leading-[1.05] tracking-[-0.02em] text-ink sm:text-[2.6rem]">
           {title}
         </h1>
-        {description && (
-          <p className="max-w-prose text-sm leading-relaxed text-ink-2">
-            {description}
-          </p>
-        )}
       </div>
       {actions && (
         <div className="flex items-center gap-2 self-start sm:self-end">

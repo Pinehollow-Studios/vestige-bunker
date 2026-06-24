@@ -77,7 +77,6 @@ export default async function AnnouncementsPage({
       <SectionHeader
         eyebrow="Editorial"
         title="Announcements"
-        description="In-app pop-ups the app raises in front of users."
         actions={<NewAnnouncementButton />}
       />
 

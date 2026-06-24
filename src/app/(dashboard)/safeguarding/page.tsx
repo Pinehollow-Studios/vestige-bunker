@@ -75,7 +75,6 @@ export default async function SafeguardingPage({
       <SectionHeader
         eyebrow="People &amp; safety · Safeguarding"
         title="Safeguarding queue"
-        description="Heuristic flags raised by the round-log trigger, plus first-county-completion badge grants flagged for review — review actions land in the next slice."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -42,7 +42,6 @@ export default async function SyncPage() {
       <SectionHeader
         eyebrow="Promotion"
         title="Deploy to prod"
-        description="Dev is the workshop — everything is built and tested there. Prod is the live app and only ever receives pushes. Review each section and push the built product (schema, editorial, config) from dev up to prod. Live user data (accounts, feedback, rounds, photos…) is never touched."
       />
 
       <Section title="Schema & functions" subtitle="Database migrations + Edge Functions — applied to prod via the prod-deploy GitHub Action. Held migrations are excluded automatically.">

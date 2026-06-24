@@ -55,7 +55,6 @@ export default async function ListVerificationPage() {
       <SectionHeader
         eyebrow="Queues · review"
         title="List verification"
-        description="Public user lists awaiting the verified stamp — oldest first, work top to bottom."
       />
 
       {error && (

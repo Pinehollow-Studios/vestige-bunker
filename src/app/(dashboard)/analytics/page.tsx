@@ -200,7 +200,6 @@ function Shell({ children }: { children: React.ReactNode }) {
       <SectionHeader
         eyebrow="Insights · Analytics"
         title="Analytics"
-        description="The app at a glance. Switch the hero to the lens you care about — it sticks."
       />
       <AnalyticsNav active="/analytics" />
       {children}

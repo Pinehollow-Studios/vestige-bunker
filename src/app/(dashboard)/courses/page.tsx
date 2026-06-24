@@ -138,7 +138,6 @@ export default async function CoursesPage(props: { searchParams: SearchParams })
       <SectionHeader
         eyebrow="Editorial"
         title="Courses"
-        description="The master course catalogue — editorial fields and hero photos."
       />
 
       <Filters

@@ -116,10 +116,6 @@ export default async function CourseDetailPage(props: { params: RouteParams }) {
       <SectionHeader
         eyebrow={`Editorial · ${TIER_LABELS[row.tier].toLowerCase()}`}
         title={row.name}
-        description={
-          row.description?.slice(0, 240) ??
-          `${row.club_name ?? "Unknown club"} · ${row.county_name ?? "no county"}`
-        }
       />
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl glass-panel px-4 py-3 text-xs">

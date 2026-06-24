@@ -165,7 +165,6 @@ export default async function FeedbackQueuePage({
       <SectionHeader
         eyebrow="Queues · review"
         title="Feedback triage"
-        description="In-app reports — bugs, data errors, requests, and notes. Highest priority first."
       />
 
       <ViewTabs view={view} params={params} />

@@ -111,7 +111,6 @@ export default async function CrashesQueuePage({
       <SectionHeader
         eyebrow="Queues · review"
         title="Crashes"
-        description="Sentry-issued crash events, newest first — tap through for the stack trace and any linked feedback."
       />
 
       {queryError && (

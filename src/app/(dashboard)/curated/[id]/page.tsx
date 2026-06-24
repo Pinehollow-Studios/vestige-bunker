@@ -108,11 +108,6 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
       <SectionHeader
         eyebrow={`Editorial · ${STATUS_LABELS[status].toLowerCase()}`}
         title={row.name}
-        description={
-          row.bio?.slice(0, 240) ??
-          row.description ??
-          "Editorial curated list — full control of every field below."
-        }
       />
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl glass-panel px-4 py-3 text-xs">

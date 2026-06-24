@@ -87,7 +87,6 @@ function Shell({ children }: { children: React.ReactNode }) {
       <SectionHeader
         eyebrow="Insights · Analytics"
         title="B2B preview"
-        description="The club-data product, as the club would see it — threshold-gated, opt-out-excluded."
       />
       <AnalyticsNav active="/analytics/b2b" />
       {children}

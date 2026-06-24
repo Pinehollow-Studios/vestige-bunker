@@ -86,7 +86,6 @@ export default async function ChangelogPage() {
       <SectionHeader
         eyebrow="Editorial"
         title="Changelog"
-        description="What shipped in each version of the app — and which reported bugs each release tackled."
         actions={<NewVersionButton />}
       />
 

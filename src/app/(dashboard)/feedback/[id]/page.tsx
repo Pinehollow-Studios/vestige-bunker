@@ -194,7 +194,6 @@ export default async function FeedbackThreadPage({
         <SectionHeader
           eyebrow="Queues · review"
           title="Feedback report"
-          description="Failed to load this report."
         />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           {error.message}

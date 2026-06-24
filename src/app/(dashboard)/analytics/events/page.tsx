@@ -117,7 +117,6 @@ function Shell({ children }: { children: React.ReactNode }) {
       <SectionHeader
         eyebrow="Insights · Analytics"
         title="Events"
-        description="The raw app_events stream, newest first. Filter by type; inspect the properties each event carries."
       />
       <AnalyticsNav active="/analytics/events" />
       {children}

@@ -246,7 +246,6 @@ export default async function OverviewPage() {
       <SectionHeader
         eyebrow="Dashboard"
         title="Overview"
-        description="The state of Vestige at a glance — what needs your attention, and the numbers underneath it."
       />
 
       <figure className="relative overflow-hidden rounded-2xl glass-panel px-6 py-8 sm:px-10 sm:py-10">

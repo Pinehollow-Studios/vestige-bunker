@@ -60,7 +60,6 @@ export default async function UsersPage({
         <SectionHeader
           eyebrow="People &amp; safety · Users"
           title="Users"
-          description="Directory of every registered profile."
         />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           {e instanceof Error ? e.message : "Service-role client unavailable."}
@@ -140,7 +139,6 @@ export default async function UsersPage({
       <SectionHeader
         eyebrow="People &amp; safety · Users"
         title="Users"
-        description="Directory of every registered profile — click a row for the full account."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
