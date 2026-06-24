@@ -4,23 +4,45 @@
  * Mirrors the iOS `BadgeDefinition` model (`Vestige/Models/BadgeDefinition.swift`)
  * and the server `badge_definitions` table + CHECK constraints
  * (`20260605140000_editorial_badge_system.sql`) so what Jack designs here is
- * exactly what ships in the app. The hex palettes match the iOS `BadgeTheme` /
- * `BadgeTier` colours one-for-one.
+ * exactly what ships in the app.
+ *
+ * 2026-06-17 badge rework — the badge artwork became a uniform **engraved
+ * seal** (a flat slate plate + a brushed-metal tier rim + a mint glyph),
+ * replacing the old glossy medallion. Consequence: `tier`, `glyph` and the
+ * optional `tint_hex` are the only fields the renderer reads. `shape`,
+ * `effect` and `theme` are now **deprecated** — kept here (and on the DB row)
+ * so existing rows and the insert path don't break, but they no longer affect
+ * how a badge looks. The `THEME_*` / `SHAPE` / `EFFECT` exports survive only
+ * as safe defaults for inserts and tolerance of legacy rows. The `TIER_RING`
+ * gradients drive the live seal rim and match iOS `BadgeTier.ringColors`.
  */
 
 // ── Visual vocabulary ───────────────────────────────────────────────
 
+/** @deprecated The seal is uniform; theme no longer affects rendering. Kept
+ *  for insert defaults + legacy-row tolerance only. */
 export type BadgeTheme =
   | "mint" | "lime" | "amber" | "claret" | "sea"
   | "violet" | "gold" | "slate" | "rose";
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "legendary";
+/** @deprecated Every badge is a circular seal now. Default `coin`. */
 export type BadgeShape = "rosette" | "shield" | "coin" | "hexagon" | "seal";
+/** @deprecated The flat seal carries no extra flair. Default `none`. */
 export type BadgeEffect = "none" | "glow" | "metallic" | "holographic";
 export type BadgeCategory =
   | "collection" | "counties" | "lists" | "social" | "rounds" | "milestones" | "special";
 
-/** Top→bottom face gradient per theme (matches iOS `BadgeTheme.colors`). */
+/** The engraved plate face — flat deep slate, matches iOS `Theme.Color.paperRaised`
+ *  (`rgb(0.078,0.133,0.208)` = #142235). The mint glyph reads against it. */
+export const PLATE_COLOR = "#142235";
+/** The mint glyph colour (iOS `Theme.Color.accent`), unless a `tint_hex` override. */
+export const GLYPH_MINT = "#5BE4C3";
+
+/**
+ * @deprecated Theme no longer drives the seal. Retained so legacy rows decode
+ * without crashing and the insert path can send a safe `theme: "mint"` default.
+ */
 export const THEME_COLORS: Record<BadgeTheme, [string, string]> = {
   mint:   ["#5BE4C3", "#2FA98B"],
   lime:   ["#B8F36B", "#6FBF3B"],
@@ -33,19 +55,28 @@ export const THEME_COLORS: Record<BadgeTheme, [string, string]> = {
   rose:   ["#F2A0B8", "#C25677"],
 };
 
-/** Glyph ink over the face (dark on bright themes, cream on deep). */
+/** @deprecated Old face-ink table; the seal glyph is always mint (or a tint). */
 export const THEME_INK: Record<BadgeTheme, string> = {
   mint: "#10202C", lime: "#10202C", amber: "#10202C", gold: "#10202C", rose: "#10202C",
   claret: "#F6F2E6", sea: "#F6F2E6", violet: "#F6F2E6", slate: "#F6F2E6",
 };
 
-/** Metallic frame gradient per tier (matches iOS `BadgeTier.ringColors`). */
+/**
+ * Brushed-metal tier rim gradient (topLeft→bottomRight) — the ONE visual that
+ * varies by tier, matching iOS `BadgeTier.ringColors`. Restrained linear, no
+ * gloss sheen.
+ */
 export const TIER_RING: Record<BadgeTier, string[]> = {
   bronze:    ["#E6A66B", "#9C6233"],
   silver:    ["#E8EEF3", "#9FB0BE"],
   gold:      ["#FBE38C", "#C79A2E"],
   platinum:  ["#DDF0FF", "#9BC2DE"],
   legendary: ["#A98BE8", "#5BE4C3", "#F4C44B"],
+};
+
+/** Rim thickness fraction per tier (matches iOS `BadgeTier.ringWidth`). */
+export const TIER_RIM_WIDTH: Record<BadgeTier, number> = {
+  bronze: 0.045, silver: 0.045, gold: 0.055, platinum: 0.055, legendary: 0.07,
 };
 
 export const THEMES: BadgeTheme[] = Object.keys(THEME_COLORS) as BadgeTheme[];
@@ -119,9 +150,13 @@ export type CriteriaType =
   | "manual";
 
 export type CriteriaMetric =
+  // Active (collection-purist) metrics.
   | "courses_played"
   | "counties_complete"
   | "lists_complete"
+  | "partners_best_round"
+  // Archived in the 2026-06-17 rework — kept so existing rows still decode and
+  // their summaries render. NOT selectable when authoring a new badge.
   | "rounds_logged"
   | "friends"
   | "photos_added"
@@ -131,11 +166,32 @@ export const METRIC_LABELS: Record<CriteriaMetric, string> = {
   courses_played: "Courses played",
   counties_complete: "Counties completed",
   lists_complete: "Curated lists completed",
+  partners_best_round: "Playing partners on one round",
+  // Archived metrics (still labelled so legacy rows read).
   rounds_logged: "Rounds logged",
   friends: "Friends",
   photos_added: "Round photos added",
   bucket_list_size: "Bucket-list courses",
 };
+
+/**
+ * Metrics an admin can pick when authoring. The collection-purist catalogue
+ * dropped `rounds_logged` / `friends` / `photos_added` / `bucket_list_size`;
+ * they remain valid on existing rows (tolerated everywhere) but are no longer
+ * offered. `partners_best_round` (the Fourball badge — most playing-partners
+ * tagged on a single round) is the new addition.
+ */
+export const SELECTABLE_METRICS: CriteriaMetric[] = [
+  "courses_played",
+  "counties_complete",
+  "lists_complete",
+  "partners_best_round",
+];
+
+/** Metrics retired in the 2026-06-17 rework — tolerated, never offered. */
+export const ARCHIVED_METRICS: CriteriaMetric[] = [
+  "rounds_logged", "friends", "photos_added", "bucket_list_size",
+];
 
 /** `courses_played` is the only metric that supports scoping. */
 export const SCOPEABLE_METRICS: CriteriaMetric[] = ["courses_played"];

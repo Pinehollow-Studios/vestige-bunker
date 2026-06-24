@@ -20,11 +20,11 @@ import {
   type BadgePatch,
 } from "../actions";
 import {
-  CATEGORIES, COURSE_TIERS, EFFECTS, GLYPH_OPTIONS, METRIC_LABELS,
-  SCOPEABLE_METRICS, SHAPES, statusFor, STATUS_LABELS, THEME_COLORS, THEMES,
+  ARCHIVED_METRICS, CATEGORIES, COURSE_TIERS, GLYPH_OPTIONS, METRIC_LABELS,
+  SCOPEABLE_METRICS, SELECTABLE_METRICS, statusFor, STATUS_LABELS,
   TIER_RING, TIERS,
-  type BadgeCategory, type BadgeDefinitionRow, type BadgeEffect, type BadgeShape,
-  type BadgeTheme, type BadgeTier, type CountyOption, type CourseOption,
+  type BadgeCategory, type BadgeDefinitionRow, type BadgeTier,
+  type CountyOption, type CourseOption,
   type Criteria, type CriteriaMetric, type CriteriaType, type CuratedListOption,
 } from "../types";
 
@@ -52,12 +52,15 @@ export function BadgeEditor({
   const [description, setDescription] = useState(row.description ?? "");
   const [howToEarn, setHowToEarn] = useState(row.how_to_earn ?? "");
   const [glyph, setGlyph] = useState(row.glyph);
-  const [theme, setTheme] = useState<BadgeTheme>(row.theme);
   const [tintHex, setTintHex] = useState(row.tint_hex ?? "");
   const [tier, setTier] = useState<BadgeTier>(row.tier);
-  const [shape, setShape] = useState<BadgeShape>(row.shape);
-  const [effect, setEffect] = useState<BadgeEffect>(row.effect);
   const [category, setCategory] = useState<BadgeCategory>(row.category);
+  // Deprecated visual fields (2026-06-17 seal rework): the renderer ignores
+  // them, but we preserve whatever a legacy row carries and keep sending it so
+  // inserts/updates stay valid against the unchanged DB CHECK constraints.
+  const theme = row.theme;
+  const shape = row.shape;
+  const effect = row.effect;
   const [seriesKey, setSeriesKey] = useState(row.series_key ?? "");
   const [seriesRank, setSeriesRank] = useState(row.series_rank?.toString() ?? "");
   const [displayPriority, setDisplayPriority] = useState(row.display_priority.toString());
@@ -105,7 +108,7 @@ export function BadgeEditor({
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
       {/* Sticky preview + lifecycle */}
       <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-        <PreviewCard spec={spec} name={name} tier={tier} />
+        <PreviewCard spec={spec} name={name} tier={tier} isManual={criteria.type === "manual"} />
         <Lifecycle row={row} pending={pending} dirty={dirty} onSave={save} />
         <ArtCard row={row} />
         <ManualGrant row={row} />
@@ -113,20 +116,9 @@ export function BadgeEditor({
 
       {/* Form */}
       <div className="space-y-6">
-        <Card title="Artwork" hint="How the badge looks in the app. Composed natively — crisp at any size.">
+        <Card title="Artwork" hint="An engraved seal — a slate plate, a brushed-metal tier rim, and one mint glyph. Composed natively, crisp at any size.">
           <GlyphPicker glyph={glyph} setGlyph={setGlyph} />
-          <Swatches label="Theme" >
-            {THEMES.map((t) => (
-              <SwatchButton
-                key={t}
-                selected={theme === t}
-                onClick={() => setTheme(t)}
-                title={t}
-                style={{ background: `linear-gradient(135deg, ${THEME_COLORS[t][0]}, ${THEME_COLORS[t][1]})` }}
-              />
-            ))}
-          </Swatches>
-          <Swatches label="Tier (rarity frame)">
+          <Swatches label="Tier (metal rim)">
             {TIERS.map((t) => (
               <SwatchButton
                 key={t}
@@ -138,21 +130,14 @@ export function BadgeEditor({
               />
             ))}
           </Swatches>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Shape">
-              <select className={SELECT_CLS} value={shape} onChange={(e) => setShape(e.target.value as BadgeShape)}>
-                {SHAPES.map((s) => <option key={s} value={s}>{cap(s)}</option>)}
-              </select>
-            </Field>
-            <Field label="Effect">
-              <select className={SELECT_CLS} value={effect} onChange={(e) => setEffect(e.target.value as BadgeEffect)}>
-                {EFFECTS.map((s) => <option key={s} value={s}>{cap(s)}</option>)}
-              </select>
-            </Field>
-          </div>
-          <Field label="Colour override (optional)" hint="6-digit hex, e.g. 5BE4C3. Overrides the theme face colour.">
-            <Input value={tintHex} onChange={(e) => setTintHex(e.target.value)} placeholder="leave blank for theme" />
+          <Field label="Glyph colour override (optional)" hint="6-digit hex, e.g. 5BE4C3. Replaces the default mint glyph. Leave blank for mint.">
+            <Input value={tintHex} onChange={(e) => setTintHex(e.target.value)} placeholder="leave blank for mint" />
           </Field>
+          <p className="rounded-lg border border-rule/70 bg-paper-sunken/30 p-3 text-[11px] leading-relaxed text-ink-3">
+            The seal is uniform across the catalogue, so shape, effect and the
+            old theme palette no longer change how a badge looks. The tier sets
+            the metal rim; the glyph and optional tint are the only other dials.
+          </p>
         </Card>
 
         <Card title="Editorial" hint="The words users read — keep them warm and specific.">
@@ -214,11 +199,12 @@ export function BadgeEditor({
 // ── Preview ─────────────────────────────────────────────────────────
 
 function PreviewCard({
-  spec, name, tier,
+  spec, name, tier, isManual,
 }: {
   spec: Parameters<typeof BadgeMedallion>[0]["spec"];
   name: string;
   tier: BadgeTier;
+  isManual: boolean;
 }) {
   return (
     <section className="space-y-4 rounded-xl glass-panel p-5">
@@ -232,8 +218,8 @@ function PreviewCard({
       </div>
       <div className="flex items-center justify-around rounded-xl bg-[#0E1822] p-4">
         <div className="flex flex-col items-center gap-1.5">
-          <BadgeMedallion spec={spec} size={64} earned={false} progress={0.62} />
-          <span className="text-[10px] text-[#9BB0C2]">Locked</span>
+          <BadgeMedallion spec={spec} size={64} earned={false} progress={0.62} isManual={isManual} />
+          <span className="text-[10px] text-[#9BB0C2]">{isManual ? "Locked" : "In progress"}</span>
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <BadgeMedallion spec={spec} size={48} />
@@ -277,13 +263,8 @@ function GlyphPicker({ glyph, setGlyph }: { glyph: string; setGlyph: (g: string)
 }
 
 function GlyphMini({ sf }: { sf: string }) {
-  // Render via the medallion's lucide map by drawing a tiny neutral medallion.
-  return (
-    <BadgeMedallion
-      spec={{ glyph: sf, theme: "slate", tier: "silver", shape: "coin", effect: "none" }}
-      size={26}
-    />
-  );
+  // Render via the medallion's lucide map by drawing a tiny neutral seal.
+  return <BadgeMedallion spec={{ glyph: sf, tier: "silver" }} size={26} />;
 }
 
 // ── Criteria builder ────────────────────────────────────────────────
@@ -311,7 +292,7 @@ function CriteriaBuilder({
     <div className="space-y-3">
       <Field label="Earned by">
         <select className={SELECT_CLS} value={criteria.type} onChange={(e) => changeType(e.target.value as CriteriaType)}>
-          <option value="count_threshold">Reaching a number (courses, rounds, friends…)</option>
+          <option value="count_threshold">Reaching a number (courses, counties, lists, partners…)</option>
           <option value="specific_county_complete">Completing a specific county</option>
           <option value="specific_list_complete">Completing a specific curated list</option>
           <option value="specific_course">Playing a specific course</option>
@@ -392,9 +373,14 @@ function CountThresholdFields({
             value={criteria.metric}
             onChange={(e) => setCriteria({ type: "count_threshold", metric: e.target.value as CriteriaMetric, threshold: criteria.threshold })}
           >
-            {(Object.keys(METRIC_LABELS) as CriteriaMetric[]).map((m) => (
+            {SELECTABLE_METRICS.map((m) => (
               <option key={m} value={m}>{METRIC_LABELS[m]}</option>
             ))}
+            {/* Tolerate a retired metric already saved on this row — keep it
+                selectable so the value isn't silently lost, but mark it. */}
+            {ARCHIVED_METRICS.includes(criteria.metric) && (
+              <option value={criteria.metric}>{METRIC_LABELS[criteria.metric]} (archived)</option>
+            )}
           </select>
         </Field>
         <Field label="Target (≥)">

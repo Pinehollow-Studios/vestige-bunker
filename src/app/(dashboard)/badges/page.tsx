@@ -48,7 +48,6 @@ export default async function BadgesPage() {
       <SectionHeader
         eyebrow="Editorial"
         title="Badges"
-        description="Design the badges users chase — artwork, rarity, and how each is earned."
         actions={<NewBadgeButton />}
       />
 
@@ -138,14 +137,7 @@ function BadgeCard({
     >
       <div className="shrink-0">
         <BadgeMedallion
-          spec={{
-            glyph: row.glyph,
-            theme: row.theme,
-            tint_hex: row.tint_hex,
-            tier: row.tier,
-            shape: row.shape,
-            effect: row.effect,
-          }}
+          spec={{ glyph: row.glyph, tint_hex: row.tint_hex, tier: row.tier }}
           size={72}
         />
       </div>

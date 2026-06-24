@@ -3,16 +3,36 @@
 import { useId } from "react";
 import {
   Award, BadgeCheck, Bolt, Calendar, Camera, CheckSquare, Clock, Crown, Flag,
-  Flame, Footprints, Globe, Heart, Image as ImageIcon, Images, Leaf, MapPin,
+  Flame, Footprints, Globe, Heart, Image as ImageIcon, Images, Leaf, Lock, MapPin,
   Map as MapIcon, Medal, Moon, Mountain, Sparkles, Star, Sun, Trophy, User,
   Users, type LucideIcon,
 } from "lucide-react";
 import {
-  THEME_COLORS, THEME_INK, TIER_RING,
+  GLYPH_MINT, PLATE_COLOR, TIER_RIM_WIDTH, TIER_RING,
   type BadgeEffect, type BadgeShape, type BadgeTheme, type BadgeTier,
 } from "@/app/(dashboard)/badges/types";
 
-/** SF Symbol name → lucide preview icon (the app renders the real symbol). */
+/**
+ * The engraved-seal badge preview — a React/SVG mirror of the iOS
+ * `BadgeMedallion` (2026-06-17 badge rework). One uniform circular seal for
+ * the whole catalogue: a flat **brushed-metal tier rim** (the only thing that
+ * varies by tier) around a flat **deep-slate engraved plate** with a single
+ * **mint glyph** centred and a fine hairline ring pressed into the plate.
+ *
+ * The old glossy medallion (gradient faces, white sheen, holographic /
+ * metallic effects, five shapes, nine-colour theme palette) is gone. The
+ * `theme` / `shape` / `effect` fields on `MedallionSpec` are accepted for
+ * compatibility but deliberately ignored — only `tier`, `glyph` and the
+ * optional `tint_hex` are read, exactly as iOS does.
+ *
+ * States:
+ *   • earned — metal tier rim + slate plate + mint (or tinted) glyph.
+ *   • locked — a "blank impression": no metal rim, a dashed faint edge, a
+ *     ghost glyph, and either a mint progress ring (count badges) or a lock
+ *     (manual / awarded badges).
+ */
+
+/** SF Symbol name → lucide preview icon (iOS renders the real SF Symbol). */
 const GLYPH_LUCIDE: Record<string, LucideIcon> = {
   rosette: Award,
   "trophy.fill": Trophy,
@@ -35,6 +55,7 @@ const GLYPH_LUCIDE: Record<string, LucideIcon> = {
   "person.fill": User,
   "person.2.fill": Users,
   "person.3.fill": Users,
+  "person.3.sequence.fill": Users,
   sparkles: Sparkles,
   "bolt.fill": Bolt,
   "flame.fill": Flame,
@@ -50,11 +71,14 @@ const GLYPH_LUCIDE: Record<string, LucideIcon> = {
 
 export type MedallionSpec = {
   glyph: string;
-  theme: BadgeTheme;
+  /** @deprecated ignored by the seal renderer — kept for compatibility. */
+  theme?: BadgeTheme;
   tint_hex?: string | null;
   tier: BadgeTier;
-  shape: BadgeShape;
-  effect: BadgeEffect;
+  /** @deprecated ignored by the seal renderer. */
+  shape?: BadgeShape;
+  /** @deprecated ignored by the seal renderer. */
+  effect?: BadgeEffect;
 };
 
 export function BadgeMedallion({
@@ -62,181 +86,147 @@ export function BadgeMedallion({
   size = 96,
   earned = true,
   progress = 0,
+  isManual = false,
 }: {
   spec: MedallionSpec;
   size?: number;
   earned?: boolean;
   progress?: number;
+  /** Manual / awarded badges show a lock when locked, not a progress ring. */
+  isManual?: boolean;
 }) {
   const id = useId().replace(/:/g, "");
-  const faceColors = tint(spec.tint_hex) ?? THEME_COLORS[spec.theme];
-  const ink = THEME_INK[spec.theme];
-  const ring = TIER_RING[spec.tier];
   const Glyph = GLYPH_LUCIDE[spec.glyph] ?? Award;
+  const glyphColor = tintHexOrMint(spec.tint_hex);
 
-  const path = shapePath(spec.shape);
-  const facePath = shapePath(spec.shape, 0.86); // inset for the frame border
+  // SVG works in a 0..100 box; rim width tracks the tier, matching iOS's
+  // `max(2.5, size * 0.075)` floor expressed as a fraction of the box.
+  const rim = Math.max(2.5 / size, TIER_RIM_WIDTH[spec.tier]) * 100;
+  const glyphPx = size * 0.34;
 
-  const glow =
-    spec.effect === "glow"
-      ? `drop-shadow(0 0 ${size * 0.12}px ${faceColors[0]}aa)`
-      : undefined;
-
-  const body = (
-    <div
-      style={{ width: size, height: size, position: "relative", filter: glow }}
-    >
-      <svg viewBox="0 0 100 100" width={size} height={size} style={{ display: "block" }}>
-        <defs>
-          <linearGradient id={`${id}-face`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={faceColors[0]} />
-            <stop offset="1" stopColor={faceColors[1]} />
-          </linearGradient>
-          <linearGradient id={`${id}-ring`} x1="0" y1="0" x2="1" y2="1">
-            {ring.map((c, i) => (
-              <stop key={i} offset={`${(i / (ring.length - 1)) * 100}%`} stopColor={c} />
-            ))}
-          </linearGradient>
-          <linearGradient id={`${id}-sheen`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#ffffff" stopOpacity="0.5" />
-            <stop offset="0.5" stopColor="#ffffff" stopOpacity="0" />
-          </linearGradient>
-          <clipPath id={`${id}-clip`}>
-            <path d={facePath} />
-          </clipPath>
-        </defs>
-
-        {/* Tier frame */}
-        <path d={path} fill={`url(#${id}-ring)`} stroke="rgba(255,255,255,0.25)" strokeWidth="0.75" />
-        {/* Face */}
-        <path d={facePath} fill={`url(#${id}-face)`} />
-        <path d={facePath} fill={`url(#${id}-sheen)`} />
-        {spec.effect === "metallic" && (
-          <rect x="0" y="0" width="100" height="100" clipPath={`url(#${id}-clip)`}
-            fill={`url(#${id}-ring)`} opacity="0.18" style={{ mixBlendMode: "overlay" }} />
-        )}
-        <path d={facePath} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="0.75" />
-      </svg>
-
-      {/* Holographic sheen (conic) clipped to the face */}
-      {spec.effect === "holographic" && (
-        <div
-          aria-hidden
+  if (earned) {
+    const ring = TIER_RING[spec.tier];
+    return (
+      <div style={{ width: size, height: size, position: "relative" }}>
+        <svg
+          viewBox="0 0 100 100"
+          width={size}
+          height={size}
           style={{
-            position: "absolute", inset: 0,
-            clipPath: `url(#${id}-clip)`,
-            background:
-              "conic-gradient(from 0deg, #FF8FD0, #8FE8FF, #B8F36B, #F6D873, #A98BE8, #FF8FD0)",
-            mixBlendMode: "plus-lighter",
-            opacity: 0.3,
+            display: "block",
+            filter: `drop-shadow(0 ${size * 0.03}px ${size * 0.05}px rgba(0,0,0,0.32))`,
           }}
-        />
-      )}
+        >
+          <defs>
+            <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
+              {ring.map((c, i) => (
+                <stop key={i} offset={`${(i / (ring.length - 1)) * 100}%`} stopColor={c} />
+              ))}
+            </linearGradient>
+          </defs>
 
-      {/* Glyph */}
-      <div
-        style={{
-          position: "absolute", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}
-      >
-        <Glyph size={size * 0.34} color={ink} strokeWidth={2.4} absoluteStrokeWidth />
+          {/* Brushed-metal tier rim — the only thing that varies by tier. */}
+          <circle cx="50" cy="50" r="49.5" fill={`url(#${id}-rim)`} />
+          <circle
+            cx="50" cy="50" r="49"
+            fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="0.75"
+          />
+
+          {/* Engraved slate plate inset inside the rim. */}
+          <circle cx="50" cy="50" r={50 - rim} fill={PLATE_COLOR} />
+          {/* Outer pressed shadow edge of the plate. */}
+          <circle
+            cx="50" cy="50" r={50 - rim}
+            fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="0.75"
+          />
+          {/* Fine hairline ring pressed into the plate. */}
+          <circle
+            cx="50" cy="50" r={50 - rim - rim * 0.55}
+            fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="1"
+          />
+        </svg>
+
+        {/* Mint (or tinted) glyph. */}
+        <GlyphLayer Glyph={Glyph} size={glyphPx} color={glyphColor} />
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (earned) return body;
-
-  // Locked — desaturated + progress ring.
+  // Locked — a "blank impression": debossed empty slot.
+  const clamped = Math.max(0.001, Math.min(1, progress));
+  // r=46, circumference ≈ 289 (matches the iOS ring proportion).
+  const circumference = 2 * Math.PI * 46;
   return (
     <div style={{ width: size, height: size, position: "relative" }}>
-      <div
-        style={{
-          position: "absolute", inset: size * 0.09,
-          filter: "grayscale(1)", opacity: 0.34,
-        }}
-      >
-        <BadgeMedallion spec={spec} size={size * 0.82} earned />
-      </div>
-      <svg viewBox="0 0 100 100" width={size} height={size}
-        style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="4" />
+      <svg viewBox="0 0 100 100" width={size} height={size} style={{ display: "block" }}>
+        {/* Sunken empty face inside the rim band. */}
+        <circle cx="50" cy="50" r={50 - rim} fill={PLATE_COLOR} fillOpacity="0.45" />
+        {/* Dashed faint edge where the metal rim would be. */}
         <circle
-          cx="50" cy="50" r="46" fill="none"
-          stroke="#5BE4C3" strokeWidth="4" strokeLinecap="round"
-          strokeDasharray={`${Math.max(0.001, progress) * 289} 289`}
+          cx="50" cy="50" r={50 - rim}
+          fill="none"
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth="1.5"
+          strokeDasharray="3 3"
         />
       </svg>
+
+      {/* Ghost of the glyph — faintest mint impression of what goes here. */}
+      <GlyphLayer Glyph={Glyph} size={glyphPx} color={GLYPH_MINT} opacity={0.1} />
+
+      {isManual ? (
+        // Manual / awarded badges — a quiet lock, no progress.
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <Lock size={size * 0.2} color="#5C7187" strokeWidth={2.4} />
+        </div>
+      ) : (
+        // Count badges — a mint progress ring showing % to target.
+        <svg
+          viewBox="0 0 100 100" width={size} height={size}
+          style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}
+        >
+          <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+          <circle
+            cx="50" cy="50" r="46" fill="none"
+            stroke={GLYPH_MINT} strokeWidth="4" strokeLinecap="round"
+            strokeDasharray={`${clamped * circumference} ${circumference}`}
+          />
+        </svg>
+      )}
     </div>
   );
 }
 
-// ── Shape paths (mirror the iOS BadgeMedallion shapes) ───────────────
-
-function shapePath(shape: BadgeShape, scale = 1): string {
-  const cx = 50, cy = 50, base = 48 * scale;
-  switch (shape) {
-    case "coin":
-      return circlePath(cx, cy, base);
-    case "hexagon":
-      return polygonPath(cx, cy, base, 6, Math.PI / 6 - Math.PI / 2);
-    case "shield":
-      return shieldPath(scale);
-    case "rosette":
-      return scallopPath(cx, cy, base, 14, 0.07);
-    case "seal":
-      return scallopPath(cx, cy, base, 22, 0.05);
-  }
+/** Centred glyph overlay — the SF Symbol is previewed via its lucide mapping. */
+function GlyphLayer({
+  Glyph, size, color, opacity = 1,
+}: {
+  Glyph: LucideIcon;
+  size: number;
+  color: string;
+  opacity?: number;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute", inset: 0, opacity,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <Glyph size={size} color={color} strokeWidth={2.2} absoluteStrokeWidth />
+    </div>
+  );
 }
 
-function circlePath(cx: number, cy: number, r: number): string {
-  return `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
-}
-
-function polygonPath(cx: number, cy: number, r: number, sides: number, offset: number): string {
-  let d = "";
-  for (let i = 0; i < sides; i++) {
-    const a = (i / sides) * 2 * Math.PI + offset;
-    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
-    d += (i === 0 ? "M" : "L") + ` ${x.toFixed(2)} ${y.toFixed(2)} `;
-  }
-  return d + "Z";
-}
-
-function scallopPath(cx: number, cy: number, base: number, scallops: number, depth: number): string {
-  const steps = 240;
-  let d = "";
-  for (let i = 0; i <= steps; i++) {
-    const a = (i / steps) * 2 * Math.PI;
-    const r = base * (1 - depth) + base * depth * (1 + Math.sin(a * scallops)) / 2;
-    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
-    d += (i === 0 ? "M" : "L") + ` ${x.toFixed(2)} ${y.toFixed(2)} `;
-  }
-  return d + "Z";
-}
-
-function shieldPath(scale: number): string {
-  // 100-box shield, centre-scaled toward the middle for the inset face.
-  const inset = (1 - scale) * 50;
-  const x = inset, y = inset, w = 100 - inset * 2, h = 100 - inset * 2;
-  return [
-    `M ${x + w * 0.06} ${y + h * 0.10}`,
-    `Q ${x + w * 0.28} ${y} ${x + w * 0.5} ${y + h * 0.04}`,
-    `Q ${x + w * 0.72} ${y} ${x + w * 0.94} ${y + h * 0.10}`,
-    `L ${x + w * 0.94} ${y + h * 0.55}`,
-    `Q ${x + w * 0.86} ${y + h * 0.84} ${x + w * 0.5} ${y + h * 0.98}`,
-    `Q ${x + w * 0.14} ${y + h * 0.84} ${x + w * 0.06} ${y + h * 0.55}`,
-    "Z",
-  ].join(" ");
-}
-
-function tint(hex?: string | null): [string, string] | null {
-  if (!hex) return null;
+/** Mint glyph by default; honour a valid 6-digit `tint_hex` override. */
+function tintHexOrMint(hex?: string | null): string {
+  if (!hex) return GLYPH_MINT;
   const clean = hex.replace(/^#/, "");
-  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
-  // Darken the second stop ~38% for a gradient.
-  const n = parseInt(clean, 16);
-  const r = (n >> 16) & 0xff, g = (n >> 8) & 0xff, b = n & 0xff;
-  const dark = (v: number) => Math.round(v * 0.62).toString(16).padStart(2, "0");
-  return [`#${clean}`, `#${dark(r)}${dark(g)}${dark(b)}`];
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return GLYPH_MINT;
+  return `#${clean}`;
 }
