@@ -12,7 +12,7 @@ import { PhotoModerationActions } from "./PhotoModerationActions";
 export const dynamic = "force-dynamic";
 
 type PhotoModerationState = "pending" | "approved" | "rejected" | "flagged";
-type PhotoKind = "roundPhoto" | "avatar";
+type PhotoKind = "roundPhoto" | "avatar" | "coursePhoto";
 
 type Variants = {
   thumb_storage_key?: string;
@@ -44,12 +44,28 @@ const MODERATION_BUCKETS: PhotoModerationState[] = [
   "flagged",
 ];
 
-type SearchParams = Promise<{ state?: string }>;
+// Secondary filter — course photos are PUBLIC, shared-gallery content
+// (CLAUDE.md §5.2 in Vestige-ios), so they warrant a higher review bar than
+// round photos (which appear on a semi-private feed). The "Course photos"
+// filter lets a moderator focus the queue on the community submissions.
+const KIND_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "coursePhoto", label: "Course photos" },
+  { value: "roundPhoto", label: "Round photos" },
+  { value: "avatar", label: "Avatars" },
+] as const;
+type KindFilter = (typeof KIND_FILTERS)[number]["value"];
+
+type SearchParams = Promise<{ state?: string; kind?: string }>;
 
 /**
  * Photo moderation surface — the NSFW / safety review queue for user-uploaded
- * round photos. A photo stays `pending` until an admin approves it; the
- * verdict gates whether it surfaces on course pages and friend activity.
+ * photos. A photo stays `pending` until an admin approves it; the verdict gates
+ * whether it surfaces on course pages and friend activity. Three kinds flow
+ * through here: round photos, avatars, and `coursePhoto` — community
+ * contributions to a course's public gallery (CLAUDE.md §5.2, pre-moderated:
+ * only `approved` ones surface). The "Course photos" kind filter focuses the
+ * queue on those public submissions, which warrant a higher review bar.
  *
  * Reads go through the service-role client: `public.photos` has only a
  * `photos_select_own` RLS policy (no admin SELECT), so the admin's session
@@ -63,6 +79,9 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
   const active = MODERATION_BUCKETS.includes(params.state as PhotoModerationState)
     ? (params.state as PhotoModerationState)
     : "pending";
+  const kind: KindFilter = KIND_FILTERS.some((k) => k.value === params.kind)
+    ? (params.kind as KindFilter)
+    : "all";
 
   const supabase = await tryCreateServiceClient();
 
@@ -84,21 +103,25 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
   const [modCountsRes, listRes] = await Promise.all([
     Promise.all(
       MODERATION_BUCKETS.map(async (state) => {
-        const { count } = await supabase
+        let q = supabase
           .from("photos")
           .select("id", { count: "exact", head: true })
           .eq("moderation_state", state);
+        if (kind !== "all") q = q.eq("kind", kind);
+        const { count } = await q;
         return [state, count ?? 0] as const;
       }),
     ),
-    supabase
-      .from("photos")
-      .select(
-        "id, original_storage_key, variants, kind, moderation_state, uploader_user_id, exif_taken_at, exif_gps_lat, exif_gps_lng, round_id, course_id, width, height, created_at",
-      )
-      .eq("moderation_state", active)
-      .order("created_at", { ascending: false })
-      .limit(60),
+    (() => {
+      let q = supabase
+        .from("photos")
+        .select(
+          "id, original_storage_key, variants, kind, moderation_state, uploader_user_id, exif_taken_at, exif_gps_lat, exif_gps_lng, round_id, course_id, width, height, created_at",
+        )
+        .eq("moderation_state", active);
+      if (kind !== "all") q = q.eq("kind", kind);
+      return q.order("created_at", { ascending: false }).limit(60);
+    })(),
   ]);
 
   const modCounts = Object.fromEntries(modCountsRes) as Record<PhotoModerationState, number>;
@@ -118,7 +141,7 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
       <SectionHeader
         eyebrow="Queues · Photo moderation"
         title="Photo moderation"
-        description="Review user-uploaded round photos before they appear on course pages. Approve, reject, or flag each one."
+        description="Review user-uploaded round and course photos before they appear on course pages. Course photos are public, shared-gallery submissions — review them at a higher bar. Approve, reject, or flag each one."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -129,7 +152,25 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
             label={prettyMod(state)}
             value={modCounts[state]}
             active={state === active}
+            kind={kind}
           />
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {KIND_FILTERS.map((k) => (
+          <Link
+            key={k.value}
+            href={`/photos?state=${active}${k.value === "all" ? "" : `&kind=${k.value}`}`}
+            className={cn(
+              "rounded-full border px-3 py-1 text-[11px] font-medium transition-colors",
+              k.value === kind
+                ? "border-brand/50 bg-brand/10 text-brand"
+                : "border-rule/70 text-ink-2 hover:border-brand/40 hover:text-ink",
+            )}
+          >
+            {k.label}
+          </Link>
         ))}
       </div>
 
@@ -203,7 +244,7 @@ function PhotoTile({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={thumb ?? full}
-            alt={`Round photo by ${uploaderName ?? "user"}`}
+            alt={`${prettyKind(row.kind)} by ${uploaderName ?? "user"}`}
             className="size-full object-cover transition-opacity group-hover/img:opacity-90"
           />
           {geotagged && (
@@ -225,9 +266,12 @@ function PhotoTile({
           </span>
           <StateChip state={row.moderation_state} />
         </div>
-        <p className="truncate text-[11px] text-ink-2">
-          {courseName ?? (row.round_id ? "Round photo" : prettyKind(row.kind))}
-        </p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <KindChip kind={row.kind} />
+          <span className="truncate text-[11px] text-ink-2">
+            {courseName ?? (row.round_id ? "on a round" : "—")}
+          </span>
+        </div>
         <p className="text-[11px] tabular-nums text-ink-3">
           {row.width && row.height ? `${row.width}×${row.height} · ` : ""}
           {row.exif_taken_at ? `taken ${relativeTime(row.exif_taken_at)}` : "no exif"} · added{" "}
@@ -246,11 +290,13 @@ function StatTile({
   label,
   value,
   active,
+  kind,
 }: {
   state: PhotoModerationState;
   label: string;
   value: number;
   active: boolean;
+  kind: KindFilter;
 }) {
   const tone =
     state === "pending"
@@ -266,7 +312,7 @@ function StatTile({
         : "text-ink";
   return (
     <Link
-      href={`/photos?state=${state}`}
+      href={`/photos?state=${state}${kind === "all" ? "" : `&kind=${kind}`}`}
       className={cn(
         "rounded-xl glass-panel p-4 transition-colors hover:border-brand/40",
         active && "border-brand/50 ring-1 ring-brand/30",
@@ -297,6 +343,22 @@ function StateChip({ state }: { state: PhotoModerationState }) {
       }
     >
       {prettyMod(state)}
+    </span>
+  );
+}
+
+function KindChip({ kind }: { kind: PhotoKind }) {
+  // Course photos are public, shared-gallery content — flag them in brand
+  // accent so a moderator spots them at a glance; round/avatar are muted.
+  const isCourse = kind === "coursePhoto";
+  return (
+    <span
+      className={
+        "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider " +
+        (isCourse ? "border-brand/40 text-brand" : "border-rule/70 text-ink-3")
+      }
+    >
+      {prettyKind(kind)}
     </span>
   );
 }
@@ -379,6 +441,8 @@ function prettyKind(kind: PhotoKind): string {
       return "Round photo";
     case "avatar":
       return "Avatar";
+    case "coursePhoto":
+      return "Course photo";
   }
 }
 
