@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { SectionHeader } from "@/components/admin/SectionHeader";
+import { ArrowLeft, ChevronRight, Flag, MessageSquareWarning } from "lucide-react";
 import { activeStorageBaseUrl, createServiceClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { avatarURL } from "@/lib/storage";
+import { cn } from "@/lib/utils";
+import { kindLabel, workStageLabel, type FeedbackKind, type FeedbackWorkStage } from "@/lib/feedback/types";
+import { UserActions } from "./UserActions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +27,6 @@ type UserRow = {
   analytics_opt_out: boolean;
   home_club_id: string | null;
   home_county_id: string | null;
-  distance_units: string | null;
-  default_round_privacy: string | null;
-  shake_to_feedback_enabled: boolean | null;
-  onboarding_walkthrough_completed_at: string | null;
-  username_changed_at: string | null;
   last_seen_app_version: string | null;
   created_at: string;
   updated_at: string | null;
@@ -37,216 +35,307 @@ type UserRow = {
 const USER_COLUMNS =
   "id, username, display_name, bio, avatar_photo_id, privacy, account_status, " +
   "is_admin_hidden_from_public_leaderboards, admin_hidden_at, is_founding_member, " +
-  "analytics_opt_out, home_club_id, home_county_id, distance_units, " +
-  "default_round_privacy, shake_to_feedback_enabled, onboarding_walkthrough_completed_at, " +
-  "username_changed_at, last_seen_app_version, created_at, updated_at";
+  "analytics_opt_out, home_club_id, home_county_id, last_seen_app_version, created_at, updated_at";
 
-/**
- * Per-user detail — read-only v1. Reads the full profile through the
- * SERVER-ONLY service-role client (same RLS rationale as the directory:
- * `public.users` has no admin SELECT policy). Gated by the layout's
- * `requireAdmin()`. Set-status / hide / outreach controls land next via the
- * existing `is_admin()`-gated RPCs run on the session client.
- */
-export default async function UserDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+type ReportRow = { id: string; kind: FeedbackKind; work_stage: FeedbackWorkStage; body: string; created_at: string };
+type FlagRow = { id: string; flag_kind: string; state: string; triggered_at: string };
+type RoundRow = { course_id: string; date: string; gross_score: number | null };
+
+export default async function UserHubPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const admin = await requireAdmin();
 
   let supabase;
   try {
     supabase = await createServiceClient();
   } catch (e) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <BackLink />
-        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
-          {e instanceof Error ? e.message : "Service-role client unavailable."}
-        </div>
-      </div>
+      <Shell>
+        <Err>{e instanceof Error ? e.message : "Service-role client unavailable."}</Err>
+      </Shell>
     );
   }
 
-  const { data, error } = await supabase
-    .from("users")
-    .select(USER_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
-
+  const { data, error } = await supabase.from("users").select(USER_COLUMNS).eq("id", id).maybeSingle();
   if (error) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <BackLink />
-        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
-          Failed to load user: {error.message}.
-        </div>
-      </div>
+      <Shell>
+        <Err>Failed to load user: {error.message}</Err>
+      </Shell>
     );
   }
   if (!data) notFound();
-
   const user = data as unknown as UserRow;
 
-  // Resolve home club / county names (best-effort — a missing ref just hides
-  // the field). Service-role read, so RLS never trims these.
-  const [clubRes, countyRes] = await Promise.all([
+  const [
+    clubRes,
+    countyRes,
+    roundsCount,
+    coursesCount,
+    photosCount,
+    friendsCount,
+    reportsCount,
+    flagsCount,
+    reportsRes,
+    flagsRes,
+    roundsRes,
+  ] = await Promise.all([
     user.home_club_id
       ? supabase.from("clubs").select("name").eq("id", user.home_club_id).maybeSingle()
       : Promise.resolve({ data: null }),
     user.home_county_id
       ? supabase.from("counties").select("name").eq("id", user.home_county_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from("logged_rounds").select("id", { count: "exact", head: true }).eq("user_id", id),
+    supabase.from("played_markers").select("id", { count: "exact", head: true }).eq("user_id", id),
+    supabase.from("photos").select("id", { count: "exact", head: true }).eq("uploader_user_id", id),
+    supabase
+      .from("friendships")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "accepted")
+      .or(`requester_id.eq.${id},addressee_id.eq.${id}`),
+    supabase.from("feedback_reports").select("id", { count: "exact", head: true }).eq("user_id", id),
+    supabase.from("safeguarding_flags").select("id", { count: "exact", head: true }).eq("user_id", id),
+    supabase
+      .from("feedback_reports")
+      .select("id, kind, work_stage, body, created_at")
+      .eq("user_id", id)
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("safeguarding_flags")
+      .select("id, flag_kind, state, triggered_at")
+      .eq("user_id", id)
+      .order("triggered_at", { ascending: false })
+      .limit(6),
+    supabase
+      .from("logged_rounds")
+      .select("course_id, date, gross_score")
+      .eq("user_id", id)
+      .order("date", { ascending: false })
+      .limit(6),
   ]);
+
+  const reports = (reportsRes.data as ReportRow[] | null) ?? [];
+  const flags = (flagsRes.data as FlagRow[] | null) ?? [];
+  const rounds = (roundsRes.data as RoundRow[] | null) ?? [];
+
+  const courseNames: Record<string, string> = {};
+  const courseIds = Array.from(new Set(rounds.map((r) => r.course_id)));
+  if (courseIds.length > 0) {
+    const { data: cRows } = await supabase.from("courses").select("id,name").in("id", courseIds);
+    for (const c of cRows ?? []) courseNames[c.id] = c.name;
+  }
+
   const clubName = (clubRes.data as { name?: string } | null)?.name ?? null;
   const countyName = (countyRes.data as { name?: string } | null)?.name ?? null;
-
   const baseUrl = await activeStorageBaseUrl();
   const avatar = avatarURL(user.id, user.avatar_photo_id, baseUrl);
   const name = user.display_name?.trim() || user.username;
 
+  const stats = [
+    { label: "Rounds", value: roundsCount.count ?? 0 },
+    { label: "Courses", value: coursesCount.count ?? 0 },
+    { label: "Photos", value: photosCount.count ?? 0 },
+    { label: "Friends", value: friendsCount.count ?? 0 },
+    { label: "Reports", value: reportsCount.count ?? 0 },
+    { label: "Flags", value: flagsCount.count ?? 0, alert: (flagsCount.count ?? 0) > 0 },
+  ];
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink />
-
-      <SectionHeader
-        eyebrow="People &amp; safety · Users"
-        title={name}
-      />
-
+    <Shell>
+      {/* Identity */}
       <section className="flex items-start gap-4 rounded-xl glass-panel p-5">
         {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={avatar}
-            alt={`${name}'s avatar`}
-            className="size-20 shrink-0 rounded-full bg-paper-sunken object-cover"
-          />
+          <img src={avatar} alt="" className="size-16 shrink-0 rounded-full bg-paper-sunken object-cover" />
         ) : (
-          <div
-            aria-hidden
-            className="flex size-20 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xl font-semibold text-brand"
-          >
+          <div className="grid size-16 shrink-0 place-items-center rounded-full bg-brand/15 text-lg font-semibold text-brand">
             {initials(name)}
           </div>
         )}
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusChip status={user.account_status} />
-            {user.is_founding_member && (
-              <span className="rounded-full border border-brand/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
-                Founding member
-              </span>
-            )}
-            {user.is_admin_hidden_from_public_leaderboards && (
-              <span className="rounded-full border border-amber/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">
-                Hidden from leaderboards
-              </span>
-            )}
+            <h1 className="font-display text-xl font-semibold text-ink">{name}</h1>
+            <span className="text-sm text-ink-3">@{user.username}</span>
           </div>
-          {user.bio ? (
-            <p className="text-sm leading-snug text-ink-2">{user.bio}</p>
-          ) : (
-            <p className="text-sm italic text-ink-3">No bio set</p>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StatusChip status={user.account_status} />
+            {user.is_founding_member && <Pill tone="brand">Founding member</Pill>}
+            {user.is_admin_hidden_from_public_leaderboards && <Pill tone="amber">Hidden from boards</Pill>}
+            <Pill tone="neutral">{prettyPrivacy(user.privacy)}</Pill>
+          </div>
+          {user.bio && <p className="text-sm leading-snug text-ink-2">{user.bio}</p>}
         </div>
       </section>
 
-      <section className="rounded-xl glass-panel p-5">
-        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">
-          Account
-        </h2>
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-          <Field label="Account status" value={user.account_status} />
-          <Field label="Profile privacy" value={prettyPrivacy(user.privacy)} />
-          <Field label="Home club" value={clubName ?? (user.home_club_id ? "—" : "Not set")} />
-          <Field label="Home county" value={countyName ?? (user.home_county_id ? "—" : "Not set")} />
-          <Field label="Distance units" value={user.distance_units ?? "—"} />
-          <Field
-            label="Default round privacy"
-            value={user.default_round_privacy ? prettyPrivacy(user.default_round_privacy as Privacy) : "—"}
-          />
-          <Field label="Analytics" value={user.analytics_opt_out ? "Opted out" : "Opted in"} />
-          <Field
-            label="Shake to feedback"
-            value={user.shake_to_feedback_enabled === false ? "Off" : "On"}
-          />
-          <Field label="Last seen app version" value={user.last_seen_app_version ?? "—"} />
-          <Field
-            label="Onboarding"
-            value={user.onboarding_walkthrough_completed_at ? "Completed" : "Incomplete"}
-          />
-        </dl>
-      </section>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Activity */}
+        <div className="min-w-0 space-y-5">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {stats.map((s) => (
+              <div key={s.label} className="rounded-xl glass-panel p-3 text-center">
+                <p className={cn("font-display text-2xl font-semibold tabular-nums", s.alert ? "text-alert" : "text-ink")}>
+                  {s.value.toLocaleString()}
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">{s.label}</p>
+              </div>
+            ))}
+          </div>
 
-      <section className="rounded-xl glass-panel p-5">
-        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">
-          Timeline
-        </h2>
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-          <Field label="Joined" value={formatDate(user.created_at)} />
-          <Field label="Profile updated" value={formatDate(user.updated_at)} />
-          <Field label="Username changed" value={formatDate(user.username_changed_at)} />
-          {user.is_admin_hidden_from_public_leaderboards && (
-            <Field label="Hidden at" value={formatDate(user.admin_hidden_at)} />
+          <Card title={`Feedback reports (${reportsCount.count ?? 0})`}>
+            {reports.length === 0 ? (
+              <Empty>No reports from this user.</Empty>
+            ) : (
+              <ul className="divide-y divide-rule/50">
+                {reports.map((r) => (
+                  <li key={r.id}>
+                    <Link href={`/feedback/${r.id}`} className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80">
+                      <MessageSquareWarning aria-hidden className="size-4 shrink-0 text-ink-3" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-ink">{snippet(r.body)}</p>
+                        <p className="text-[11px] text-ink-3">
+                          {kindLabel(r.kind)} · {workStageLabel(r.work_stage)} · {relativeTime(r.created_at)}
+                        </p>
+                      </div>
+                      <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          {flags.length > 0 && (
+            <Card title={`Safeguarding flags (${flagsCount.count ?? 0})`}>
+              <ul className="divide-y divide-rule/50">
+                {flags.map((f) => (
+                  <li key={f.id}>
+                    <Link href="/safeguarding" className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80">
+                      <Flag aria-hidden className="size-4 shrink-0 text-amber" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-ink">{prettyFlagKind(f.flag_kind)}</p>
+                        <p className="text-[11px] text-ink-3">{f.state.replace(/_/g, " ")} · {relativeTime(f.triggered_at)}</p>
+                      </div>
+                      <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
           )}
-          <Field label="User ID" value={user.id} mono />
-        </dl>
-      </section>
 
-      <p className="text-xs text-ink-3">
-        Read-only — set-status, hide, and outreach controls ship in the next slice.
-      </p>
+          <Card title="Recent rounds">
+            {rounds.length === 0 ? (
+              <Empty>No rounds logged.</Empty>
+            ) : (
+              <ul className="divide-y divide-rule/50">
+                {rounds.map((r, i) => (
+                  <li key={i}>
+                    <Link
+                      href={`/courses/${r.course_id}`}
+                      className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-ink">{courseNames[r.course_id] ?? "Unknown course"}</p>
+                        <p className="text-[11px] text-ink-3">{formatDate(r.date)}</p>
+                      </div>
+                      {r.gross_score != null && (
+                        <span className="font-display text-sm font-semibold tabular-nums text-ink-2">{r.gross_score}</span>
+                      )}
+                      <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        {/* Actions + account */}
+        <div className="space-y-5">
+          <UserActions
+            userId={user.id}
+            status={user.account_status}
+            hidden={user.is_admin_hidden_from_public_leaderboards}
+            isSuperAdmin={admin.role === "super_admin"}
+          />
+          <Card title="Account">
+            <dl className="space-y-2.5 text-xs">
+              <Row label="Home club" value={clubName ?? (user.home_club_id ? "—" : "Not set")} />
+              <Row label="Home county" value={countyName ?? (user.home_county_id ? "—" : "Not set")} />
+              <Row label="Analytics" value={user.analytics_opt_out ? "Opted out" : "Opted in"} />
+              <Row label="Last seen" value={user.last_seen_app_version ?? "—"} />
+              <Row label="Joined" value={formatDate(user.created_at)} />
+              {user.is_admin_hidden_from_public_leaderboards && (
+                <Row label="Hidden at" value={formatDate(user.admin_hidden_at)} />
+              )}
+              <Row label="User ID" value={user.id} mono />
+            </dl>
+          </Card>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+// ── chrome ─────────────────────────────────────────────────────────────
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-5xl space-y-5">
+      <Link href="/users" className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink">
+        <ArrowLeft aria-hidden className="size-4" /> All users
+      </Link>
+      {children}
     </div>
   );
 }
 
-function BackLink() {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Link
-      href="/users"
-      className="inline-flex items-center gap-1.5 text-xs text-ink-2 hover:text-ink"
+    <section className="rounded-xl glass-panel p-5">
+      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="shrink-0 text-ink-3">{label}</dt>
+      <dd className={cn("min-w-0 text-right text-ink-2", mono && "break-all font-mono text-[10px]")}>{value}</dd>
+    </div>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <p className="py-3 text-center text-xs text-ink-3">{children}</p>;
+}
+function Err({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">{children}</div>;
+}
+
+function Pill({ tone, children }: { tone: "brand" | "amber" | "neutral"; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        tone === "brand" ? "border-brand/40 text-brand" : tone === "amber" ? "border-amber/40 text-amber" : "border-rule/70 text-ink-3",
+      )}
     >
-      <ArrowLeft className="size-4" aria-hidden /> Back to users
-    </Link>
-  );
-}
-
-function Field({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="space-y-1">
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-        {label}
-      </dt>
-      <dd className={"text-sm text-ink " + (mono ? "break-all font-mono text-xs text-ink-2" : "")}>
-        {value}
-      </dd>
-    </div>
+      {children}
+    </span>
   );
 }
 
 function StatusChip({ status }: { status: AccountStatus }) {
-  const cls =
-    status === "active"
-      ? "border-brand/40 text-brand"
-      : status === "restricted"
-        ? "border-amber/40 text-amber"
-        : "border-alert/40 text-alert";
   return (
     <span
-      className={
-        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " +
-        cls
-      }
+      className={cn(
+        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        status === "active" ? "border-brand/40 text-brand" : status === "restricted" ? "border-amber/40 text-amber" : "border-alert/40 text-alert",
+      )}
     >
       {status}
     </span>
@@ -255,32 +344,31 @@ function StatusChip({ status }: { status: AccountStatus }) {
 
 function initials(name: string): string {
   const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+  return (parts.length >= 2 ? parts[0][0] + parts[1][0] : name.slice(0, 2)).toUpperCase();
 }
-
 function prettyPrivacy(p: Privacy): string {
-  switch (p) {
-    case "onlyMe":
-      return "Only me";
-    case "friendsOnly":
-      return "Friends only";
-    case "everyone":
-      return "Everyone";
-    default:
-      return p;
-  }
+  return p === "onlyMe" ? "Only me" : p === "friendsOnly" ? "Friends only" : "Public";
 }
-
+function prettyFlagKind(k: string): string {
+  return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function snippet(body: string): string {
+  const t = body.trim().replace(/\s+/g, " ");
+  return t.length <= 80 ? t : t.slice(0, 77) + "…";
+}
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+function relativeTime(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d`;
+  return `${Math.round(days / 30)}mo`;
 }

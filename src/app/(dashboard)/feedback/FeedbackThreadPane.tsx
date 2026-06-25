@@ -322,12 +322,21 @@ function Header({
         <span className="font-medium text-ink">{reporter ? display : "Anonymous (deleted)"}</span>
         {reporter?.username && <span className="text-ink-3">@{reporter.username}</span>}
         {owner && (
-          <span className="ml-auto text-ink-3">
-            Owner ·{" "}
+          <span className="text-ink-3">
+            · owner{" "}
             <span className="text-ink-2">
               {owner.display_name ?? (owner.username ? `@${owner.username}` : "admin")}
             </span>
           </span>
+        )}
+        {reporter && (
+          <Link
+            href={`/users/${reporter.id}`}
+            className="ml-auto inline-flex items-center gap-0.5 text-[11px] font-medium text-brand transition-colors hover:underline"
+          >
+            View profile
+            <ExternalLink aria-hidden className="size-3" />
+          </Link>
         )}
       </div>
     </div>

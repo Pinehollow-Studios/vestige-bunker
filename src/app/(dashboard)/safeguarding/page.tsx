@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Shield, ShieldAlert } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { createClient } from "@/lib/supabase/server";
@@ -154,7 +155,9 @@ function FlagRow({ row }: { row: Row }) {
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <KindBadge kind={row.flag_kind} />
-            <span className="font-medium text-ink">{name}</span>
+            <Link href={`/users/${row.user_id}`} className="font-medium text-ink transition-colors hover:text-brand hover:underline">
+              {name}
+            </Link>
             {row.username && row.display_name && (
               <span className="text-xs text-ink-3">@{row.username}</span>
             )}
