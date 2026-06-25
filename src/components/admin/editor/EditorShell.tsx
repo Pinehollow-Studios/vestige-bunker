@@ -19,6 +19,7 @@ export function EditorShell({
   saveState,
   actions,
   meta,
+  aside,
   children,
 }: {
   backHref: string;
@@ -28,10 +29,12 @@ export function EditorShell({
   saveState?: SaveState;
   actions?: React.ReactNode;
   meta?: React.ReactNode;
+  /** Optional sticky right column — a live preview + readiness checklist. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className={cn("mx-auto space-y-5", aside ? "max-w-6xl" : "max-w-5xl")}>
       <Link
         href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"
@@ -61,7 +64,14 @@ export function EditorShell({
         </div>
       )}
 
-      <div className="space-y-4">{children}</div>
+      {aside ? (
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-4">{children}</div>
+          <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">{aside}</aside>
+        </div>
+      ) : (
+        <div className="space-y-4">{children}</div>
+      )}
     </div>
   );
 }

@@ -11,6 +11,9 @@ import {
   Field,
   fieldInputClass,
 } from "@/components/admin/editor/EditorShell";
+import { PreviewFrame } from "@/components/admin/editor/PreviewFrame";
+import { Readiness, type ReadinessCheck } from "@/components/admin/editor/Readiness";
+import { CuratedPreviewContent } from "./CuratedPreview";
 import { useFormAutosave } from "@/lib/hooks/useFormAutosave";
 import {
   archiveList,
@@ -71,6 +74,41 @@ export function CuratedEditor({
     (patch) => updateCuratedList(row.id, patch),
   );
 
+  const checks: ReadinessCheck[] = [
+    coverURL
+      ? { state: "ok", label: "Cover image" }
+      : { state: "warn", label: "No cover image", hint: "Lists look far better with a 16:9 cover." },
+    courses.length === 0
+      ? { state: "missing", label: "No courses", hint: "Add courses from the picker below." }
+      : courses.length < 5
+        ? { state: "warn", label: `Only ${courses.length} course${courses.length === 1 ? "" : "s"}`, hint: "Curated lists usually have 10+." }
+        : { state: "ok", label: `${courses.length} courses` },
+    values.description.trim()
+      ? { state: "ok", label: "Summary set" }
+      : { state: "warn", label: "No summary", hint: "The one-line subtitle in the hero." },
+    values.bio.trim() ? { state: "ok", label: "Bio set" } : { state: "info", label: "No bio (optional)" },
+    status === "live"
+      ? { state: "ok", label: "Published — live on iOS" }
+      : { state: "info", label: `${STATUS_LABELS[status]} — not visible to users yet` },
+  ];
+
+  const aside = (
+    <>
+      <Readiness checks={checks} />
+      <PreviewFrame caption="Curated list · iOS">
+        <CuratedPreviewContent
+          name={values.name}
+          summary={values.description}
+          bio={values.bio}
+          tier={values.tier}
+          isOrdered={values.is_ordered}
+          coverURL={coverURL}
+          courses={courses}
+        />
+      </PreviewFrame>
+    </>
+  );
+
   return (
     <EditorShell
       backHref="/curated"
@@ -78,6 +116,7 @@ export function CuratedEditor({
       eyebrow={`Editorial · ${STATUS_LABELS[status].toLowerCase()}`}
       title={values.name || "Untitled list"}
       saveState={state}
+      aside={aside}
       meta={
         <>
           <span

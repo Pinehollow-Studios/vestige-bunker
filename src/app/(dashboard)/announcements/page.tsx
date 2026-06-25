@@ -1,202 +1,139 @@
-import Link from "next/link";
-import { ArrowUpRight, Megaphone } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
+import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
+import type { SortDir } from "@/components/admin/table/DataTable";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { cn } from "@/lib/utils";
 import { NewAnnouncementButton } from "./NewAnnouncementButton";
-import { AnnouncementFilters } from "./AnnouncementFilters";
+import { AnnouncementsTable } from "./AnnouncementsTable";
 import {
-  audienceSummary,
+  ANNOUNCEMENT_KINDS,
+  AUDIENCE_KINDS,
+  AUDIENCE_LABELS,
   KIND_LABELS,
   statusFor,
-  STATUS_CHIP,
   STATUS_DOT,
   STATUS_LABELS,
-  type AnnouncementAudienceKind,
-  type AnnouncementKind,
   type AnnouncementOverviewRow,
   type AnnouncementStatus,
 } from "./types";
 
 export const dynamic = "force-dynamic";
 
-type SearchParamArray = string | string[] | undefined;
+const STATUS_ORDER: AnnouncementStatus[] = ["live", "scheduled", "draft", "expired", "archived"];
+const STATUS_RANK: Record<AnnouncementStatus, number> = {
+  live: 0,
+  scheduled: 1,
+  draft: 2,
+  expired: 3,
+  archived: 4,
+};
 
-function asArray<T extends string>(value: SearchParamArray): T[] | null {
-  if (!value) return null;
-  const arr = Array.isArray(value) ? value : [value];
-  return arr.length > 0 ? (arr as T[]) : null;
-}
+type SearchParams = Promise<{
+  q?: string;
+  status?: string;
+  kind?: string;
+  audience?: string;
+  sort?: string;
+  dir?: string;
+}>;
 
-/**
- * Announcements index. Admin RLS + the `admin_announcements_overview()` RPC see
- * every announcement (draft / scheduled / live / expired / archived) with the
- * derived seen / dismissed / acted counts. Each row links to
- * `/announcements/[id]` for the full content + targeting + lifecycle editor.
- *
- * Forward-compat: the overview RPC + tables don't exist on prod until Tom
- * applies the migration, so a missing-table error renders the unconfigured
- * empty state rather than throwing.
- */
-export default async function AnnouncementsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, SearchParamArray>>;
-}) {
+export default async function AnnouncementsPage(props: { searchParams: SearchParams }) {
   await requireAdmin();
-  const params = await searchParams;
+  const sp = await props.searchParams;
+  const q = (sp.q ?? "").trim().toLowerCase();
+  const statusFilter = sp.status ?? "all";
+  const kindFilter = sp.kind ?? "all";
+  const audienceFilter = sp.audience ?? "all";
+  const sort = sp.sort ?? "status";
+  const dir: SortDir = sp.dir === "desc" ? "desc" : "asc";
+
   const supabase = await createClient();
-
-  const statuses = asArray<AnnouncementStatus>(params.status);
-  const kinds = asArray<AnnouncementKind>(params.kind);
-  const audiences = asArray<AnnouncementAudienceKind>(params.audience);
-
   const { data, error } = await supabase.rpc("admin_announcements_overview");
-  const rows = (data as AnnouncementOverviewRow[] | null) ?? [];
-
-  // The migration may not be applied in this environment yet (e.g. prod before
-  // Tom's coordinated deploy). Treat a missing-function / missing-table error
-  // as "not yet wired" rather than a hard failure.
+  const all = (data as AnnouncementOverviewRow[] | null) ?? [];
   const notConfigured = !!error && isMissingRelation(error.message);
 
-  const buckets = bucketRows(rows);
-
-  // Client-side filtering keeps the surface single-RPC + URL-driven without a
-  // bespoke filtered RPC — the overview already returns every row.
   const now = new Date();
-  const filtered = rows.filter((row) => {
-    if (statuses && !statuses.includes(statusFor(row, now))) return false;
-    if (kinds && !kinds.includes(row.kind)) return false;
-    if (audiences && !audiences.includes(row.audience_kind)) return false;
-    return true;
+  const buckets: Record<AnnouncementStatus, number> = {
+    draft: 0,
+    scheduled: 0,
+    live: 0,
+    expired: 0,
+    archived: 0,
+  };
+  for (const r of all) buckets[statusFor(r, now)] += 1;
+
+  let rows = all;
+  if (q) rows = rows.filter((r) => r.title.toLowerCase().includes(q) || (r.eyebrow ?? "").toLowerCase().includes(q));
+  if (statusFilter !== "all") rows = rows.filter((r) => statusFor(r, now) === statusFilter);
+  if (kindFilter !== "all") rows = rows.filter((r) => r.kind === kindFilter);
+  if (audienceFilter !== "all") rows = rows.filter((r) => r.audience_kind === audienceFilter);
+  rows = [...rows].sort((a, b) => {
+    const m = dir === "asc" ? 1 : -1;
+    switch (sort) {
+      case "title":
+        return a.title.localeCompare(b.title) * m;
+      case "priority":
+        return (a.priority - b.priority) * m;
+      default:
+        return (STATUS_RANK[statusFor(a, now)] - STATUS_RANK[statusFor(b, now)]) * m;
+    }
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <SectionHeader
-        eyebrow="Editorial"
-        title="Announcements"
-        actions={<NewAnnouncementButton />}
-      />
+    <div className="mx-auto max-w-5xl space-y-4">
+      <SectionHeader eyebrow="Editorial" title="Announcements" actions={<NewAnnouncementButton />} />
 
-      {rows.length > 0 && <Summary buckets={buckets} total={rows.length} />}
-
-      {error && !notConfigured && (
-        <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+      {notConfigured ? (
+        <NotConfigured />
+      ) : error ? (
+        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load announcements: {error.message}
         </div>
-      )}
-
-      {notConfigured && <NotConfigured />}
-
-      {!notConfigured && rows.length > 0 && <AnnouncementFilters />}
-
-      {!error && rows.length === 0 && <EmptyState />}
-
-      {!notConfigured && rows.length > 0 && (
+      ) : (
         <>
-          {filtered.length === 0 ? (
-            <p className="rounded-xl glass-panel p-8 text-center text-sm text-ink-2">
-              No announcements match the current filters.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {filtered.map((row) => (
-                <li key={row.id}>
-                  <AnnouncementRowCard row={row} />
-                </li>
+          {all.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {STATUS_ORDER.filter((k) => buckets[k] > 0).map((key) => (
+                <span key={key} className="inline-flex items-center gap-2 rounded-full glass-panel px-3 py-1 text-xs">
+                  <span aria-hidden className={cn("size-2 rounded-full", STATUS_DOT[key])} />
+                  <span className="text-ink-2">{STATUS_LABELS[key]}</span>
+                  <span className="font-semibold tabular-nums text-ink">{buckets[key]}</span>
+                </span>
               ))}
-            </ol>
+            </div>
           )}
+
+          <TableToolbar
+            initialQuery={sp.q ?? ""}
+            searchPlaceholder="Search announcements…"
+            countLabel={`${rows.length} of ${all.length}`}
+            hasFilters={Boolean(q) || statusFilter !== "all" || kindFilter !== "all" || audienceFilter !== "all"}
+          >
+            <TableSelect
+              name="status"
+              label="Status"
+              value={statusFilter}
+              options={[{ value: "all", label: "All" }, ...STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]}
+            />
+            <TableSelect
+              name="kind"
+              label="Kind"
+              value={kindFilter}
+              options={[{ value: "all", label: "All" }, ...ANNOUNCEMENT_KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] }))]}
+            />
+            <TableSelect
+              name="audience"
+              label="Audience"
+              value={audienceFilter}
+              options={[{ value: "all", label: "All" }, ...AUDIENCE_KINDS.map((a) => ({ value: a, label: AUDIENCE_LABELS[a] }))]}
+            />
+          </TableToolbar>
+
+          {all.length === 0 ? <EmptyState /> : <AnnouncementsTable rows={rows} sort={sort} dir={dir} />}
         </>
       )}
-    </div>
-  );
-}
-
-function AnnouncementRowCard({ row }: { row: AnnouncementOverviewRow }) {
-  const status = statusFor(row);
-  return (
-    <Link
-      href={`/announcements/${row.id}`}
-      className="group/card block rounded-xl glass-panel p-5 transition-colors hover:border-brand/40"
-    >
-      <article className="flex flex-col gap-3">
-        <header className="flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5">
-                <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_DOT[status])} />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
-                  {KIND_LABELS[row.kind]}
-                </span>
-              </span>
-              {row.eyebrow && <span className="text-ink-3">· {row.eyebrow}</span>}
-              <span className="text-ink-3">· priority {row.priority}</span>
-            </div>
-            <h2 className="truncate font-heading text-base font-semibold leading-snug text-ink">
-              {row.title}
-            </h2>
-            <p className="text-xs text-ink-2">{audienceSummary(row)}</p>
-          </div>
-          <span
-            className={cn(
-              "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-              STATUS_CHIP[status],
-            )}
-          >
-            {STATUS_LABELS[status]}
-          </span>
-        </header>
-
-        <footer className="flex flex-wrap items-center gap-4 text-xs text-ink-3">
-          <Stat label="seen" value={row.seen_count} />
-          <Stat label="dismissed" value={row.dismissed_count} />
-          <Stat label="acted" value={row.acted_count} />
-          <span className="ml-auto inline-flex items-center gap-1 text-brand opacity-0 transition-opacity group-hover/card:opacity-100">
-            Edit <ArrowUpRight aria-hidden className="size-3" />
-          </span>
-        </footer>
-      </article>
-    </Link>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <span className="inline-flex items-baseline gap-1">
-      <span className="font-semibold tabular-nums text-ink">{value}</span>
-      <span className="text-ink-3">{label}</span>
-    </span>
-  );
-}
-
-function Summary({
-  buckets,
-  total,
-}: {
-  buckets: Record<AnnouncementStatus, number>;
-  total: number;
-}) {
-  const order: AnnouncementStatus[] = ["live", "scheduled", "draft", "expired", "archived"];
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full glass-panel px-3 py-1 text-xs font-medium text-ink-2">
-        {total} total
-      </span>
-      {order
-        .filter((key) => buckets[key] > 0)
-        .map((key) => (
-          <span
-            key={key}
-            className="inline-flex items-center gap-2 rounded-full glass-panel px-3 py-1 text-xs"
-          >
-            <span aria-hidden className={cn("size-2 rounded-full", STATUS_DOT[key])} />
-            <span className="text-ink-2">{STATUS_LABELS[key]}</span>
-            <span className="font-semibold tabular-nums text-ink">{buckets[key]}</span>
-          </span>
-        ))}
     </div>
   );
 }
@@ -209,10 +146,7 @@ function EmptyState() {
           <Megaphone className="size-5" />
         </span>
         <p className="font-display text-base font-semibold text-ink">No announcements yet</p>
-        <p className="text-sm text-ink-2">
-          Author your first announcement — a what&apos;s-new card, a feature spotlight, a note to
-          the beta.
-        </p>
+        <p className="text-sm text-ink-2">Author your first — a what&apos;s-new card, a spotlight, a note to the beta.</p>
       </div>
     </div>
   );
@@ -227,35 +161,15 @@ function NotConfigured() {
         </span>
         <p className="font-display text-base font-semibold text-ink">Announcements not wired here</p>
         <p className="mx-auto max-w-md text-sm text-ink-2">
-          The announcements tables aren&apos;t in this Supabase project yet. Apply the
-          <span className="font-mono text-xs"> 20260607100000_announcements.sql</span> migration to
-          enable this surface.
+          The announcements tables aren&apos;t in this Supabase project yet. Apply the{" "}
+          <span className="font-mono text-xs">20260607100000_announcements.sql</span> migration to enable this surface.
         </p>
       </div>
     </div>
   );
 }
 
-function bucketRows(rows: AnnouncementOverviewRow[]): Record<AnnouncementStatus, number> {
-  const out: Record<AnnouncementStatus, number> = {
-    draft: 0,
-    scheduled: 0,
-    live: 0,
-    expired: 0,
-    archived: 0,
-  };
-  const now = new Date();
-  for (const row of rows) out[statusFor(row, now)] += 1;
-  return out;
-}
-
-/** True when a PostgREST error reads like "relation/function does not exist". */
 function isMissingRelation(message: string): boolean {
   const m = message.toLowerCase();
-  return (
-    m.includes("does not exist") ||
-    m.includes("could not find") ||
-    m.includes("schema cache") ||
-    m.includes("not found")
-  );
+  return m.includes("does not exist") || m.includes("could not find") || m.includes("schema cache") || m.includes("not found");
 }

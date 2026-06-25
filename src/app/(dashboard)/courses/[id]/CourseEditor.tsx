@@ -13,6 +13,9 @@ import {
   ReadOnlyField,
   fieldInputClass,
 } from "@/components/admin/editor/EditorShell";
+import { PreviewFrame } from "@/components/admin/editor/PreviewFrame";
+import { Readiness, type ReadinessCheck } from "@/components/admin/editor/Readiness";
+import { CoursePreviewContent } from "./CoursePreview";
 import { useFormAutosave } from "@/lib/hooks/useFormAutosave";
 import { removeCourseCover, updateCourse, uploadCourseCover } from "../actions";
 import { CoverCropDialog } from "./CoverCropDialog";
@@ -62,6 +65,41 @@ export function CourseEditor({
     (patch) => updateCourse(row.id, patch),
   );
 
+  const checks: ReadinessCheck[] = [
+    coverURL
+      ? { state: "ok", label: "Hero photo" }
+      : { state: "warn", label: "No hero photo", hint: "Courses read better with a photo." },
+    values.description.trim()
+      ? { state: "ok", label: "Description set" }
+      : { state: "warn", label: "No description", hint: "Shown under About in the app." },
+    values.par != null && values.yards != null
+      ? { state: "ok", label: "Par & yards set" }
+      : { state: "warn", label: "Missing par / yards" },
+    values.style.trim() ? { state: "ok", label: "Style set" } : { state: "info", label: "No style (optional)" },
+  ];
+
+  const aside = (
+    <>
+      <Readiness checks={checks} />
+      <PreviewFrame caption="Course detail · iOS">
+        <CoursePreviewContent
+          name={row.name}
+          club={row.club_name}
+          county={row.county_name}
+          coverURL={coverURL}
+          description={values.description}
+          par={values.par}
+          yards={values.yards}
+          holeCount={values.hole_count}
+          style={values.style}
+          established={values.established}
+          tier={values.tier}
+          layout={values.layout}
+        />
+      </PreviewFrame>
+    </>
+  );
+
   return (
     <EditorShell
       backHref="/courses"
@@ -69,6 +107,7 @@ export function CourseEditor({
       eyebrow={`Editorial · ${TIER_LABELS[row.tier].toLowerCase()}`}
       title={row.name}
       saveState={state}
+      aside={aside}
       meta={
         <>
           <span className="inline-flex items-center rounded-full border border-rule/70 bg-paper-sunken/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-2">
