@@ -2,17 +2,25 @@ import Link from "next/link";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { AnalyticsNav } from "@/components/admin/analytics/AnalyticsNav";
 import { EventFeed } from "@/components/admin/analytics/EventFeed";
-import { SectionLabel, MetricCard, AreaChart, EmptyHint } from "@/components/admin/analytics/viz";
+import { Reveal } from "@/components/admin/Motion";
+import { SectionLabel, MetricCard, AreaChart, BarList, EmptyHint } from "@/components/admin/analytics/viz";
 import { cn } from "@/lib/utils";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
-import { eventLabel } from "@/lib/analytics/config";
-import { getEvents, rollupVolume, rollupEventsPerDay, distinctUsers, isoDaysAgo } from "@/lib/analytics/queries";
+import { eventLabel, eventGroup, GROUP_LABEL, type EventGroup } from "@/lib/analytics/config";
+import {
+  getEvents,
+  getOverview,
+  getDailyActivity,
+  getEventVolume,
+  isoDaysAgo,
+  type EventVolumeRow,
+} from "@/lib/analytics/queries";
 
 export const dynamic = "force-dynamic";
 
 const FEED_LIMIT = 200;
 
-function relTime(iso?: string): string {
+function relTime(iso?: string | null): string {
   if (!iso) return "—";
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (s < 60) return `${s}s ago`;
@@ -23,6 +31,8 @@ function relTime(iso?: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+const GROUP_ORDER: EventGroup[] = ["onboarding", "discovery", "play", "social", "lifecycle", "other"];
+
 export default async function EventExplorerPage({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
   const { event } = await searchParams;
   const supabase = await tryCreateServiceClient();
@@ -32,53 +42,94 @@ export default async function EventExplorerPage({ searchParams }: { searchParams
       <Shell>
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-amber">
           Service-role key not configured — set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
-          analytics tables.
+          analytics views.
         </div>
       </Shell>
     );
   }
 
-  const since = isoDaysAgo(30);
-  const [feed, windowEvents] = await Promise.all([
-    getEvents(supabase, { sinceIso: since, eventName: event, limit: FEED_LIMIT }),
-    getEvents(supabase, { sinceIso: since, limit: 10000 }),
+  const [feed, overview, daily, volume] = await Promise.all([
+    getEvents(supabase, { sinceIso: isoDaysAgo(30), eventName: event, limit: FEED_LIMIT }),
+    getOverview(supabase),
+    getDailyActivity(supabase),
+    getEventVolume(supabase),
   ]);
-  const volume = rollupVolume(windowEvents);
-  const perDay = rollupEventsPerDay(windowEvents, 14);
-  const perDayPeak = Math.max(...perDay.map((d) => d.count), 0);
+
+  const last30 = daily.slice(-30);
+  const eventsSeries = last30.map((d) => ({ day: d.day, count: d.events }));
+  const hasEvents = last30.some((d) => d.events > 0);
+  const totalEvents = volume.reduce((s, v) => s + v.total, 0);
+
+  // Group the volume table by event group, group order then volume order.
+  const grouped: { group: EventGroup; rows: EventVolumeRow[] }[] = GROUP_ORDER.map((group) => ({
+    group,
+    rows: volume.filter((v) => eventGroup(v.event_name) === group),
+  })).filter((g) => g.rows.length > 0);
 
   return (
     <Shell>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MetricCard label="Events · 30d" value={windowEvents.length.toLocaleString()} tone="brand" />
-        <MetricCard label="Event types" value={volume.length.toLocaleString()} />
-        <MetricCard label="Active users" value={distinctUsers(windowEvents).toLocaleString()} />
-        <MetricCard label="Last event" value={relTime(windowEvents[0]?.created_at)} />
-      </div>
-
-      <section className="space-y-2 rounded-xl glass-panel p-4">
-        <SectionLabel>Events per day · 14d</SectionLabel>
-        {perDayPeak > 0 ? <AreaChart data={perDay} height={120} /> : <EmptyHint>No events in the window yet.</EmptyHint>}
-      </section>
-
-      <section className="space-y-3">
-        <SectionLabel>Filter by event</SectionLabel>
-        <div className="flex flex-wrap gap-1.5">
-          <FilterChip href="/analytics/events" label={`All (${windowEvents.length})`} active={!event} />
-          {volume.map((v) => (
-            <FilterChip
-              key={v.key}
-              href={`/analytics/events?event=${encodeURIComponent(v.key)}`}
-              label={`${eventLabel(v.key)} (${v.count})`}
-              active={event === v.key}
-            />
-          ))}
+      <Reveal>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <MetricCard label="Events · all time" value={(overview?.total_events ?? totalEvents).toLocaleString()} tone="brand" />
+          <MetricCard label="Events today" value={(overview?.events_today ?? 0).toLocaleString()} />
+          <MetricCard label="Event types" value={volume.length.toLocaleString()} />
+          <MetricCard label="Last event" value={relTime(feed[0]?.created_at)} />
         </div>
-      </section>
+      </Reveal>
+
+      <Reveal delay={60}>
+        <section className="space-y-2 rounded-xl glass-panel p-4">
+          <SectionLabel>Events per day · 30d</SectionLabel>
+          {hasEvents ? <AreaChart data={eventsSeries} height={130} /> : <EmptyHint>No events in the window yet.</EmptyHint>}
+        </section>
+      </Reveal>
+
+      <Reveal delay={80}>
+        <section className="space-y-3">
+          <SectionLabel>Filter by event</SectionLabel>
+          <div className="flex flex-wrap gap-1.5">
+            <FilterChip href="/analytics/events" label="All" active={!event} />
+            {volume.map((v) => (
+              <FilterChip
+                key={v.event_name}
+                href={`/analytics/events?event=${encodeURIComponent(v.event_name)}`}
+                label={`${eventLabel(v.event_name)} (${v.total.toLocaleString()})`}
+                active={event === v.event_name}
+              />
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      {!event && grouped.length > 0 && (
+        <Reveal delay={100}>
+          <section className="space-y-4 rounded-xl glass-panel p-4">
+            <SectionLabel>Event volume · by group</SectionLabel>
+            <div className="space-y-5">
+              {grouped.map(({ group, rows }) => (
+                <div key={group} className="space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+                    {GROUP_LABEL[group]}
+                  </p>
+                  <BarList
+                    items={rows.map((r) => ({
+                      key: r.event_name,
+                      label: eventLabel(r.event_name),
+                      value: r.total,
+                      trailing: `${r.users.toLocaleString()} users`,
+                    }))}
+                    tone="info"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <SectionLabel>{event ? eventLabel(event) : "All events"}</SectionLabel>
+          <SectionLabel>{event ? eventLabel(event) : "Live feed"}</SectionLabel>
           <span className="text-[11px] tabular-nums text-ink-3">
             {feed.length}
             {feed.length >= FEED_LIMIT ? "+" : ""} shown
@@ -114,10 +165,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <SectionHeader
-        eyebrow="Insights · Analytics"
-        title="Events"
-      />
+      <SectionHeader eyebrow="Insights · Analytics" title="Events" />
       <AnalyticsNav active="/analytics/events" />
       {children}
     </div>
