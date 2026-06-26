@@ -7,6 +7,7 @@ import {
   Award,
   BarChart3,
   Flag,
+  Gauge,
   Images,
   LayoutDashboard,
   ListChecks,
@@ -48,6 +49,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/curated", label: "Curated lists", icon: Sparkles, countKey: "curated" },
       { href: "/courses", label: "Courses", icon: MapIcon, countKey: "courses" },
+      { href: "/index", label: "Index", icon: Gauge },
       { href: "/badges", label: "Badges", icon: Award },
       { href: "/announcements", label: "Announcements", icon: Megaphone, countKey: "announcements" },
       { href: "/societies", label: "Societies", icon: Flag },

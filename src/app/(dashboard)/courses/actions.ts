@@ -174,6 +174,63 @@ export async function removeCourseCover(courseId: string): Promise<ActionResult>
   return { ok: true };
 }
 
+/**
+ * Set a course's editorial prestige (0–100) + optional source note via the
+ * `admin_set_course_prestige` RPC, which writes the value, stamps the audit
+ * columns, and recomputes the whole Vestige Index in one atomic call.
+ * Returns the course's new index for an immediate optimistic readout.
+ */
+export async function setCoursePrestige(
+  courseId: string,
+  prestige: number,
+  source: string | null,
+): Promise<ActionResult<number | null>> {
+  if (!Number.isFinite(prestige) || prestige < 0 || prestige > 100) {
+    return { ok: false, message: "Prestige must be 0–100." };
+  }
+  const supabase = await createDevClient();
+  const { data, error } = await supabase.rpc("admin_set_course_prestige", {
+    p_course: courseId,
+    p_prestige: Math.round(prestige),
+    p_source: source?.trim() || null,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/index");
+  revalidatePath("/courses");
+  revalidatePath(`/courses/${courseId}`);
+  return { ok: true, data: (data as number | null) ?? null };
+}
+
+/** Recompute every course's Vestige Index now (admin "recalculate" button). */
+export async function recomputeVestigeIndex(): Promise<ActionResult<number>> {
+  const supabase = await createDevClient();
+  const { data, error } = await supabase.rpc("admin_recompute_vestige_index");
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/index");
+  revalidatePath("/courses");
+  return { ok: true, data: (data as number | null) ?? 0 };
+}
+
+/**
+ * Tune the global blend (rarity swing, 0–1) via `admin_set_vestige_index_config`,
+ * which also recomputes every index. `rarity_swing` is the ± fraction rarity
+ * applies to prestige (0.15 = ±15%).
+ */
+export async function setVestigeIndexSwing(raritySwing: number): Promise<ActionResult> {
+  if (!Number.isFinite(raritySwing) || raritySwing < 0 || raritySwing > 1) {
+    return { ok: false, message: "Rarity swing must be 0–1." };
+  }
+  const supabase = await createDevClient();
+  const { error } = await supabase.rpc("admin_set_vestige_index_config", {
+    p_rarity_swing: raritySwing,
+  });
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/index");
+  revalidatePath("/courses");
+  return { ok: true };
+}
+
 // ---------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------

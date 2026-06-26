@@ -41,6 +41,15 @@ export type CourseRow = {
   established: number | null;
   description: string | null;
   curated_list_ids: string[];
+  /** Editorial 0–100 prestige input to the Vestige Index (admin-set). */
+  prestige: number;
+  prestige_source: string | null;
+  /** Live computed 0–100 Vestige Index (prestige blended with rarity). */
+  vestige_index: number | null;
+  /** Computed 0–100 rarity score (100 = rarest). */
+  vestige_rarity: number | null;
+  /** Distinct players who have this course in their collection. */
+  play_count: number;
   hero_photo_storage_key: string | null;
   last_edited_by_admin_id: string | null;
   last_edited_at: string | null;

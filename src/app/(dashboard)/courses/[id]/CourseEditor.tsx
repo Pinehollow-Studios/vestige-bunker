@@ -22,6 +22,7 @@ import { CoverCropDialog } from "./CoverCropDialog";
 import { CoursePhotoManager, type ManagedPhoto } from "./CoursePhotoManager";
 import { PolygonPreview } from "./PolygonPreview";
 import { StylePicker } from "./StylePicker";
+import { PrestigeEditor } from "./PrestigeEditor";
 import {
   LAYOUTS,
   LAYOUT_LABELS,
@@ -189,6 +190,13 @@ export function CourseEditor({
         <Field label="Style" hint="Heathland, Parkland, Links… title-cased on save.">
           <StylePicker value={values.style} onChange={(v) => setField("style", v)} suggestions={styles} />
         </Field>
+      </EditorSection>
+
+      <EditorSection
+        title="Vestige Index"
+        hint="The flagship 0–100 metric. Set prestige; the Index recomputes (prestige × live rarity)."
+      >
+        <PrestigeEditor row={row} />
       </EditorSection>
 
       {/* Advanced: structural / classification — rarely touched */}

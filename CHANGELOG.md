@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-06-26 — Vestige Index: per-course prestige editor + ranked Index tab
+
+The Vestige Index is the app's flagship 0–100 per-course metric — editorial
+**prestige** blended with live play-**rarity** (computed in
+`Vestige-ios/supabase/migrations/20260626220000_vestige_index_foundation.sql`).
+This adds the admin surfaces to manage it.
+
+### Courses
+
+- New **Vestige Index** section in the course editor: edit `prestige` (0–100)
+  + a source / justification note, autosaved via `admin_set_course_prestige`
+  (which recomputes the whole Index). Read-only Index + rarity readout with a
+  `prestige · rarity → index` breakdown.
+
+### Index (new tab)
+
+- Every course **ranked by Vestige Index** with inline prestige editing,
+  county / tier / sort filters + search, pagination.
+- A **rarity-swing tuner** (how far rarity moves prestige, ±) and a
+  **Recalculate now** button — both recompute every course's Index.
+
+### Notes
+
+- Prestige is the only editable value; rarity + the Index are computed.
+- Editorial writes use the dev client (promoted to prod via `/sync`).
+- No schema changes here — reads/writes the columns + RPCs from the iOS-side
+  migration `20260626220000`.
+- TypeScript clean, ESLint clean, `next build` green.
+
+---
+
 ## 2026-06-13 — Mobile navigation (the dashboard works from a phone)
 
 The dashboard was desktop-only in the most literal sense: the navigation rail is
