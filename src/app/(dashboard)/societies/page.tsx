@@ -20,12 +20,6 @@ export default async function SocietyModesPage() {
     <div className="mx-auto max-w-5xl space-y-4">
       <SectionHeader eyebrow="Editorial" title="Society modes" actions={<NewModeButton />} />
 
-      <p className="max-w-2xl text-sm text-ink-2">
-        The fixed set of formats a player picks from when creating a society. Edit each mode’s name,
-        copy, icon, and rule knobs here, or turn one off. Each mode’s scoring lives in code — a brand-new
-        mode needs a code mechanic before it does anything in the app.
-      </p>
-
       {error ? (
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load: {error.message}
