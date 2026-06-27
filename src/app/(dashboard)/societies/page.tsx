@@ -1,9 +1,9 @@
 import { SectionHeader } from "@/components/admin/SectionHeader";
-import { TableToolbar } from "@/components/admin/table/TableToolbar";
+import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
 import type { SortDir } from "@/components/admin/table/DataTable";
 import { createClient } from "@/lib/supabase/server";
 import { NewSocietyButton } from "./NewSocietyButton";
-import { SocietiesTable } from "./SocietiesTable";
+import { SocietyCard } from "./SocietyCard";
 import type { SocietyRow } from "./types";
 
 export const dynamic = "force-dynamic";
@@ -55,14 +55,32 @@ export default async function SocietiesPage(props: { searchParams: SearchParams 
         searchPlaceholder="Search societies…"
         countLabel={`${rows.length} of ${all.length} ${all.length === 1 ? "society" : "societies"}`}
         hasFilters={Boolean(q)}
-      />
+      >
+        <TableSelect
+          name="sort"
+          label="Sort"
+          value={sort}
+          options={[
+            { value: "name", label: "Name" },
+            { value: "kind", label: "Type" },
+            { value: "members", label: "Members" },
+            { value: "created", label: "Created" },
+          ]}
+        />
+      </TableToolbar>
 
       {error ? (
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load: {error.message}
         </div>
+      ) : rows.length === 0 ? (
+        <p className="rounded-xl glass-panel p-6 text-center text-sm text-ink-3">No societies match.</p>
       ) : (
-        <SocietiesTable rows={rows} sort={sort} dir={dir} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {rows.map((r) => (
+            <SocietyCard key={r.society_id} row={r} />
+          ))}
+        </div>
       )}
     </div>
   );

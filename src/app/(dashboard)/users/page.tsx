@@ -211,46 +211,44 @@ export default async function UsersPage({
             }
           />
         ) : (
-          <div className="overflow-hidden rounded-xl glass-panel">
-            <ul className="divide-y divide-rule/60">
-              {rows.map((row) => {
-                const name = row.display_name?.trim() || row.username;
-                return (
-                  <li key={row.id}>
-                    <Link
-                      href={`/users/${row.id}`}
-                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper-raised/40"
-                    >
-                      <Avatar
-                        url={avatarURL(row.id, row.avatar_photo_id, baseUrl)}
-                        name={name}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="truncate font-medium text-ink">{name}</span>
-                          <span className="text-xs text-ink-3">@{row.username}</span>
-                          {row.is_founding_member && (
-                            <span className="rounded-full border border-brand/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
-                              FM
-                            </span>
-                          )}
-                          {row.is_admin_hidden_from_public_leaderboards && (
-                            <span className="rounded-full border border-amber/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber">
-                              Hidden
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-0.5 text-xs text-ink-3">
-                          {prettyPrivacy(row.privacy)} · joined {relativeTime(row.created_at)}
-                        </p>
-                      </div>
-                      <StatusChip status={row.account_status} />
-                      <ChevronRight className="size-4 shrink-0 text-ink-3" aria-hidden />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map((row) => {
+              const name = row.display_name?.trim() || row.username;
+              return (
+                <Link
+                  key={row.id}
+                  href={`/users/${row.id}`}
+                  className="group flex flex-col gap-3 rounded-xl glass-panel p-4 transition-colors hover:border-brand/40"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <Avatar url={avatarURL(row.id, row.avatar_photo_id, baseUrl)} name={name} />
+                    <StatusChip status={row.account_status} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="truncate font-medium text-ink">{name}</span>
+                      {row.is_founding_member && (
+                        <span className="rounded-full border border-brand/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
+                          FM
+                        </span>
+                      )}
+                      {row.is_admin_hidden_from_public_leaderboards && (
+                        <span className="rounded-full border border-amber/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber">
+                          Hidden
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-ink-3">@{row.username}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-rule/40 pt-2.5 text-xs text-ink-3">
+                    <span className="truncate">
+                      {prettyPrivacy(row.privacy)} · joined {relativeTime(row.created_at)}
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 

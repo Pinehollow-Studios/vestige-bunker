@@ -5,6 +5,57 @@
 
 ---
 
+## 2026-06-27 — Card-grid redesign of the list screens + Editorial/Operations split
+
+Six older list/table screens were still on the dense row design while Courses,
+Index and Badges had moved to the glass-panel card grid. This brings them all
+onto the same card language, and re-cuts the sidebar around who does the work.
+
+### List → card grid (six screens)
+
+Each landing now renders a responsive `glass-panel` card grid
+(`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` for compact tiles,
+`sm:grid-cols-2 lg:grid-cols-3` for richer cards) instead of a `DataTable` /
+`<ul>` / `<ol>`:
+
+- **Announcements** — new `AnnouncementCard` (kind + status-dot lead, status
+  chip, two-line title, seen/dismissed/acted receipts + priority). Old
+  `AnnouncementsTable` deleted.
+- **Curated lists** — new `CuratedCard` with a 16:9 cover banner (tinted
+  placeholder when none), status chip overlaid, name + status dot, description,
+  tier · course-count footer. Old `CuratedTable` deleted.
+- **Societies** — new `SocietyCard` (crest + editorial/member chip, county,
+  member count). Old `SocietiesTable` deleted.
+- **Users** — the `<ul>` directory became a 3-up card grid (avatar, status
+  chip, FM/Hidden badges, privacy · joined). Stat tiles, search form and
+  pagination unchanged.
+- **Crashes** — the divided `<ol>` became a 2-up grid; each `CrashRow` is now a
+  self-contained `glass-panel` card (`h-full` so rows align). Filters +
+  pagination unchanged.
+- **Safeguarding** — the stacked `<ul>` became a 2-up grid (`FlagRow` was
+  already a glass-panel card; now `h-full` in a grid). State/kind tiles +
+  filters unchanged.
+
+Because the `DataTable` column-header sort goes away with the table, the three
+editorial screens gained a **Sort** `TableSelect` in their `TableToolbar`
+(name/status/tier/courses/updated etc.) so ordering is still reachable — all
+existing server-side sort logic was kept.
+
+### Sidebar: Editorial = Jack, Operations = Tom
+
+`components/admin/nav.tsx` — **Changelog moved from Editorial to Operations**.
+Editorial is now Jack's content surfaces (Curated, Courses, Index, Badges,
+Announcements, Societies); Operations is Tom's (Feedback, Photos, Safeguarding,
+Crashes, List verification, Changelog). People / Insight / System groups kept as
+-is.
+
+### Notes
+
+- No schema / data changes — every screen kept its existing query, types and
+  helpers; only the presentation layer changed.
+- `tsc` / `eslint` / `next build` green. Live UI walk-through is gated behind
+  the admin login (not driveable headlessly) — Tom/Jack to eyeball.
+
 ## 2026-06-27 — Vestige Index: normalise, county-ify, batch editor + back-nav fix
 
 The Index surface shipped fast (2026-06-26) and didn't fit the rest of the

@@ -133,13 +133,11 @@ export default async function CrashesQueuePage({
           {rows.length === 0 ? (
             <EmptyQueue />
           ) : (
-            <ol className="divide-y divide-rule/60 overflow-hidden rounded-xl glass-panel">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {rows.map((row) => (
-                <li key={row.id}>
-                  <CrashRow row={row} />
-                </li>
+                <CrashRow key={row.id} row={row} />
               ))}
-            </ol>
+            </div>
           )}
           <PaginationFooter
             offset={safeOffset}
@@ -242,9 +240,9 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
   return (
     <Link
       href={`/crashes/${row.id}`}
-      className="block transition-colors hover:bg-paper-raised/40"
+      className="group block h-full rounded-xl glass-panel transition-colors hover:border-brand/40"
     >
-      <article className="flex flex-col gap-3 p-5">
+      <article className="flex h-full flex-col gap-3 p-5">
         <header className="flex flex-wrap items-start gap-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-alert/10 text-alert">
             <AlertTriangle aria-hidden className="size-4" />

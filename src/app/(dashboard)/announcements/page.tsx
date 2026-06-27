@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { cn } from "@/lib/utils";
 import { NewAnnouncementButton } from "./NewAnnouncementButton";
-import { AnnouncementsTable } from "./AnnouncementsTable";
+import { AnnouncementCard } from "./AnnouncementCard";
 import {
   ANNOUNCEMENT_KINDS,
   AUDIENCE_KINDS,
@@ -129,9 +129,29 @@ export default async function AnnouncementsPage(props: { searchParams: SearchPar
               value={audienceFilter}
               options={[{ value: "all", label: "All" }, ...AUDIENCE_KINDS.map((a) => ({ value: a, label: AUDIENCE_LABELS[a] }))]}
             />
+            <TableSelect
+              name="sort"
+              label="Sort"
+              value={sort}
+              options={[
+                { value: "status", label: "Status" },
+                { value: "title", label: "Title" },
+                { value: "priority", label: "Priority" },
+              ]}
+            />
           </TableToolbar>
 
-          {all.length === 0 ? <EmptyState /> : <AnnouncementsTable rows={rows} sort={sort} dir={dir} />}
+          {all.length === 0 ? (
+            <EmptyState />
+          ) : rows.length === 0 ? (
+            <p className="rounded-xl glass-panel p-6 text-center text-sm text-ink-3">No announcements match.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {rows.map((r) => (
+                <AnnouncementCard key={r.id} row={r} />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

@@ -4,7 +4,7 @@ import type { SortDir } from "@/components/admin/table/DataTable";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { NewCuratedListButton } from "./NewCuratedListButton";
-import { CuratedTable } from "./CuratedTable";
+import { CuratedCard } from "./CuratedCard";
 import {
   STATUS_DOT,
   STATUS_LABELS,
@@ -112,14 +112,32 @@ export default async function CuratedListsPage(props: { searchParams: SearchPara
             ...STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] })),
           ]}
         />
+        <TableSelect
+          name="sort"
+          label="Sort"
+          value={sort}
+          options={[
+            { value: "name", label: "Name" },
+            { value: "status", label: "Status" },
+            { value: "tier", label: "Tier" },
+            { value: "courses", label: "Courses" },
+            { value: "updated", label: "Updated" },
+          ]}
+        />
       </TableToolbar>
 
       {error ? (
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load: {error.message}
         </div>
+      ) : rows.length === 0 ? (
+        <p className="rounded-xl glass-panel p-6 text-center text-sm text-ink-3">No curated lists match.</p>
       ) : (
-        <CuratedTable rows={rows} sort={sort} dir={dir} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((r) => (
+            <CuratedCard key={r.id} row={r} />
+          ))}
+        </div>
       )}
     </div>
   );

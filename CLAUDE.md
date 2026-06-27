@@ -426,3 +426,18 @@ canonical write-up lives on disk.
   change (every lever already existed). Verified `tsc`/`eslint`/`build`; `/index`
   gone, `/vestige-index` registered. Live UI walk-through gated behind the admin
   login (not driveable headlessly). Long-form in `CHANGELOG.md`.
+- **2026-06-27** — Card-grid redesign of the list screens + Editorial/Operations
+  split. Six landings still on the dense row design (`DataTable`/`<ul>`/`<ol>`)
+  moved onto the app's `glass-panel` card grid: **announcements** (new
+  `AnnouncementCard`), **curated lists** (new `CuratedCard` w/ cover banner),
+  **societies** (new `SocietyCard` w/ crest) — old `*Table.tsx` deleted; and
+  **users**, **crashes**, **safeguarding** converted in-place to responsive card
+  grids (stat tiles / filters / pagination kept). The three editorial screens
+  gained a **Sort** `TableSelect` to replace the lost column-header sort
+  (server-side sort logic unchanged). Sidebar (`components/admin/nav.tsx`):
+  **Changelog moved Editorial → Operations**; Editorial is now Jack's content
+  work (Curated, Courses, Index, Badges, Announcements, Societies), Operations is
+  Tom's (Feedback, Photos, Safeguarding, Crashes, List verification, Changelog);
+  People/Insight/System groups kept. No schema/data change — presentation only.
+  Verified `tsc`/`eslint`/`build`; UI gated behind admin login. Long-form in
+  `CHANGELOG.md`.

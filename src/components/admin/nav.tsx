@@ -53,7 +53,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/badges", label: "Badges", icon: Award },
       { href: "/announcements", label: "Announcements", icon: Megaphone, countKey: "announcements" },
       { href: "/societies", label: "Societies", icon: Flag },
-      { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
     ],
   },
   {
@@ -64,6 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
       { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
       { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification" },
+      { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
     ],
   },
   { label: "People", items: [{ href: "/users", label: "Users", icon: Users, countKey: "users" }] },

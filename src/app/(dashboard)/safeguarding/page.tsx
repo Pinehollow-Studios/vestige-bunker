@@ -127,7 +127,7 @@ export default async function SafeguardingPage({
             subtitle="No flags in this bucket."
           />
         ) : (
-          <ul className="space-y-3">
+          <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {rows.map((row) => (
               <FlagRow key={row.flag_id} row={row} />
             ))}
@@ -150,7 +150,7 @@ function FlagRow({ row }: { row: Row }) {
       ? row.display_name
       : `@${row.username ?? "unknown"}`;
   return (
-    <li className="rounded-xl glass-panel p-4">
+    <li className="flex h-full flex-col rounded-xl glass-panel p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
