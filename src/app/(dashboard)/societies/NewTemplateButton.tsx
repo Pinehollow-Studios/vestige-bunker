@@ -4,14 +4,14 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createSociety } from "./actions";
+import { createTemplate } from "./actions";
 
 /**
- * Create-society trigger. Tap "New society" → inline name field → submit
- * creates an editorial society and the action redirects into its editor
- * (crest, colour, suggested county are set there).
+ * Create-template trigger. Tap "New template" → inline name prompt →
+ * the action inserts a draft `society_templates` row and redirects into
+ * the editor (where mechanic, target, copy + county theming are set).
  */
-export function NewSocietyButton() {
+export function NewTemplateButton() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [pending, startTransition] = useTransition();
@@ -20,19 +20,16 @@ export function NewSocietyButton() {
     if (!name.trim() || pending) return;
     const value = name.trim();
     startTransition(async () => {
-      const result = await createSociety(value);
+      const result = await createTemplate(value);
       if (!result.ok) toast.error(result.message);
+      // On success the action redirects.
     });
   }
 
   if (!open) {
     return (
-      <Button
-        onClick={() => setOpen(true)}
-        size="sm"
-        className="bg-brand text-brand-fg hover:bg-brand-deep"
-      >
-        + New society
+      <Button onClick={() => setOpen(true)} size="sm" className="bg-brand text-brand-fg hover:bg-brand-deep">
+        + New template
       </Button>
     );
   }
@@ -41,7 +38,7 @@ export function NewSocietyButton() {
     <div className="flex items-center gap-2">
       <Input
         autoFocus
-        placeholder="London Clubs"
+        placeholder="County chasers"
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
