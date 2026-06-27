@@ -58,19 +58,14 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
+      { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
       { href: "/feedback", label: "Feedback", icon: MessageSquareWarning, countKey: "feedback" },
+      { href: "/analytics", label: "Analytics", icon: BarChart3 },
       { href: "/photos", label: "Photos", icon: Images, countKey: "photos" },
       { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
       { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
+      { href: "/users", label: "Users", icon: Users, countKey: "users" },
       { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification" },
-      { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
-    ],
-  },
-  { label: "People", items: [{ href: "/users", label: "Users", icon: Users, countKey: "users" }] },
-  { label: "Insight", items: [{ href: "/analytics", label: "Analytics", icon: BarChart3 }] },
-  {
-    label: "System",
-    items: [
       { href: "/app-version", label: "App version", icon: Smartphone },
       { href: "/sync", label: "Sync", icon: RefreshCw },
     ],
