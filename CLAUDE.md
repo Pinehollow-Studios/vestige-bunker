@@ -488,3 +488,15 @@ canonical write-up lives on disk.
   (4) **Feedback** is now a fixed two-pane (`lg:h-[calc(100dvh-8rem)]`) — only the
   ticket list + thread viewer scroll, page chrome pinned. Verified `tsc`/`eslint`/
   `build` + clean dev boot; gated UI is Tom-to-eyeball. Long-form in `CHANGELOG.md`.
+- **2026-06-27** — Declutter: dropped the grey helper/description text
+  dashboard-wide (Tom + Jack don't need the explainers). Done at the
+  shared-component level, not an ~80-site prop sweep: `EditorSection` /
+  `AdvancedSection` / `Field` (`editor/EditorShell.tsx`) + the file-local `Card` /
+  `Field` in `AnnouncementEditor` / `BadgeEditor` + the bespoke `AppVersionForm`
+  field no longer render their `hint`; the `hint`/`subtitle` props stay on the
+  *types* so all call sites still compile and the strings survive in source.
+  Also removed inline prose — the App-version gate explainer, the two Sync
+  `Section` subtitles, the badge-seal note. Kept the Overview mission quote,
+  analytics stat captions, empty states, sync-misconfig setup steps, bell counts
+  (functional, not headings). No schema/data/deps. Verified `tsc`/`eslint`/`build`
+  + clean dev boot. Long-form in `CHANGELOG.md`.

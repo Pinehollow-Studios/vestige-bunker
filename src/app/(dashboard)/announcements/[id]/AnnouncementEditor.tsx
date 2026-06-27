@@ -1074,24 +1074,22 @@ function RecipientStateChip({ state }: { state: RecipientState }) {
 
 // ── Small layout helpers ────────────────────────────────────────────
 
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Card({ title, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4 rounded-xl glass-panel p-5">
-      <header className="space-y-1">
+      <header>
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">{title}</h3>
-        {hint && <p className="text-xs text-ink-3">{hint}</p>}
       </header>
       {children}
     </section>
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <Label className="text-xs">{label}</Label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground/80">{hint}</p>}
     </div>
   );
 }

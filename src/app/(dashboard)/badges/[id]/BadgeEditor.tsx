@@ -133,11 +133,6 @@ export function BadgeEditor({
           <Field label="Glyph colour override (optional)" hint="6-digit hex, e.g. 5BE4C3. Replaces the default mint glyph. Leave blank for mint.">
             <Input value={tintHex} onChange={(e) => setTintHex(e.target.value)} placeholder="leave blank for mint" />
           </Field>
-          <p className="rounded-lg border border-rule/70 bg-paper-sunken/30 p-3 text-[11px] leading-relaxed text-ink-3">
-            The seal is uniform across the catalogue, so shape, effect and the
-            old theme palette no longer change how a badge looks. The tier sets
-            the metal rim; the glyph and optional tint are the only other dials.
-          </p>
         </Card>
 
         <Card title="Editorial" hint="The words users read — keep them warm and specific.">
@@ -603,24 +598,22 @@ function ManualGrant({ row }: { row: BadgeDefinitionRow }) {
 
 // ── Small layout helpers ────────────────────────────────────────────
 
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Card({ title, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4 rounded-xl glass-panel p-5">
-      <header className="space-y-1">
+      <header>
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">{title}</h3>
-        {hint && <p className="text-xs text-ink-3">{hint}</p>}
       </header>
       {children}
     </section>
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <Label className="text-xs">{label}</Label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground/80">{hint}</p>}
     </div>
   );
 }

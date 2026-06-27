@@ -37,14 +37,6 @@ export default async function AppVersionPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <SectionHeader eyebrow="Advanced · App version" title="App version gate" />
 
-      <p className="text-sm leading-relaxed text-ink-2">
-        Controls the launch-time version gate. Raising the <strong>minimum version</strong> forces
-        every older app to a blocking update wall — reserve it for a genuinely-breaking change or a
-        bad build. Most backend changes should be backward-compatible (expand/contract) and need no
-        gate at all. The gate fails open: if a device can&apos;t reach the backend, it is never
-        locked out.
-      </p>
-
       <AppVersionForm
         initial={{
           min: data?.min_supported_version ?? "0.0.0",

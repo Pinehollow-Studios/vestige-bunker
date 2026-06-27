@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-06-27 — Declutter: drop grey helper/description text
+
+Tom + Jack know the tools; the explanatory grey text under section headings and
+inputs was just clutter. Stripped it dashboard-wide. Done at the shared-component
+level rather than a ~80-site prop sweep — the `hint` / `subtitle` props stay on
+the component *types* (so every call site still compiles, and the strings remain
+in source if we ever want them back) but are no longer rendered.
+
+- **Shared editor chrome** (`components/admin/editor/EditorShell.tsx`):
+  `EditorSection`, `AdvancedSection`, and `Field` no longer render their `hint`.
+  This alone clears the helper text across the course, curated, society/modes,
+  prestige, and app-version editors.
+- **Local editor helpers**: the file-local `Card` + `Field` in
+  `announcements/[id]/AnnouncementEditor.tsx` and `badges/[id]/BadgeEditor.tsx`,
+  and the bespoke field in `app-version/AppVersionForm.tsx`, stopped rendering
+  their hints too. Removed the standalone badge-seal explainer paragraph.
+- **Page-level prose**: dropped the App-version gate explainer paragraph and the
+  two `Section` subtitles on the Sync page.
+- **Kept** (not clutter): the Overview mission quote, analytics stat captions,
+  empty-state messages, the sync "not configured yet" setup instructions, and
+  TopBar bell counts — all functional, not heading descriptions.
+
+No schema/data/deps. Verified `tsc` / `eslint` / `build` clean + dev boot with no
+console errors. Gated UI behind the admin login (Tom to eyeball).
+
 ## 2026-06-27 — Preview/polygon/changelog/feedback QoL pass
 
 Four operator-facing quality tweaks to keep the editorial surfaces honest and

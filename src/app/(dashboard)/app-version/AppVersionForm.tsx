@@ -58,13 +58,12 @@ export function AppVersionForm({ initial }: { initial: Initial }) {
 
 function Field({
   label,
-  hint,
   value,
   onChange,
   placeholder,
 }: {
   label: string;
-  hint: string;
+  hint?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -79,7 +78,6 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
       />
-      <span className="block text-[11px] leading-relaxed text-ink-3">{hint}</span>
     </label>
   );
 }

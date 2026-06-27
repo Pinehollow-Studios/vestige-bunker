@@ -44,11 +44,11 @@ export default async function SyncPage() {
         title="Deploy to prod"
       />
 
-      <Section title="Schema & functions" subtitle="Database migrations + Edge Functions — applied to prod via the prod-deploy GitHub Action. Held migrations are excluded automatically.">
+      <Section title="Schema & functions">
         <SchemaDeploy initial={{ status: schema, githubReady, latestRun }} />
       </Section>
 
-      <Section title="Editorial &amp; config" subtitle="Curated lists, badge definitions, course editorial fields, and server-tunable config (safeguard thresholds) — mirrored dev→prod by slug/key. Dry-run first, then apply.">
+      <Section title="Editorial &amp; config">
         <SyncRunner status={syncStatus} prodConfigured={prodConfigured} />
       </Section>
     </div>
@@ -57,19 +57,15 @@ export default async function SyncPage() {
 
 function Section({
   title,
-  subtitle,
   children,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="font-heading text-lg font-semibold text-ink">{title}</h2>
-        <p className="text-xs text-ink-3">{subtitle}</p>
-      </div>
+      <h2 className="font-heading text-lg font-semibold text-ink">{title}</h2>
       {children}
     </section>
   );

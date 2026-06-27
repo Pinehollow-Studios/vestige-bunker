@@ -101,10 +101,14 @@ export function SaveIndicator({ state }: { state: SaveState }) {
   );
 }
 
-/** A titled card section — the essentials. */
+/** A titled card section — the essentials.
+ *
+ *  `hint` is accepted (so existing call sites keep compiling) but intentionally
+ *  not rendered: the dashboard dropped its grey helper/description text in the
+ *  2026-06-27 declutter pass. Same applies to {@link AdvancedSection} +
+ *  {@link Field} below. */
 export function EditorSection({
   title,
-  hint,
   actions,
   children,
 }: {
@@ -116,10 +120,7 @@ export function EditorSection({
   return (
     <section className="space-y-4 rounded-xl glass-panel p-5">
       <header className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">{title}</h2>
-          {hint && <p className="text-xs text-ink-3">{hint}</p>}
-        </div>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">{title}</h2>
         {actions}
       </header>
       {children}
@@ -131,7 +132,6 @@ export function EditorSection({
  *  `<details>` — no JS. The progressive-disclosure escape valve. */
 export function AdvancedSection({
   title = "Advanced",
-  hint,
   children,
   defaultOpen = false,
 }: {
@@ -143,10 +143,7 @@ export function AdvancedSection({
   return (
     <details open={defaultOpen} className="group rounded-xl glass-panel">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
-        <div className="space-y-0.5">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">{title}</h2>
-          {hint && <p className="text-xs text-ink-3">{hint}</p>}
-        </div>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-2">{title}</h2>
         <ChevronDown
           aria-hidden
           className="size-4 text-ink-3 transition-transform group-open:rotate-180"
@@ -160,7 +157,6 @@ export function AdvancedSection({
 /** A labelled field wrapper. */
 export function Field({
   label,
-  hint,
   htmlFor,
   children,
 }: {
@@ -175,7 +171,6 @@ export function Field({
         {label}
       </label>
       {children}
-      {hint && <p className="text-[11px] leading-relaxed text-ink-3">{hint}</p>}
     </div>
   );
 }
