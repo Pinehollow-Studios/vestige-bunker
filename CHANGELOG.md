@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-06-27 — Two-group sidebar + anonymous login
+
+### Sidebar collapsed to two groups
+
+`components/admin/nav.tsx` — the People / Insight / System groups folded into
+**Operations**, leaving just **Editorial** (Jack) and **Operations** (Tom) under
+the pinned Overview. Operations is now ordered by expected use with **Changelog
+at the top**: Changelog · Feedback · Analytics · Photos · Safeguarding · Crashes
+· Users · List verification · App version · Sync. No items removed — only
+regrouped/reordered; counts still flow to the same `countKey`s.
+
+### Login page made anonymous
+
+The sign-in page leaked the product: branded split-panel, "Vestige Admin",
+"Welcome back", "Access is gated against the admins table", a `@pinehollow.studio`
+placeholder, and a "Ask Tom or Jack" footer. Redesigned so a passer-by learns
+nothing — a single centered, unbranded form with two fields (Email / Password)
+and a Sign in button, on the bare app background. New `login/layout.tsx`
+overrides the root metadata for the route: generic tab title **"Sign in"**,
+empty description, and `robots: noindex/nofollow`. The sign-in action
+(`login/actions.ts`) now returns one **generic** error ("Incorrect email or
+password.") for every failure path, so it never reveals whether an email exists,
+the admin gate, rate limits, or Supabase internals. `BrandMark` stays exported
+for the `/unauthorized` page (only reachable by an already-authenticated
+non-admin). Verified visually (the one pre-auth screen) + `tsc`/`eslint`/`build`.
+
 ## 2026-06-27 — Card-grid redesign of the list screens + Editorial/Operations split
 
 Six older list/table screens were still on the dense row design while Courses,

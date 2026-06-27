@@ -441,3 +441,17 @@ canonical write-up lives on disk.
   People/Insight/System groups kept. No schema/data change — presentation only.
   Verified `tsc`/`eslint`/`build`; UI gated behind admin login. Long-form in
   `CHANGELOG.md`.
+- **2026-06-27** — Two-group sidebar + anonymous login. Sidebar
+  (`components/admin/nav.tsx`) collapsed to just **Editorial** (Jack) +
+  **Operations** (Tom) under the pinned Overview — People/Insight/System folded
+  into Operations, reordered by expected use with **Changelog at the top**
+  (Changelog · Feedback · Analytics · Photos · Safeguarding · Crashes · Users ·
+  List verification · App version · Sync). Login page stripped to be invisible to
+  a passer-by: removed all branding / "Vestige Admin" / "Welcome back" / admins-
+  table copy / company-domain placeholder / help footer, leaving one centered
+  unbranded Email+Password form. New `login/layout.tsx` overrides route metadata
+  (generic title "Sign in", empty description, `robots` noindex/nofollow);
+  `login/actions.ts` returns a single generic "Incorrect email or password."
+  error for every failure (no email-existence / gate / rate-limit leak).
+  `BrandMark` retained for `/unauthorized`. Verified visually + `tsc`/`eslint`/
+  `build`. Long-form in `CHANGELOG.md`.
