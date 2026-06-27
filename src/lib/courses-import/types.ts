@@ -10,10 +10,19 @@ export interface GeoJsonPolygon {
   coordinates: number[][][];
 }
 
+export interface GeoJsonMultiPolygon {
+  type: "MultiPolygon";
+  coordinates: number[][][][];
+}
+
+/** A course/county boundary is either a single Polygon or, for courses merged
+ *  from several OSM ways, a MultiPolygon. ~12% of courses are MultiPolygon. */
+export type GeoJsonGeometry = GeoJsonPolygon | GeoJsonMultiPolygon;
+
 export interface CountyFeature {
   type: "Feature";
   properties: { name: string };
-  geometry: GeoJsonPolygon;
+  geometry: GeoJsonGeometry;
 }
 
 export interface CountiesFile {
@@ -37,7 +46,7 @@ export interface CourseProperties {
 export interface CourseFeature {
   type: "Feature";
   properties: CourseProperties;
-  geometry: GeoJsonPolygon;
+  geometry: GeoJsonGeometry;
 }
 
 export interface CoursesFile {
@@ -50,7 +59,7 @@ export interface CoursesFile {
 export interface CountyRow {
   name: string;
   slug: string;
-  polygon: GeoJsonPolygon;
+  polygon: GeoJsonGeometry;
 }
 
 export interface ClubRow {
@@ -69,7 +78,7 @@ export interface CourseRow {
   tier: "championship" | "standard" | "short" | "par3";
   layout: "primary18" | "secondary18" | "nineHole" | "shortCourse";
   holeCount: number;
-  polygon: GeoJsonPolygon;
+  polygon: GeoJsonGeometry;
   centerLat: number | null;
   centerLng: number | null;
   description: string | null;

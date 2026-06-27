@@ -123,13 +123,12 @@ export type ApplyResult =
   | { ok: true; sha: string; counties: number; clubs: number; courses: number; indexRecomputed: boolean }
   | { ok: false; message: string };
 
-/** Apply the import to the LIVE app. Super_admin only — it writes prod course
- *  data with the service-role key. Idempotent / upsert-only. */
+/** Apply the import to the LIVE app. Any admin may run it — Tom + Jack are
+ *  co-founders with equal access; the client's confirmation dialog is the
+ *  safety gate, not a role wall. Writes prod course data with the service-role
+ *  key; idempotent / upsert-only (nothing is ever deleted). */
 export async function applyImport(sha: string, note?: string): Promise<ApplyResult> {
-  const admin = await requireAdmin();
-  if (admin.role !== "super_admin") {
-    return { ok: false, message: "Applying an import requires super_admin." };
-  }
+  await requireAdmin();
 
   let supabase;
   try {

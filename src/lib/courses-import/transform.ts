@@ -14,7 +14,7 @@ import type {
   CountyRow,
   ClubRow,
   CourseRow,
-  GeoJsonPolygon,
+  GeoJsonGeometry,
 } from "./types";
 
 /** Deterministic slug — ported verbatim from the iOS `lib/slug.ts` that minted
@@ -98,8 +98,12 @@ function inferLayout(props: CourseFeature["properties"]): {
   return { holeCount: 18, layout: "primary18" };
 }
 
-function polygonCentroid(polygon: GeoJsonPolygon): { lat: number; lng: number } | null {
-  const ring = polygon.coordinates[0];
+function polygonCentroid(geom: GeoJsonGeometry): { lat: number; lng: number } | null {
+  // Polygon → outer ring; MultiPolygon → outer ring of its first sub-polygon.
+  // (~12% of courses are MultiPolygon — merged from several OSM ways. The CLI
+  // import left these with a null centre; handling them here backfills a real
+  // map pin on the next apply.)
+  const ring = geom.type === "MultiPolygon" ? geom.coordinates[0]?.[0] : geom.coordinates[0];
   if (!ring || ring.length === 0) return null;
   let sumLng = 0;
   let sumLat = 0;

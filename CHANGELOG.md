@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-06-27 — Course import: make Apply fully usable + safe
+
+Follow-up to the import bridge — turns Apply from a gated, untested button into
+something Jack can run himself, safely.
+
+- **Equal access.** Apply was super_admin-only; Tom + Jack are co-founders with
+  identical access, so the role gate is gone — any admin can apply. The safety is
+  a **confirmation pop-up**, not a permission wall (new reusable
+  `components/admin/ConfirmDialog.tsx`, portal modal matching `ReleaseDialog`). It
+  spells out the live impact ("N new courses added, M refreshed, +K counties …
+  upsert-only, reversible") and double-checks before writing.
+- **MultiPolygon centres.** ~12% of courses (136/1181) are MultiPolygon (merged
+  from several OSM ways); the ported centroid only handled Polygon, so they'd
+  import with a null `center_lat/lng` — same as the CLI. Added a MultiPolygon
+  branch (`GeoJsonGeometry` union in types); verified against live data that all
+  136 now get a real centre (e.g. Thames Ditton & Esher → 51.38, −0.35). The next
+  apply backfills them.
+- **Timeout headroom.** A full apply re-upserts ~1.2k courses + clubs + counties
+  then recomputes the index — `export const maxDuration = 60` on the route so it
+  doesn't hit the short serverless default mid-write.
+
+Verified `tsc`/`eslint`/`build` + the centroid fix on real data + route
+auth-gates. Note for full parity *elsewhere* (`/sync`, announcement hard-delete
+are still super_admin): set Jack's `admins.role` to `super_admin` — a DB change,
+not code. Long-form continues in the entry below.
+
 ## 2026-06-27 — Course dataset import in the dashboard
 
 Closes Jack's biggest dependency. Course boundary polygons are mapped in the

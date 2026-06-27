@@ -515,3 +515,14 @@ canonical write-up lives on disk.
   notice). No schema/migrations. Verified `tsc`/`eslint`/`build` + slugify parity
   + route auth-gates; full logged-in flow not headless-tested. Long-form in
   `CHANGELOG.md`.
+- **2026-06-27** — Course import Apply made fully usable + safe (supersedes the
+  super_admin gate above). **Any admin can now Apply** — Tom + Jack are co-founders
+  with equal access; the gate is replaced by a **confirmation pop-up** (new
+  reusable `components/admin/ConfirmDialog.tsx`) that states the live impact and
+  double-checks. **MultiPolygon centroid** fix (`GeoJsonGeometry` union) — the 136
+  merged-geometry courses (~12%) that imported with a null centre now get a real
+  one (verified on live data; next apply backfills them). `maxDuration = 60` on
+  the route for the full re-upsert + index recompute. For parity on the *other*
+  super_admin surfaces (`/sync`, announcement hard-delete) set Jack's
+  `admins.role = super_admin` — a DB change, not code. Verified `tsc`/`eslint`/
+  `build` + centroid on real data. Long-form in `CHANGELOG.md`.

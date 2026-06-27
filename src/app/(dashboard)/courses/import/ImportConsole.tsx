@@ -12,22 +12,18 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import type { ImportPreview } from "@/lib/courses-import/preview";
 import { applyImport, previewImport, type ImportStatus } from "./actions";
 
-export function ImportConsole({
-  status,
-  isSuperAdmin,
-}: {
-  status: ImportStatus;
-  isSuperAdmin: boolean;
-}) {
+export function ImportConsole({ status }: { status: ImportStatus }) {
   const router = useRouter();
   const [sha, setSha] = useState(status.latestCommit?.sha ?? "");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [previewedSha, setPreviewedSha] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [applying, setApplying] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const shaValid = /^[0-9a-f]{40}$/.test(sha.trim());
 
@@ -51,23 +47,19 @@ export function ImportConsole({
     });
   };
 
-  const runApply = () => {
+  const openConfirm = () => {
     if (!preview || previewedSha !== sha.trim()) {
       return void toast.error("Preview this commit first.");
     }
-    const n = preview.newCourses.length;
-    if (
-      !window.confirm(
-        `Apply this import to the LIVE app?\n\n${n} new course${n === 1 ? "" : "s"} added, ` +
-          `${preview.updatedCourses} refreshed. This is upsert-only (nothing is deleted).`,
-      )
-    ) {
-      return;
-    }
+    setConfirmOpen(true);
+  };
+
+  const doApply = () => {
     setApplying(true);
     startTransition(async () => {
       const res = await applyImport(sha.trim());
       setApplying(false);
+      setConfirmOpen(false);
       if (!res.ok) return void toast.error(res.message);
       toast.success(`Imported ${res.courses} courses · ${res.counties} counties`);
       setPreview(null);
@@ -122,28 +114,47 @@ export function ImportConsole({
           <PreviewResult preview={preview} />
         )}
 
-        <div className="border-t border-rule/50 pt-4">
-          {isSuperAdmin ? (
-            <Button
-              disabled={pending || !preview || previewedSha !== sha.trim()}
-              onClick={runApply}
-              className="bg-brand text-brand-fg hover:bg-brand-deep"
-            >
-              {applying ? (
-                <Loader2 aria-hidden className="size-4 animate-spin" />
-              ) : (
-                <UploadCloud aria-hidden className="size-4" />
-              )}
-              Apply to live app
-            </Button>
-          ) : (
-            <p className="text-xs text-ink-3">
-              Preview only — applying to the live app needs super_admin. Share what you see here
-              with Tom and he&rsquo;ll push it.
-            </p>
-          )}
+        <div className="space-y-2 border-t border-rule/50 pt-4">
+          <Button
+            disabled={pending || !preview || previewedSha !== sha.trim()}
+            onClick={openConfirm}
+            className="bg-brand text-brand-fg hover:bg-brand-deep"
+          >
+            <UploadCloud aria-hidden className="size-4" />
+            Apply to live app
+          </Button>
+          <p className="text-[11px] text-ink-3">
+            Writes to the live app — you&rsquo;ll get a confirmation first. Preview a commit to
+            enable.
+          </p>
         </div>
       </section>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Apply to the live app?"
+        confirmLabel="Apply now"
+        busy={applying}
+        onConfirm={doApply}
+        onCancel={() => {
+          if (!applying) setConfirmOpen(false);
+        }}
+      >
+        <p>
+          This updates the <strong className="text-ink">live</strong> course data players see:{" "}
+          <strong className="text-ink">{preview?.newCourses.length ?? 0}</strong> new course
+          {(preview?.newCourses.length ?? 0) === 1 ? "" : "s"} added and{" "}
+          <strong className="text-ink">{preview?.updatedCourses ?? 0}</strong> refreshed
+          {preview && preview.newCounties.length > 0
+            ? `, plus ${preview.newCounties.length} new ${preview.newCounties.length === 1 ? "county" : "counties"}`
+            : ""}
+          .
+        </p>
+        <p className="mt-2 text-ink-3">
+          Upsert-only — nothing is deleted, so it&rsquo;s reversible by re-applying an earlier
+          commit.
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }
