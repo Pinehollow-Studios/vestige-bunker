@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-06-27 — Equal admin access + confirm-guards on the foot-guns
+
+The dashboard's two admins (Tom + Jack) are co-founders with identical access.
+Rather than thread Jack through role gates, the model is now "all admins equal,
+with confirmation pop-ups guarding the genuinely-consequential actions."
+
+- **Perms (DB, not code).** Full parity is one row: elevate Jack's
+  `admins.role` to `super_admin`. This is the *complete* fix because several
+  gates are enforced in Supabase (e.g. user-suspend's RPC checks role in SQL),
+  so dashboard-only code changes would leave a half-state. Per the
+  access-control rule the role change is run by a human in Supabase Studio (exact
+  SQL handed over) — `update public.admins set role='super_admin' where user_id =
+  'cedf42b5-…618'` (Jack). After that, every super_admin gate passes for him.
+- **Confirm-guards (code).** With access widened, the two "foot-guns" we'd
+  flagged get a double-check via the reusable `ConfirmDialog`:
+  - **App-version gate** (`AppVersionForm`): Save now only prompts when the
+    **minimum version is being *raised*** (a `cmpVersion` check) — the case that
+    walls older apps out. Lowering / editing the recommended version or link
+    saves straight through (no nagging). The prompt is `tone="danger"`.
+  - **Vestige Index rarity-swing** (`IndexMechanics`): Apply (which recomputes
+    every course's Index and shifts rankings app-wide) confirms first. The
+    harmless deterministic "Recompute now" stays one-click.
+
+No schema/migrations on the dashboard side. Verified `tsc`/`eslint`/`build`.
+
 ## 2026-06-27 — Course import: make Apply fully usable + safe
 
 Follow-up to the import bridge — turns Apply from a gated, untested button into

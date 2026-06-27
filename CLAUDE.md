@@ -526,3 +526,14 @@ canonical write-up lives on disk.
   super_admin surfaces (`/sync`, announcement hard-delete) set Jack's
   `admins.role = super_admin` — a DB change, not code. Verified `tsc`/`eslint`/
   `build` + centroid on real data. Long-form in `CHANGELOG.md`.
+- **2026-06-27** — Equal admin access + confirm-guards. Model is "all admins
+  equal (Tom + Jack are co-founders), with confirmation pop-ups guarding
+  consequential actions" rather than role gates. **Full perms parity = elevate
+  Jack's `admins.role` to `super_admin`** (one row, run in Supabase Studio per the
+  access-control rule — `update public.admins set role='super_admin' where
+  user_id='cedf42b5-b997-4018-9824-ae4d06618618'`); this is the complete fix since
+  some gates are SQL-enforced (user-suspend RPC). Code: the two foot-guns now use
+  `ConfirmDialog` — the **App-version gate** prompts only when the *minimum* is
+  *raised* (`cmpVersion`; the lock-out case), and the **Vestige Index rarity-swing
+  Apply** confirms before recomputing every ranking (the harmless "Recompute now"
+  stays one-click). Verified `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.

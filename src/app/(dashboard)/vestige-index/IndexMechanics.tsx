@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { recomputeVestigeIndex, setVestigeIndexSwing } from "../courses/actions";
 import { projectIndex } from "./formula";
 
@@ -30,6 +31,7 @@ export function IndexMechanics({
   const router = useRouter();
   const [swing, setSwing] = useState(raritySwing);
   const [pending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const dirty = swing !== raritySwing;
   const pct = Math.round(swing * 100);
@@ -43,6 +45,7 @@ export function IndexMechanics({
   function applySwing() {
     startTransition(async () => {
       const res = await setVestigeIndexSwing(swing);
+      setConfirmOpen(false);
       if (res.ok) {
         toast.success(`Rarity swing set to ±${Math.round(swing * 100)}% · index recomputed`);
         router.refresh();
@@ -122,7 +125,7 @@ export function IndexMechanics({
               onChange={(e) => clampSwing(Number(e.target.value))}
               className="h-9 w-20 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 text-sm tabular-nums text-ink outline-none focus:border-brand/50"
             />
-            <Button size="sm" disabled={pending || !dirty} onClick={applySwing}>
+            <Button size="sm" disabled={pending || !dirty} onClick={() => setConfirmOpen(true)}>
               Apply
             </Button>
           </div>
@@ -147,6 +150,24 @@ export function IndexMechanics({
           <p className="mt-1 text-[11px] text-ink-3">at ±{pct}% swing</p>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Apply rarity swing?"
+        confirmLabel={`Apply ±${pct}%`}
+        busy={pending}
+        onConfirm={applySwing}
+        onCancel={() => {
+          if (!pending) setConfirmOpen(false);
+        }}
+      >
+        <p>
+          Setting the swing to <strong className="text-ink">±{pct}%</strong> recomputes the Vestige
+          Index for <strong className="text-ink">every course</strong> — shifting rankings across
+          the app.
+        </p>
+        <p className="mt-2 text-ink-3">Reversible: set it back and re-apply.</p>
+      </ConfirmDialog>
     </section>
   );
 }

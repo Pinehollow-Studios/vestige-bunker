@@ -3,25 +3,46 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { setAppVersionConfig } from "./actions";
 
 type Initial = { min: string; recommended: string; updateUrl: string };
+
+/** Compare "a.b.c" semver-ish strings. >0 when a is higher than b. */
+function cmpVersion(a: string, b: string): number {
+  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
 
 export function AppVersionForm({ initial }: { initial: Initial }) {
   const [min, setMin] = useState(initial.min);
   const [recommended, setRecommended] = useState(initial.recommended);
   const [updateUrl, setUpdateUrl] = useState(initial.updateUrl);
   const [pending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const dirty =
     min !== initial.min || recommended !== initial.recommended || updateUrl !== initial.updateUrl;
+  // Raising the hard floor is the dangerous case — it walls older apps out.
+  const raisesFloor = cmpVersion(min, initial.min) > 0;
 
-  function save() {
+  function doSave() {
     startTransition(async () => {
       const result = await setAppVersionConfig(min, recommended || null, updateUrl || null);
+      setConfirmOpen(false);
       if (result.ok) toast.success("Saved — applies on next app launch");
       else toast.error(result.message);
     });
+  }
+
+  function attemptSave() {
+    if (raisesFloor) setConfirmOpen(true);
+    else doSave();
   }
 
   return (
@@ -48,10 +69,29 @@ export function AppVersionForm({ initial }: { initial: Initial }) {
         placeholder="https://…"
       />
       <div className="flex justify-end pt-1">
-        <Button onClick={save} disabled={pending || !dirty}>
+        <Button onClick={attemptSave} disabled={pending || !dirty}>
           {pending ? "Saving…" : "Save"}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Raise the minimum version?"
+        confirmLabel="Raise the floor"
+        tone="danger"
+        busy={pending}
+        onConfirm={doSave}
+        onCancel={() => {
+          if (!pending) setConfirmOpen(false);
+        }}
+      >
+        <p>
+          Setting the floor to <strong className="text-ink">{min}</strong> forces every app below
+          it to a blocking <strong className="text-ink">“update required”</strong> wall. Anyone who
+          can&rsquo;t update is locked out of the app until they do.
+        </p>
+        <p className="mt-2 text-ink-3">Only do this for a genuinely breaking change or a bad build.</p>
+      </ConfirmDialog>
     </div>
   );
 }
