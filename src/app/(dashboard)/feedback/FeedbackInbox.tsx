@@ -174,7 +174,7 @@ export function FeedbackInbox({
     : (selectedId ?? "");
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       <div className="flex items-center justify-between gap-3 text-xs text-ink-3">
         <span className="inline-flex items-center gap-2">
           {live && <span aria-hidden className="size-1.5 rounded-full bg-brand pulse-dot" />}
@@ -193,13 +193,13 @@ export function FeedbackInbox({
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(300px,380px)_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(300px,380px)_1fr] lg:grid-rows-[minmax(0,1fr)]">
         {/* List */}
-        <div className={cn("min-w-0", selectedId ? "hidden lg:block" : "block")}>
+        <div className={cn("min-w-0 lg:min-h-0 lg:flex-col", selectedId ? "hidden lg:flex" : "flex flex-col")}>
           {rows.length === 0 ? (
             <EmptyQueue />
           ) : (
-            <div className="overflow-hidden rounded-xl glass-panel">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl glass-panel">
               <div className="flex items-center gap-2 border-b border-rule/60 px-3 py-2 text-[10px] uppercase tracking-wider text-ink-3">
                 <input
                   type="checkbox"
@@ -210,7 +210,7 @@ export function FeedbackInbox({
                 />
                 Select all
               </div>
-              <ol className="max-h-[calc(100dvh-19rem)] divide-y divide-rule/50 overflow-y-auto">
+              <ol className="max-h-[70vh] min-h-0 flex-1 divide-y divide-rule/50 overflow-y-auto lg:max-h-none">
                 {rows.map((row, i) => (
                   <li key={row.report_id} id={`fb-row-${row.report_id}`}>
                     <Row
@@ -235,8 +235,8 @@ export function FeedbackInbox({
         </div>
 
         {/* Thread */}
-        <div className={cn("min-w-0", selectedId ? "block" : "hidden lg:block")}>
-          <div className="rounded-xl glass-panel lg:sticky lg:top-24 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
+        <div className={cn("min-w-0 lg:min-h-0 lg:flex-col", selectedId ? "flex flex-col" : "hidden lg:flex")}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl glass-panel">
             <FeedbackThreadPane
               reportId={selectedId}
               signature={signature}

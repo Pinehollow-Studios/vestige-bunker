@@ -207,7 +207,7 @@ function VersionNode({
       />
 
       <section className="space-y-4 rounded-xl glass-panel p-5">
-        <header className="flex flex-wrap items-start gap-3">
+        <header className="flex flex-wrap items-start gap-3 border-b border-rule/40 pb-3">
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <Link
@@ -256,7 +256,6 @@ function VersionNode({
           </Link>
         </header>
 
-        {changes.length > 0 && <div className="border-t border-rule/40 pt-4" />}
         <ChangeLinesView changes={changes} linkedFeedback={linkedFeedback} />
       </section>
     </li>

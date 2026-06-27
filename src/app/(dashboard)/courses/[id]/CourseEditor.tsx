@@ -155,6 +155,13 @@ export function CourseEditor({
         />
       </EditorSection>
 
+      <EditorSection
+        title="Course boundary"
+        hint="The polygon Jack hand-mapped — the shape Vestige uses to place this course on the Atlas. Read-only here; edited via the import script or Supabase Studio."
+      >
+        <PolygonPreview polygon={row.polygon} centerLat={row.center_lat} centerLng={row.center_lng} />
+      </EditorSection>
+
       <EditorSection title="Editorial" hint="What users see on the course detail sheet.">
         <Field label="Description" hint="Long-form prose under About. Plain text.">
           <textarea
@@ -259,37 +266,29 @@ export function CourseEditor({
       </AdvancedSection>
 
       {/* Meta: read-only context */}
-      <EditorSection title="Reference" hint="Audit, polygon, curated-list memberships.">
+      <EditorSection title="Reference" hint="Audit + curated-list memberships.">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
-          <div className="space-y-3">
-            <Field label="Polygon">
-              <PolygonPreview polygon={row.polygon} centerLat={row.center_lat} centerLng={row.center_lng} />
-              <p className="mt-1 text-[11px] text-ink-3">Read-only — edited via Supabase Studio or the import script.</p>
-            </Field>
-          </div>
-          <div className="space-y-3">
-            <Field label="Curated list memberships">
-              {row.curated_lists.length === 0 ? (
-                <p className="text-xs text-ink-3">Not on any curated list.</p>
-              ) : (
-                <ul className="flex flex-wrap gap-1.5">
-                  {row.curated_lists.map((list) => (
-                    <li key={list.id}>
-                      <Link
-                        href={`/curated/${list.id}`}
-                        className="inline-flex items-center rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:bg-brand/15"
-                      >
-                        {list.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Field>
-            <Field label="Created">
-              <p className="text-sm text-ink-2">{new Date(row.created_at).toLocaleString()}</p>
-            </Field>
-          </div>
+          <Field label="Curated list memberships">
+            {row.curated_lists.length === 0 ? (
+              <p className="text-xs text-ink-3">Not on any curated list.</p>
+            ) : (
+              <ul className="flex flex-wrap gap-1.5">
+                {row.curated_lists.map((list) => (
+                  <li key={list.id}>
+                    <Link
+                      href={`/curated/${list.id}`}
+                      className="inline-flex items-center rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:bg-brand/15"
+                    >
+                      {list.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Field>
+          <Field label="Created">
+            <p className="text-sm text-ink-2">{new Date(row.created_at).toLocaleString()}</p>
+          </Field>
         </div>
       </EditorSection>
     </EditorShell>

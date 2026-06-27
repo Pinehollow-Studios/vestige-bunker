@@ -20,8 +20,8 @@ export function VersionView({
   linkedFeedback: Record<string, LinkedFeedback>;
 }) {
   return (
-    <article className="space-y-6 rounded-2xl glass-panel p-6">
-      <header className="space-y-2 border-b border-rule/50 pb-4">
+    <article className="space-y-4 rounded-2xl glass-panel p-6">
+      <header className="space-y-2 border-b border-rule/50 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-hero text-2xl leading-none text-ink">v{version.version}</h1>
           <span

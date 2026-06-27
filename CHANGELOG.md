@@ -5,6 +5,53 @@
 
 ---
 
+## 2026-06-27 — Preview/polygon/changelog/feedback QoL pass
+
+Four operator-facing quality tweaks to keep the editorial surfaces honest and
+the workbench comfortable. No schema, no data, no deps — presentation + layout.
+
+- **In-app preview cards rebuilt on the real iOS templates.** The old course /
+  curated previews were loose approximations (title overlaid on the hero, a flat
+  3-up stat grid, tiny list rows). Both now mirror the actual SwiftUI screens
+  (sourced from `Vestige-ios` `CourseDetailSheet` + `CuratedListDetailView`):
+  - **Course** (`courses/[id]/CoursePreview.tsx`): rounded gallery hero → "peek
+    block" (mint-dot eyebrow → serif title → club → a stat row led by the **Par
+    hero numeral** in the mint→lime gradient, holes/yards secondary, tier pill)
+    → glass **details** card (Layout / Style / Established) → glass **About**
+    card. Same prop signature, so the editor call is unchanged.
+  - **Curated** (`curated/[id]/CuratedPreview.tsx`): full-bleed cover fading to
+    paper with a tier pill + serif title + italic summary → editorial **kicker**
+    (region · tags) → mint-ruled **bio pull-quote** → glass **stat strip** →
+    **course rows** with cover tiles, `01/02`-style position stamps on ordered
+    lists, club·county subtitle, editor-note line, chevron. `CuratedEditor` now
+    feeds it `region` + `tags` for the kicker.
+  - **PreviewFrame** got a more device-true chrome: Dynamic Island, signal/wifi/
+    battery glyphs, home indicator, fatter bezel.
+- **Course polygon — made reliable + foregrounded** (`PolygonPreview.tsx`). The
+  static-map render now fits the polygon with Mapbox `auto` bounds (no more
+  guessed centre/zoom that could frame off the shape) over **satellite-streets**
+  imagery so the boundary reads against real greens/fairways, in the mint brand
+  stroke. Coordinates are rounded to ~5dp so hand-mapped boundaries serialise
+  under the ~8 KB static-API URL cap (with a centred-pin fallback past it), and a
+  vertex count is surfaced ("Boundary · N points") to credit the mapping work.
+  Moved out of the cramped read-only "Reference" two-column grid into its own
+  full-width **"Course boundary"** section high in the editor.
+- **Changelog spacing** (`changelog/[id]/VersionView.tsx` + `changelog/page.tsx`):
+  tightened the oversized gap between the version-meta header and the change
+  lines — `space-y-6 → space-y-4` + `pb-4 → pb-3` on the detail view; on the list
+  view replaced the free-floating divider div (which sat in ~48 px of stacked
+  margin) with a border hugging the header.
+- **Feedback is now a fixed two-pane** (`feedback/page.tsx` + `FeedbackInbox.tsx`):
+  the page fills the viewport (`lg:h-[calc(100dvh-8rem)]`, `overflow-hidden`) with
+  the header/tabs/filters pinned; only the **ticket list** and the **thread
+  viewer** scroll, each via its own `min-h-0 flex-1 overflow-y-auto` inside a
+  `grid-rows-[minmax(0,1fr)]` row. No more whole-page scroll fighting the sticky
+  thread pane. Mobile keeps single-column flow.
+
+Verified `tsc` / `eslint` / `build` clean; dev server boots with no console
+errors. The gated editorial/feedback surfaces are behind the admin login (not
+driveable headlessly) — Tom to eyeball the logged-in UI.
+
 ## 2026-06-27 — Security hardening pass
 
 Full security audit (three parallel sweeps — injection/XSS, secrets/service-role,

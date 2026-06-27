@@ -104,6 +104,8 @@ export function CuratedEditor({
           isOrdered={values.is_ordered}
           coverURL={coverURL}
           courses={courses}
+          region={values.region}
+          tags={values.tags}
         />
       </PreviewFrame>
     </>

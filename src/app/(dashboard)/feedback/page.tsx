@@ -62,7 +62,7 @@ export default async function FeedbackQueuePage({
   const draftVersions = (draftVersionsRes.data as ShipVersionOption[] | null) ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto flex max-w-6xl flex-col gap-4 lg:h-[calc(100dvh-8rem)] lg:overflow-hidden">
       <SectionHeader eyebrow="Queues · review" title="Feedback" />
 
       <ViewTabs view={filters.view} params={params} />

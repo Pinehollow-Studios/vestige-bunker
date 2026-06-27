@@ -472,3 +472,19 @@ canonical write-up lives on disk.
   error for every failure (no email-existence / gate / rate-limit leak).
   `BrandMark` retained for `/unauthorized`. Verified visually + `tsc`/`eslint`/
   `build`. Long-form in `CHANGELOG.md`.
+- **2026-06-27** — Preview/polygon/changelog/feedback QoL pass (presentation +
+  layout only; no schema/data/deps). (1) **In-app preview cards rebuilt on the
+  real iOS templates** — `CoursePreview` mirrors `CourseDetailSheet` (rounded
+  hero → peek block w/ mint→lime **Par hero numeral** + glass details/About
+  cards); `CuratedPreview` mirrors `CuratedListDetailView` (full-bleed fading
+  hero + tier pill, region·tags kicker, mint-ruled bio pull-quote, glass stat
+  strip, position-stamped course rows) — `CuratedEditor` now passes `region` +
+  `tags`; `PreviewFrame` gained device-true chrome (Dynamic Island / status
+  glyphs / home indicator). (2) **Polygon** (`PolygonPreview`) made reliable +
+  foregrounded — Mapbox `auto`-bounds over satellite-streets in the mint stroke,
+  5dp coord-rounding under the ~8 KB URL cap (centred-pin fallback), vertex-count
+  caption; lifted into its own full-width **"Course boundary"** editor section.
+  (3) **Changelog** version-meta→change-lines gap tightened (detail + list).
+  (4) **Feedback** is now a fixed two-pane (`lg:h-[calc(100dvh-8rem)]`) — only the
+  ticket list + thread viewer scroll, page chrome pinned. Verified `tsc`/`eslint`/
+  `build` + clean dev boot; gated UI is Tom-to-eyeball. Long-form in `CHANGELOG.md`.
