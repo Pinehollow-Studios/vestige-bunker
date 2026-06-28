@@ -158,11 +158,14 @@ function KindEditorModal({
     });
   }
 
-  // Live preview copy (override draft falls back to the default per field).
-  const pTitle = previewTemplate(pushTitle || meta.defaults.pushTitle, meta.tokens);
-  const pBody = previewTemplate(pushBody || meta.defaults.pushBody, meta.tokens);
-  const iTitle = previewTemplate(inboxTitle || meta.defaults.inboxTitle, meta.tokens);
-  const iBody = previewTemplate(inboxBody || meta.defaults.inboxBody, meta.tokens);
+  // Live preview copy — WYSIWYG of exactly what's in the fields (the fields are
+  // pre-filled with the default on open, so we must NOT re-substitute the
+  // default when a field is cleared: an emptied push title should preview as
+  // the real no-title state, which iOS renders as the app name "Vestige".
+  const pTitle = previewTemplate(pushTitle, meta.tokens);
+  const pBody = previewTemplate(pushBody, meta.tokens);
+  const iTitle = previewTemplate(inboxTitle, meta.tokens);
+  const iBody = previewTemplate(inboxBody, meta.tokens);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center" onClick={onClose}>
