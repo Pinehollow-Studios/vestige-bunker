@@ -24,10 +24,9 @@ function markSignInAttempt() {
 }
 
 /**
- * Deliberately anonymous sign-in. No branding, headings, help text, or product
- * name - a stranger who stumbles onto the page should learn nothing about what
- * it guards. Just two fields and a button. (The page title + noindex live in
- * the sibling `layout.tsx`.)
+ * Sign-in screen. Carries the "The Bunker" wordmark at Tom's request; the page
+ * still stays out of search engines (noindex/nofollow + generic title in the
+ * sibling `layout.tsx`) and leaks nothing on failure (one generic error).
  */
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(signIn, initialState);
@@ -35,6 +34,11 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">
       <form action={formAction} className="w-full max-w-xs space-y-3">
+        <div className="mb-8 flex flex-col items-center">
+          <p className="display-serif pl-[0.42em] text-sm font-bold uppercase tracking-[0.42em] text-ink">
+            The Bunker
+          </p>
+        </div>
         <Input
           name="email"
           type="email"

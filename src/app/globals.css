@@ -812,3 +812,24 @@ html[data-vault="covered"] .vault-reveal {
     transition-duration: 0.3s !important;
   }
 }
+
+/* ============================================================================
+   Autofill — kill the browser yellow/cream wash on the dark theme. Painting the
+   field inset with the page background + ink text makes an autofilled value
+   match the theme instead of flashing a light box behind the input. Kept as a
+   plain top-level rule (NOT inside @layer base) — Lightning CSS prunes the
+   :-webkit-autofill pseudo when it sits inside a layer.
+   ========================================================================= */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--background) inset !important;
+  box-shadow: 0 0 0 1000px var(--background) inset !important;
+  caret-color: var(--ink);
+  border-color: var(--input);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
