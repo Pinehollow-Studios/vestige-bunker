@@ -39,13 +39,13 @@ export function CoursePreviewContent({
 }) {
   const details: { label: string; value: string }[] = [
     { label: "Layout", value: LAYOUT_LABELS[layout] },
-    { label: "Style", value: style.trim() || "—" },
-    { label: "Established", value: established ? String(established) : "—" },
+    { label: "Style", value: style.trim() || "-" },
+    { label: "Established", value: established ? String(established) : "-" },
   ];
 
   return (
     <div className="bg-paper pb-6 text-ink">
-      {/* Hero — rounded photo card, matching the sheet's gallery hero */}
+      {/* Hero - rounded photo card, matching the sheet's gallery hero */}
       <div className="px-3 pt-3">
         <div className="relative h-40 w-full overflow-hidden rounded-[1.25rem] ring-1 ring-white/10">
           {coverURL ? (
@@ -59,7 +59,7 @@ export function CoursePreviewContent({
         </div>
       </div>
 
-      {/* Peek block — eyebrow, title, club, stat row */}
+      {/* Peek block - eyebrow, title, club, stat row */}
       <div className="space-y-3 px-4 pt-4">
         <div className="space-y-1">
           <p className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-ink-3">
@@ -73,9 +73,9 @@ export function CoursePreviewContent({
         </div>
 
         <div className="flex items-end gap-4">
-          <Stat value={par != null ? String(par) : "—"} label="Par" hero />
+          <Stat value={par != null ? String(par) : "-"} label="Par" hero />
           <Stat value={String(holeCount)} label="Holes" />
-          <Stat value={yards != null ? yards.toLocaleString() : "—"} label="Yards" />
+          <Stat value={yards != null ? yards.toLocaleString() : "-"} label="Yards" />
           <span className="ml-auto inline-flex items-center self-center rounded-full border border-white/15 bg-white/[0.04] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-ink-2">
             {TIER_LABELS[tier]}
           </span>

@@ -13,7 +13,7 @@ import {
 } from "@/app/(dashboard)/badges/types";
 
 /**
- * The engraved-seal badge preview — a React/SVG mirror of the iOS
+ * The engraved-seal badge preview - a React/SVG mirror of the iOS
  * `BadgeMedallion` (2026-06-17 badge rework). One uniform circular seal for
  * the whole catalogue: a flat **brushed-metal tier rim** (the only thing that
  * varies by tier) around a flat **deep-slate engraved plate** with a single
@@ -22,12 +22,12 @@ import {
  * The old glossy medallion (gradient faces, white sheen, holographic /
  * metallic effects, five shapes, nine-colour theme palette) is gone. The
  * `theme` / `shape` / `effect` fields on `MedallionSpec` are accepted for
- * compatibility but deliberately ignored — only `tier`, `glyph` and the
+ * compatibility but deliberately ignored - only `tier`, `glyph` and the
  * optional `tint_hex` are read, exactly as iOS does.
  *
  * States:
- *   • earned — metal tier rim + slate plate + mint (or tinted) glyph.
- *   • locked — a "blank impression": no metal rim, a dashed faint edge, a
+ *   • earned - metal tier rim + slate plate + mint (or tinted) glyph.
+ *   • locked - a "blank impression": no metal rim, a dashed faint edge, a
  *     ghost glyph, and either a mint progress ring (count badges) or a lock
  *     (manual / awarded badges).
  */
@@ -71,7 +71,7 @@ const GLYPH_LUCIDE: Record<string, LucideIcon> = {
 
 export type MedallionSpec = {
   glyph: string;
-  /** @deprecated ignored by the seal renderer — kept for compatibility. */
+  /** @deprecated ignored by the seal renderer - kept for compatibility. */
   theme?: BadgeTheme;
   tint_hex?: string | null;
   tier: BadgeTier;
@@ -125,7 +125,7 @@ export function BadgeMedallion({
             </linearGradient>
           </defs>
 
-          {/* Brushed-metal tier rim — the only thing that varies by tier. */}
+          {/* Brushed-metal tier rim - the only thing that varies by tier. */}
           <circle cx="50" cy="50" r="49.5" fill={`url(#${id}-rim)`} />
           <circle
             cx="50" cy="50" r="49"
@@ -152,7 +152,7 @@ export function BadgeMedallion({
     );
   }
 
-  // Locked — a "blank impression": debossed empty slot.
+  // Locked - a "blank impression": debossed empty slot.
   const clamped = Math.max(0.001, Math.min(1, progress));
   // r=46, circumference ≈ 289 (matches the iOS ring proportion).
   const circumference = 2 * Math.PI * 46;
@@ -171,11 +171,11 @@ export function BadgeMedallion({
         />
       </svg>
 
-      {/* Ghost of the glyph — faintest mint impression of what goes here. */}
+      {/* Ghost of the glyph - faintest mint impression of what goes here. */}
       <GlyphLayer Glyph={Glyph} size={glyphPx} color={GLYPH_MINT} opacity={0.1} />
 
       {isManual ? (
-        // Manual / awarded badges — a quiet lock, no progress.
+        // Manual / awarded badges - a quiet lock, no progress.
         <div
           style={{
             position: "absolute", inset: 0,
@@ -185,7 +185,7 @@ export function BadgeMedallion({
           <Lock size={size * 0.2} color="#5C7187" strokeWidth={2.4} />
         </div>
       ) : (
-        // Count badges — a mint progress ring showing % to target.
+        // Count badges - a mint progress ring showing % to target.
         <svg
           viewBox="0 0 100 100" width={size} height={size}
           style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}
@@ -202,7 +202,7 @@ export function BadgeMedallion({
   );
 }
 
-/** Centred glyph overlay — the SF Symbol is previewed via its lucide mapping. */
+/** Centred glyph overlay - the SF Symbol is previewed via its lucide mapping. */
 function GlyphLayer({
   Glyph, size, color, opacity = 1,
 }: {

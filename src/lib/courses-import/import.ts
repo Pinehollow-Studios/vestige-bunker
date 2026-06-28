@@ -81,7 +81,7 @@ async function upsertClubs(
     if (error) throw new Error(`upsert clubs failed: ${error.message}`);
   }
 
-  // PostgREST caps a plain select at 1000 rows, so page through explicitly —
+  // PostgREST caps a plain select at 1000 rows, so page through explicitly -
   // otherwise every club past the first 1000 is missing from the id map and
   // its course silently drops (this bit the 1148-club CLI run).
   const map = new Map<number, string>();
@@ -113,7 +113,7 @@ async function upsertCourses(
     const payload = batch
       .map((row) => {
         const clubId = clubFidToId.get(row.clubLegacyFid);
-        if (!clubId) return null; // missing club — skip (shouldn't happen post-upsert)
+        if (!clubId) return null; // missing club - skip (shouldn't happen post-upsert)
         const countyId = row.countyName ? countySlugToId.get(slugify(row.countyName)) : null;
         return {
           legacy_fid: row.legacyFid,

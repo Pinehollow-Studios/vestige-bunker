@@ -14,7 +14,7 @@ type Props = {
   count?: number;
   /** Optional pill rendered next to the count, e.g. "3 due today". */
   accent?: string;
-  /** Rich preview body — recent rows, status breakdown, etc. */
+  /** Rich preview body - recent rows, status breakdown, etc. */
   children?: ReactNode;
   /** Bullet list of what the section will surface once wired (soon only). */
   plannedSurfaces?: string[];
@@ -146,7 +146,7 @@ function SoonStamp() {
 
 /**
  * Inline list rendered inside a live OverviewCard's preview slot.
- * Each row is a label + secondary line + trailing meta — generic
+ * Each row is a label + secondary line + trailing meta - generic
  * enough to render lists, photos, safeguarding flags, anything.
  */
 export function PreviewList({

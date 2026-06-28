@@ -14,7 +14,7 @@ type Props = {
 /**
  * Grid + lightbox for the redacted screenshots attached to a
  * feedback report. The host page mints signed URLs (60-min TTL)
- * server-side and passes them down — `null` slots render the
+ * server-side and passes them down - `null` slots render the
  * "couldn't load" placeholder.
  */
 export function Screenshots({ screenshots, signedURLs }: Props) {
@@ -90,7 +90,7 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   // Portal to <body> so the fixed overlay escapes the dashboard's
   // `z-10` content column (which establishes a stacking context).
   // Without this the lightbox renders *beneath* the `z-30` fixed
-  // sidebar — its left portion lands behind the sidebar and can't
+  // sidebar - its left portion lands behind the sidebar and can't
   // be clicked, no matter how high this `z-50` is set.
   return createPortal(
     <div

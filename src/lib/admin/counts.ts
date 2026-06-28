@@ -22,7 +22,7 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
  * The sidebar / mobile-drawer badge counts.
  *
  * Wrapped in React `cache()` so the streamed Sidebar and the streamed TopBar
- * (both await this within the same render) share ONE execution — no double
+ * (both await this within the same render) share ONE execution - no double
  * round-trip. These are non-critical chrome decoration: a failed query just
  * hides the matching pip, never blocks a page. The dashboard layout streams
  * this behind a Suspense boundary so page content paints without waiting on it.

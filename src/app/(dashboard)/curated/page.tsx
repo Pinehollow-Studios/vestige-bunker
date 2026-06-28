@@ -61,7 +61,7 @@ export default async function CuratedListsPage(props: { searchParams: SearchPara
   };
   for (const r of all) buckets[statusFor(r)] += 1;
 
-  // Filter (search + status) then sort — small dataset, all in memory.
+  // Filter (search + status) then sort - small dataset, all in memory.
   let rows = all;
   if (q) rows = rows.filter((r) => r.name.toLowerCase().includes(q) || (r.description ?? "").toLowerCase().includes(q));
   if (statusFilter !== "all") rows = rows.filter((r) => statusFor(r) === statusFilter);

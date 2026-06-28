@@ -32,7 +32,7 @@ export function TablePagination({
         <ChevronLeft aria-hidden className="size-3.5" /> Previous
       </PageLink>
       <span className="tabular-nums">
-        {count === 0 ? "0" : `${offset + 1}–${offset + count}`}
+        {count === 0 ? "0" : `${offset + 1}-${offset + count}`}
       </span>
       <PageLink href={hasMore ? url({ offset: String(nextOffset) }) : null} trailing>
         Next <ChevronRight aria-hidden className="size-3.5" />

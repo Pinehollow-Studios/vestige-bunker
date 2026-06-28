@@ -7,13 +7,13 @@ import { createClient } from "@/lib/supabase/client";
 /**
  * Keep a server-rendered list live. Subscribes to a table's Supabase Realtime
  * changes (when the table is in the realtime publication) and refreshes the
- * route's server components on change, plus whenever the tab regains focus —
+ * route's server components on change, plus whenever the tab regains focus -
  * so a queue is never stale after you switch away and back. Best-effort: a
  * table not in the publication just means no push; focus-refresh still keeps
  * it fresh. Shared by the feedback inbox + the photo moderation grid.
  *
  * `router.refresh()` re-runs the server page (fresh data) while preserving the
- * calling client component's own state (selection, focus) — the key to a live
+ * calling client component's own state (selection, focus) - the key to a live
  * queue that doesn't lose your place.
  */
 export function useLiveRefresh(

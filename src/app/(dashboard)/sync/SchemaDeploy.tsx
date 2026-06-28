@@ -87,7 +87,7 @@ export function SchemaDeploy({ initial }: { initial: Initial }) {
       {/* Migration diff */}
       {!ledger && !status.error ? (
         <Banner tone="info">
-          Prod migration ledger isn&apos;t readable yet — the{" "}
+          Prod migration ledger isn&apos;t readable yet - the{" "}
           <code className="rounded bg-paper-sunken px-1">admin_applied_migrations</code> RPC
           hasn&apos;t reached prod. The first schema push establishes it (all pending migrations
           apply, excluding any held). Dev has {status.devCount} migrations applied.
@@ -122,7 +122,7 @@ export function SchemaDeploy({ initial }: { initial: Initial }) {
                       <span className="text-ink">{m.name}</span>
                       {m.held && (
                         <span className="ml-1 font-medium text-amber">
-                          — held (would break the live build; un-hold after the next app release)
+                          - held (would break the live build; un-hold after the next app release)
                         </span>
                       )}
                     </span>

@@ -138,7 +138,7 @@ export async function updateAnnouncement(
 /**
  * Set `published_at` / `unpublished_at`. Pass `null` for `publishedAt` to revert
  * to draft, an ISO string in the past to publish now, or a future ISO string to
- * schedule. Clears `is_archived` — un-archiving and publishing are the same
+ * schedule. Clears `is_archived` - un-archiving and publishing are the same
  * intent on the editor (mirrors curated).
  */
 export async function setPublishState(
@@ -175,7 +175,7 @@ export async function setArchived(id: string, archived: boolean): Promise<Action
   return { ok: true };
 }
 
-/** Hard delete — super_admin only (mirrors feedback's deleteReport gate). */
+/** Hard delete - super_admin only (mirrors feedback's deleteReport gate). */
 export async function deleteAnnouncement(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (admin.role !== "super_admin") {
@@ -191,7 +191,7 @@ export async function deleteAnnouncement(id: string): Promise<ActionResult> {
 /**
  * Replace the individual-target list for an announcement (audience_kind =
  * 'individuals'). Wipes the existing `announcement_targets` rows and inserts the
- * supplied user IDs — simplest correct semantics for a hand-picked list.
+ * supplied user IDs - simplest correct semantics for a hand-picked list.
  */
 export async function setTargets(
   id: string,
@@ -292,7 +292,7 @@ export async function loadRecipients(
  * Hero-image upload. The browser POSTs the file via FormData; we upsert it to
  * the public `announcement-media` bucket at `<id>/hero.jpg` and patch
  * `image_storage_key` with a `?v=<UUID>` cache-buster (mirrors the curated
- * cover-upload pattern). No server-side resize in v1 — admins upload
+ * cover-upload pattern). No server-side resize in v1 - admins upload
  * pre-sized imagery.
  */
 export async function uploadHero(
@@ -328,7 +328,7 @@ export async function removeHero(id: string): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
   const { path } = announcementMediaStorageKey(id);
-  // Storage 404 (object never existed) is benign — null the column anyway.
+  // Storage 404 (object never existed) is benign - null the column anyway.
   await supabase.storage.from("announcement-media").remove([path]);
   const { error } = await supabase
     .from("announcements")

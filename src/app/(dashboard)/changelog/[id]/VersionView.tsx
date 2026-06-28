@@ -8,7 +8,7 @@ import {
   versionStatusBadgeClasses,
 } from "../types";
 
-/** Read-only presentation of a single version — the default mode of the detail
+/** Read-only presentation of a single version - the default mode of the detail
  *  page. Edit affordances live behind the View/Edit toggle. */
 export function VersionView({
   version,

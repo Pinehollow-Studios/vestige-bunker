@@ -156,7 +156,7 @@ export async function removeCourseCover(courseId: string): Promise<ActionResult>
   }
 
   const { path } = courseCoverStorageKey(courseId);
-  // Storage 404 (object never existed) is benign — null the row
+  // Storage 404 (object never existed) is benign - null the row
   // anyway so the UI catches up. Mirrors `removeCuratedCover`.
   await supabase.storage.from("course-covers").remove([path]);
   const { error } = await supabase
@@ -175,7 +175,7 @@ export async function removeCourseCover(courseId: string): Promise<ActionResult>
 }
 
 /**
- * Set a course's editorial prestige (0–100) + optional source note via the
+ * Set a course's editorial prestige (0-100) + optional source note via the
  * `admin_set_course_prestige` RPC, which writes the value, stamps the audit
  * columns, and recomputes the whole Vestige Index in one atomic call.
  * Returns the course's new index for an immediate optimistic readout.
@@ -186,7 +186,7 @@ export async function setCoursePrestige(
   source: string | null,
 ): Promise<ActionResult<number | null>> {
   if (!Number.isFinite(prestige) || prestige < 0 || prestige > 100) {
-    return { ok: false, message: "Prestige must be 0–100." };
+    return { ok: false, message: "Prestige must be 0-100." };
   }
   const supabase = await createDevClient();
   const { data, error } = await supabase.rpc("admin_set_course_prestige", {
@@ -216,7 +216,7 @@ export async function setCoursesPrestige(
   if (items.length === 0) return { ok: true, data: 0 };
   for (const it of items) {
     if (!Number.isFinite(it.prestige) || it.prestige < 0 || it.prestige > 100) {
-      return { ok: false, message: "Every prestige must be 0–100." };
+      return { ok: false, message: "Every prestige must be 0-100." };
     }
   }
   const supabase = await createDevClient();
@@ -246,13 +246,13 @@ export async function recomputeVestigeIndex(): Promise<ActionResult<number>> {
 }
 
 /**
- * Tune the global blend (rarity swing, 0–1) via `admin_set_vestige_index_config`,
+ * Tune the global blend (rarity swing, 0-1) via `admin_set_vestige_index_config`,
  * which also recomputes every index. `rarity_swing` is the ± fraction rarity
  * applies to prestige (0.15 = ±15%).
  */
 export async function setVestigeIndexSwing(raritySwing: number): Promise<ActionResult> {
   if (!Number.isFinite(raritySwing) || raritySwing < 0 || raritySwing > 1) {
-    return { ok: false, message: "Rarity swing must be 0–1." };
+    return { ok: false, message: "Rarity swing must be 0-1." };
   }
   const supabase = await createDevClient();
   const { error } = await supabase.rpc("admin_set_vestige_index_config", {
@@ -276,7 +276,7 @@ export async function setVestigeIndexSwing(raritySwing: number): Promise<ActionR
  *
  * Multi-word styles ("Pitch & Putt") get every word capitalised; the
  * `&` and connectives stay as typed. We don't try to be clever about
- * articles ("of the") — editorial vocabulary doesn't have any.
+ * articles ("of the") - editorial vocabulary doesn't have any.
  */
 function normaliseStyle(input: string | null | undefined): string | null {
   if (!input) return null;

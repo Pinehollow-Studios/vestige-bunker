@@ -38,7 +38,7 @@ export function CoursesTable({
       cell: (r) => (
         <div className="min-w-0">
           <p className="truncate font-medium text-ink">{r.name}</p>
-          <p className="truncate text-xs text-ink-3">{r.club_name ?? "—"}</p>
+          <p className="truncate text-xs text-ink-3">{r.club_name ?? "-"}</p>
         </div>
       ),
     },
@@ -47,7 +47,7 @@ export function CoursesTable({
       header: "County",
       width: "minmax(110px,1fr)",
       hideBelow: "md",
-      cell: (r) => <span className="truncate text-ink-2">{r.county_name ?? "—"}</span>,
+      cell: (r) => <span className="truncate text-ink-2">{r.county_name ?? "-"}</span>,
     },
     {
       key: "tier",
@@ -74,7 +74,7 @@ export function CoursesTable({
       hideBelow: "lg",
       cell: (r) => (
         <span className="text-xs tabular-nums text-ink-2">
-          {r.par ?? "—"}
+          {r.par ?? "-"}
           {r.yards ? ` · ${r.yards.toLocaleString()}` : ""}
         </span>
       ),

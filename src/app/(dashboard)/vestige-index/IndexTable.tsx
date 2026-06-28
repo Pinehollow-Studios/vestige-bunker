@@ -77,7 +77,7 @@ export function IndexTable({ rows, raritySwing }: { rows: IndexRow[]; raritySwin
   function save() {
     if (dirtyRows.length === 0) return;
     if (anyInvalid) {
-      toast.error("Some prestige values are outside 0–100.");
+      toast.error("Some prestige values are outside 0-100.");
       return;
     }
     const items = dirtyRows.map((r) => ({
@@ -154,7 +154,7 @@ export function IndexTable({ rows, raritySwing }: { rows: IndexRow[]; raritySwin
                             {row.name}
                           </Link>
                           <p className="truncate text-xs text-ink-3">
-                            {[row.clubName, row.countyName].filter(Boolean).join(" · ") || "—"}
+                            {[row.clubName, row.countyName].filter(Boolean).join(" · ") || "-"}
                           </p>
                         </div>
                       </div>
@@ -166,7 +166,7 @@ export function IndexTable({ rows, raritySwing }: { rows: IndexRow[]; raritySwin
                     </td>
                     <td className="hidden px-3 py-2 text-right tabular-nums text-ink-3 md:table-cell">{row.playCount}</td>
                     <td className="hidden px-3 py-2 text-right tabular-nums text-ink-3 md:table-cell">
-                      {row.vestigeRarity ?? "—"}
+                      {row.vestigeRarity ?? "-"}
                     </td>
                     <td className="px-3 py-2 text-right">
                       <input
@@ -189,17 +189,17 @@ export function IndexTable({ rows, raritySwing }: { rows: IndexRow[]; raritySwin
                       {showProjected ? (
                         <span
                           className="font-display text-base font-semibold tabular-nums text-amber"
-                          title="Projected — commit to apply"
+                          title="Projected - commit to apply"
                         >
                           {projected}
                         </span>
                       ) : (
-                        <span className="tabular-nums text-ink-3">—</span>
+                        <span className="tabular-nums text-ink-3">-</span>
                       )}
                     </td>
                     <td className="px-3 py-2 text-right">
                       <span className="font-display text-base font-semibold tabular-nums text-brand">
-                        {row.vestigeIndex ?? "—"}
+                        {row.vestigeIndex ?? "-"}
                       </span>
                     </td>
                   </tr>
@@ -210,8 +210,8 @@ export function IndexTable({ rows, raritySwing }: { rows: IndexRow[]; raritySwin
                         <div className="space-y-2 rounded-lg border border-rule/50 bg-paper/40 p-3">
                           <p className="font-mono text-xs text-ink-2">
                             {row.playCount} plays → rarity{" "}
-                            <span className="text-ink">{row.vestigeRarity ?? "—"}</span> → index{" "}
-                            <span className="text-brand">{row.vestigeIndex ?? "—"}</span>
+                            <span className="text-ink">{row.vestigeRarity ?? "-"}</span> → index{" "}
+                            <span className="text-brand">{row.vestigeIndex ?? "-"}</span>
                             <span className="text-ink-3">
                               {" "}
                               (prestige {row.prestige}, swing ±{Math.round(raritySwing * 100)}%)

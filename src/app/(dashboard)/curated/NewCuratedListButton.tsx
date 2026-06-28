@@ -28,7 +28,7 @@ export function NewCuratedListButton() {
       if (!result.ok) {
         toast.error(result.message);
       }
-      // On success the action redirects — no further UI work.
+      // On success the action redirects - no further UI work.
     });
   }
 

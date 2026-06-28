@@ -26,13 +26,13 @@ type Row = {
 const PAGE_SIZE = 50;
 
 /**
- * User directory — read-only v1.
+ * User directory - read-only v1.
  *
  * Surfaces every registered profile so devs can spot-check moderation state
  * (account_status + is_admin_hidden), find users by username/display name, and
  * click through to a per-user detail view. Reads through the SERVER-ONLY
  * service-role client (`lib/supabase/admin.ts`) because `public.users` has no
- * admin SELECT policy — an anon session would only see public/friend profiles,
+ * admin SELECT policy - an anon session would only see public/friend profiles,
  * so the directory must bypass RLS to show the full roster. The page is gated
  * by the dashboard layout's `requireAdmin()`.
  *
@@ -84,7 +84,7 @@ export default async function UsersPage({
     .range(from, to);
 
   if (q.length > 0) {
-    // citext + ilike — usernames are case-insensitive. Sanitise before the
+    // citext + ilike - usernames are case-insensitive. Sanitise before the
     // `.or()` filter string to prevent PostgREST filter injection.
     const safe = sanitizeFilterValue(q);
     if (safe.length > 0) {
@@ -200,10 +200,10 @@ export default async function UsersPage({
               {filtering ? "Results" : "Recently joined"}
             </h2>
             <span className="text-[11px] tabular-nums text-ink-3">
-              {matched > 0 ? `${rangeStart}–${rangeEnd} of ${matched}` : rows.length}
+              {matched > 0 ? `${rangeStart}-${rangeEnd} of ${matched}` : rows.length}
             </span>
           </div>
-          <p className="text-xs text-ink-3">Read-only — controls ship next.</p>
+          <p className="text-xs text-ink-3">Read-only - controls ship next.</p>
         </div>
 
         {rows.length === 0 ? (

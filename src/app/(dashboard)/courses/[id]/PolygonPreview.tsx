@@ -4,7 +4,7 @@ import type { GeoJSONPolygonOrMulti } from "../types";
 /**
  * Read-only render of the course boundary Jack mapped by hand. Draws the
  * polygon over Mapbox satellite imagery via the Static Images API, auto-fit
- * to the polygon's bounds (no fixed centre/zoom — it always frames the shape),
+ * to the polygon's bounds (no fixed centre/zoom - it always frames the shape),
  * when `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` is configured. Falls back to a vertex
  * count so admins can still confirm the polygon is present.
  *
@@ -26,7 +26,7 @@ export function PolygonPreview({
       <Shell>
         <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-ink-3">
           <MapPin aria-hidden className="size-6 text-ink-3/70" />
-          <span className="text-xs">No polygon mapped — pin only.</span>
+          <span className="text-xs">No polygon mapped - pin only.</span>
         </div>
       </Shell>
     );
@@ -84,7 +84,7 @@ function staticImageURL(
   if (!token) return null;
 
   // Round coordinates to ~5 decimals (≈1m) so the GeoJSON serialises compactly
-  // — the static API caps URL length at ~8 KB and hand-mapped boundaries can
+  // - the static API caps URL length at ~8 KB and hand-mapped boundaries can
   // carry many vertices.
   const geometry = roundGeometry(polygon);
   const payload = {
@@ -100,7 +100,7 @@ function staticImageURL(
   };
   const overlay = `geojson(${encodeURIComponent(JSON.stringify(payload))})`;
 
-  // `auto` fits the viewport to the overlay bounds with sensible padding —
+  // `auto` fits the viewport to the overlay bounds with sensible padding -
   // no reliance on centre_lat/lng or a guessed zoom level. Satellite-streets
   // gives the boundary real course context (greens, fairways, treelines).
   const base = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/auto/600x360@2x`;

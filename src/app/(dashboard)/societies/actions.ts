@@ -11,7 +11,7 @@ export type ActionResult<T = void> =
 
 /**
  * Insert a new (disabled) mode and open its editor. New modes do nothing
- * in the app until a code mechanic exists for their `key` — they ship
+ * in the app until a code mechanic exists for their `key` - they ship
  * disabled so they can be configured first.
  */
 export async function createMode(name: string): Promise<ActionResult<string>> {

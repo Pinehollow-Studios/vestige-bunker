@@ -1,4 +1,4 @@
-# Vestige Admin — source of truth
+# Vestige Bunker — source of truth
 
 > Single source of truth for the Vestige admin dashboard. Read in full
 > before contributing. The companion iOS app's `CLAUDE.md` (in

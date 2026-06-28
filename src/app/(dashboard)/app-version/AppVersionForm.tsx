@@ -28,14 +28,14 @@ export function AppVersionForm({ initial }: { initial: Initial }) {
 
   const dirty =
     min !== initial.min || recommended !== initial.recommended || updateUrl !== initial.updateUrl;
-  // Raising the hard floor is the dangerous case — it walls older apps out.
+  // Raising the hard floor is the dangerous case - it walls older apps out.
   const raisesFloor = cmpVersion(min, initial.min) > 0;
 
   function doSave() {
     startTransition(async () => {
       const result = await setAppVersionConfig(min, recommended || null, updateUrl || null);
       setConfirmOpen(false);
-      if (result.ok) toast.success("Saved — applies on next app launch");
+      if (result.ok) toast.success("Saved - applies on next app launch");
       else toast.error(result.message);
     });
   }
@@ -49,21 +49,21 @@ export function AppVersionForm({ initial }: { initial: Initial }) {
     <div className="space-y-4 rounded-xl glass-panel p-5">
       <Field
         label="Minimum supported version"
-        hint="Hard floor. Apps below this hit a blocking “update required” wall. Keep at 0.0.0 to gate nobody."
+        hint="Hard floor. Apps below this hit a blocking 'update required' wall. Keep at 0.0.0 to gate nobody."
         value={min}
         onChange={setMin}
         placeholder="0.0.0"
       />
       <Field
         label="Recommended version"
-        hint="Soft nudge. Apps below this (but at/above the floor) see a dismissible “update available” banner. Leave blank for none."
+        hint="Soft nudge. Apps below this (but at/above the floor) see a dismissible 'update available' banner. Leave blank for none."
         value={recommended}
         onChange={setRecommended}
         placeholder="(none)"
       />
       <Field
         label="Update link"
-        hint="Where both “Update” buttons point — the TestFlight or App Store URL. Leave blank to fall back to the App Store app."
+        hint="Where both 'Update' buttons point - the TestFlight or App Store URL. Leave blank to fall back to the App Store app."
         value={updateUrl}
         onChange={setUpdateUrl}
         placeholder="https://…"
@@ -87,7 +87,7 @@ export function AppVersionForm({ initial }: { initial: Initial }) {
       >
         <p>
           Setting the floor to <strong className="text-ink">{min}</strong> forces every app below
-          it to a blocking <strong className="text-ink">“update required”</strong> wall. Anyone who
+          it to a blocking <strong className="text-ink">&quot;update required&quot;</strong> wall. Anyone who
           can&rsquo;t update is locked out of the app until they do.
         </p>
         <p className="mt-2 text-ink-3">Only do this for a genuinely breaking change or a bad build.</p>

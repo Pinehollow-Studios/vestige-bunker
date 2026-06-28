@@ -71,8 +71,8 @@ export function ModeEditor({ mode }: { mode: SocietyModeRow }) {
       ? { state: "ok", label: "Mechanic wired in code" }
       : { state: "missing", label: "No code mechanic for this key", hint: `Add one for "${mode.key}" before enabling.` },
     enabled
-      ? { state: "ok", label: "On — shown to players" }
-      : { state: "info", label: "Off — hidden from the picker" },
+      ? { state: "ok", label: "On - shown to players" }
+      : { state: "info", label: "Off - hidden from the picker" },
   ];
 
   const aside = (
@@ -88,9 +88,9 @@ export function ModeEditor({ mode }: { mode: SocietyModeRow }) {
           </div>
         </div>
         <p className="text-[11px] text-ink-3">
-          Duration: {config.default_duration_days ?? "—"}d default
+          Duration: {config.default_duration_days ?? "-"}d default
           {config.min_duration_days != null && config.max_duration_days != null
-            ? ` (${config.min_duration_days}–${config.max_duration_days}d)`
+            ? ` (${config.min_duration_days}-${config.max_duration_days}d)`
             : ""}
           {isMatch && config.team_count != null ? ` · ${config.team_count} teams` : ""}
         </p>
@@ -173,7 +173,7 @@ export function ModeEditor({ mode }: { mode: SocietyModeRow }) {
       <EditorSection title="Rules" hint="Tunable knobs for this mode. The scoring itself lives in code.">
         {!knownMechanic && (
           <div className="rounded-lg border border-alert/30 bg-alert/10 p-3 text-xs text-alert">
-            No code mechanic exists for the key “{mode.key}” yet — this mode won’t do anything in the app until one
+            No code mechanic exists for the key &quot;{mode.key}&quot; yet - this mode won&apos;t do anything in the app until one
             is added. Keep it off until then.
           </div>
         )}

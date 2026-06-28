@@ -7,7 +7,7 @@ import { ImportConsole } from "./ImportConsole";
 
 export const dynamic = "force-dynamic";
 // A full apply re-upserts ~1.2k courses + clubs + counties then recomputes the
-// index — give the serverless function room beyond the short default timeout.
+// index - give the serverless function room beyond the short default timeout.
 export const maxDuration = 60;
 
 export default async function CourseImportPage() {

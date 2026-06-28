@@ -17,7 +17,7 @@ const SF: CSSProperties = {
 };
 
 // A realistic iOS wallpaper (deep dusk gradient) with a subtle bottom vignette
-// so notifications read legibly — the way iOS darkens behind them.
+// so notifications read legibly - the way iOS darkens behind them.
 const WALLPAPER =
   "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.10), transparent 60%)," +
   "linear-gradient(160deg, #3a2b62 0%, #25315f 38%, #18233f 70%, #0c1020 100%)";
@@ -37,7 +37,7 @@ function boldSegments(s: string): ReactNode[] {
   return out;
 }
 
-/** The Vestige app icon — mint→lime squircle + dark golf flag (matches the real icon). */
+/** The Vestige app icon - mint→lime squircle + dark golf flag (matches the real icon). */
 export function VestigeAppIcon({ size = 40 }: { size?: number }) {
   return (
     <div
@@ -96,7 +96,7 @@ function NotificationPlatter({ title, body, time }: { title: string; body: strin
   );
 }
 
-/** A notification banner on a slice of wallpaper — for cards/thumbnails. */
+/** A notification banner on a slice of wallpaper - for cards/thumbnails. */
 export function IOSNotification({ title, body, time = "now" }: { title: string; body: string; time?: string }) {
   return (
     <div className="overflow-hidden rounded-2xl p-2.5" style={{ background: WALLPAPER }}>
@@ -105,7 +105,7 @@ export function IOSNotification({ title, body, time = "now" }: { title: string; 
   );
 }
 
-/** The in-app inbox row (Vestige dark "Atlas" surface) — for the inbox copy. */
+/** The in-app inbox row (Vestige dark "Atlas" surface) - for the inbox copy. */
 export function VestigeInboxRow({
   title,
   body,

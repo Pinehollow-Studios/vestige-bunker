@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Uppercase mint section subhead — the recurring analytics section label. */
+/** Uppercase mint section subhead - the recurring analytics section label. */
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
@@ -23,7 +23,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 /**
  * Funnel: one bar per stage, width relative to the first stage. Each row
- * shows the absolute count and the share of the entry stage — the activation
+ * shows the absolute count and the share of the entry stage - the activation
  * drop-off read.
  */
 export function FunnelBars({ stages }: { stages: { key: string; label: string; count: number }[] }) {
@@ -94,7 +94,7 @@ export function BarList({
 }
 
 /**
- * Hand-rolled SVG area sparkline for a daily series — no chart lib. Stretches
+ * Hand-rolled SVG area sparkline for a daily series - no chart lib. Stretches
  * to its container width; the stroke stays crisp via non-scaling-stroke.
  */
 export function Sparkline({
@@ -148,7 +148,7 @@ export function ThresholdNote({ n, suppressed }: { n: number; suppressed?: numbe
     <p className="text-[11px] leading-relaxed text-ink-3">
       Aggregated, opted-out users excluded. Cells covering fewer than {n} users are
       suppressed{typeof suppressed === "number" && suppressed > 0 ? ` (${suppressed} hidden)` : ""}.
-      Internal preview — not a club export.
+      Internal preview - not a club export.
     </p>
   );
 }
@@ -182,7 +182,7 @@ export function MetricCard({
 }
 
 /** A large hero number with an optional trend delta + sub-line. The biggest
- *  thing on the page — reserved for the one metric in focus. */
+ *  thing on the page - reserved for the one metric in focus. */
 export function BigStat({
   label,
   value,
@@ -219,7 +219,7 @@ export function BigStat({
   );
 }
 
-/** SVG area chart for a daily series — gridlines + a mint area fill, no chart
+/** SVG area chart for a daily series - gridlines + a mint area fill, no chart
  *  lib. Stretches to its container; the line stays crisp via non-scaling-stroke.
  *  Only one renders at a time (it's the hero), so a fixed gradient id is safe. */
 export function AreaChart({
@@ -275,7 +275,7 @@ export function AreaChart({
 
 const RAMP = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
 
-/** A single proportional stacked bar + legend — parts of a whole (discovery
+/** A single proportional stacked bar + legend - parts of a whole (discovery
  *  sources, event groups). Reads cleaner than many tiny bars. */
 export function ProportionBar({ segments }: { segments: { label: string; value: number }[] }) {
   const total = segments.reduce((s, x) => s + x.value, 0);

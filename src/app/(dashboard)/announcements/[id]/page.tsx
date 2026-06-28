@@ -44,7 +44,7 @@ export default async function AnnouncementEditorPage({
   if (!row) notFound();
 
   // Stats, the first page of recipients, the current individual targets, and
-  // the counties picker — all in parallel. Each is best-effort (the recipients
+  // the counties picker - all in parallel. Each is best-effort (the recipients
   // / stats RPCs aggregate; the targets + counties are direct reads).
   const [statsRes, recipientsRes, targetRowsRes, countyRowsRes] = await Promise.all([
     supabase.rpc("admin_announcement_stats", { p_id: id }),

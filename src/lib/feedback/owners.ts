@@ -7,12 +7,12 @@ import { tryCreateServiceClient } from "@/lib/supabase/admin";
  * `feedback_reports.owner_user_id` is constrained to admins by the
  * `set_owner` RPC, so the picker only ever offers people in
  * `public.admins`. Their display names live in `public.users`, which has
- * no admin SELECT policy (own / public / friends only — see
+ * no admin SELECT policy (own / public / friends only - see
  * `lib/supabase/admin.ts`), so we read both through the service-role
  * client. Every caller already sits behind the dashboard layout's
  * `requireAdmin()` gate.
  *
- * Degrades to `[]` when the service-role key isn't configured — the UI
+ * Degrades to `[]` when the service-role key isn't configured - the UI
  * then simply hides the owner control rather than erroring.
  */
 export type AdminOption = {
@@ -27,7 +27,7 @@ export async function listAdminOwners(): Promise<AdminOption[]> {
   if (!supabase) return [];
 
   // The admin's name lives on the `admins` record (admin-only accounts have no
-  // public.users profile — and shouldn't, see migration 20260610120000). We
+  // public.users profile - and shouldn't, see migration 20260610120000). We
   // still prefer a real users.display_name when the admin is also a full user.
   const { data: admins, error } = await supabase
     .from("admins")

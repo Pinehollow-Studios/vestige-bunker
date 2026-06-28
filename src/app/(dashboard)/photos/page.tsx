@@ -47,7 +47,7 @@ const PHOTO_COLS =
 type SearchParams = Promise<{ state?: string; kind?: string }>;
 
 /**
- * Photo moderation — the safety review queue for user-uploaded photos (round
+ * Photo moderation - the safety review queue for user-uploaded photos (round
  * photos, avatars, and public `coursePhoto` gallery contributions, CLAUDE.md
  * §5.2). A photo stays `pending` until approved; only approved ones surface in
  * the app. Reads + writes go through service-role (`public.photos` has no admin
@@ -211,7 +211,7 @@ function ConfigNotice() {
     <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-ink-2">
       Photo moderation needs the service-role key for the active environment. Set{" "}
       <code className="font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY_DEV</code> /{" "}
-      <code className="font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY_PROD</code> (server-only) —{" "}
+      <code className="font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY_PROD</code> (server-only) -{" "}
       <code className="font-mono text-xs">public.photos</code> has no admin SELECT policy.
     </div>
   );

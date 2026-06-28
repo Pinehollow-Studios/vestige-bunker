@@ -42,9 +42,9 @@ export type ToolGroup = {
  *
  * The dashboard surfaces these in two places:
  *
- * - Sidebar — compact, label-only, grouped at the bottom of the
+ * - Sidebar - compact, label-only, grouped at the bottom of the
  *   nav. Always in reach.
- * - Overview "Operator console" — expanded grid with descriptions.
+ * - Overview "Operator console" - expanded grid with descriptions.
  *   The full library; this is where new admins learn what tools
  *   even exist.
  *
@@ -79,7 +79,7 @@ export const TOOL_GROUPS: ToolGroup[] = [
       {
         href: "https://supabase.com/dashboard/project/_/auth/users",
         label: "Auth users",
-        description: "auth.users table — the canonical identity source. Reset passwords, view providers.",
+        description: "auth.users table - the canonical identity source. Reset passwords, view providers.",
         icon: KeyRound,
       },
       {
@@ -91,7 +91,7 @@ export const TOOL_GROUPS: ToolGroup[] = [
       {
         href: "https://supabase.com/dashboard/project/_/functions",
         label: "Edge functions",
-        description: "process_photo, sentry-webhook, notify_user fan-out — runtime + logs.",
+        description: "process_photo, sentry-webhook, notify_user fan-out - runtime + logs.",
         icon: Zap,
       },
       {
@@ -127,15 +127,15 @@ export const TOOL_GROUPS: ToolGroup[] = [
         icon: Gauge,
       },
       {
-        href: "https://vercel.com/pinehollow-studios/vestige-admin/deployments",
+        href: "https://vercel.com/pinehollow-studios/vestige-bunker/deployments",
         label: "Vercel deployments",
         description: "This dashboard's deploy history. Inspect a build, roll back if needed.",
         icon: LineChart,
       },
       {
-        href: "https://vercel.com/pinehollow-studios/vestige-admin/logs",
+        href: "https://vercel.com/pinehollow-studios/vestige-bunker/logs",
         label: "Vercel logs",
-        description: "Edge runtime logs — server actions, route handlers, middleware.",
+        description: "Edge runtime logs - server actions, route handlers, middleware.",
         icon: ScrollText,
       },
     ],
@@ -149,19 +149,19 @@ export const TOOL_GROUPS: ToolGroup[] = [
       {
         href: "https://github.com/Pinehollow-Studios/Vestige-ios",
         label: "iOS repo",
-        description: "Schema lives here — every admin RPC / column starts as a migration in this tree.",
+        description: "Schema lives here - every admin RPC / column starts as a migration in this tree.",
         icon: Code2,
       },
       {
-        href: "https://github.com/Pinehollow-Studios/Vestige-admin",
-        label: "Admin repo",
+        href: "https://github.com/Pinehollow-Studios/Vestige-bunker",
+        label: "Bunker repo",
         description: "This dashboard. Branch off main, open a PR; Vercel ships a preview per branch.",
         icon: Code2,
       },
       {
         href: "https://github.com/Pinehollow-Studios/Vestige-marketing",
         label: "Marketing repo",
-        description: "vestige.golf — landing page + waitlist server actions + design experiments.",
+        description: "vestige.golf - landing page + waitlist server actions + design experiments.",
         icon: Code2,
       },
       {
@@ -213,7 +213,7 @@ export const TOOL_GROUPS: ToolGroup[] = [
 ];
 
 /**
- * Convenience flat view — used wherever you want to render every
+ * Convenience flat view - used wherever you want to render every
  * link without thinking about groups (e.g. command-palette later).
  */
 export const ALL_TOOLS: ToolLink[] = TOOL_GROUPS.flatMap((group) => group.links);

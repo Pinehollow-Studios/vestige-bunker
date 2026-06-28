@@ -53,7 +53,7 @@ export default async function VersionDetailPage({
   const changes = (changeRows as AppVersionChange[] | null) ?? [];
 
   // Hydrate the linked feedback reports in one batch (admin RLS permits direct
-  // select on feedback_reports — same as the overview page).
+  // select on feedback_reports - same as the overview page).
   const linkedIds = Array.from(
     new Set(changes.map((c) => c.feedback_report_id).filter(Boolean) as string[]),
   );

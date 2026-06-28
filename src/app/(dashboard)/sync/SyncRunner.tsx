@@ -142,7 +142,7 @@ export function SyncRunner({
             <span>
               {report.mode === "apply" ? "Applied" : "Dry run"} ·{" "}
               {totalChanges === 0
-                ? "no changes — prod already matches dev"
+                ? "no changes - prod already matches dev"
                 : `${totalChanges} change${totalChanges === 1 ? "" : "s"}`}
             </span>
           </div>
@@ -197,7 +197,7 @@ function EntityCard({ entity }: { entity: EntityReport }) {
               <span className={cn("mt-0.5 shrink-0", kindText(c.kind))}>{kindIcon(c.kind)}</span>
               <span className="min-w-0 flex-1">
                 <span className="font-medium text-ink">{c.label}</span>
-                {c.detail && <span className="text-ink-3"> — {c.detail}</span>}
+                {c.detail && <span className="text-ink-3"> - {c.detail}</span>}
               </span>
             </li>
           ))}

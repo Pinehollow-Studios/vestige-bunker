@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 const FEED_LIMIT = 200;
 
 function relTime(iso?: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (s < 60) return `${s}s ago`;
   const m = Math.floor(s / 60);
@@ -41,7 +41,7 @@ export default async function EventExplorerPage({ searchParams }: { searchParams
     return (
       <Shell>
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-amber">
-          Service-role key not configured — set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
+          Service-role key not configured - set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
           analytics views.
         </div>
       </Shell>

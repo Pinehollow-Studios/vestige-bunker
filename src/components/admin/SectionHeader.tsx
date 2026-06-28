@@ -8,7 +8,7 @@ type Props = {
 
 /**
  * A page header. Instrument-calm: a small static mint eyebrow (no pulse-ring
- * theater) over a tight display-sans title — not the old 2.6rem serif. Same
+ * theater) over a tight display-sans title - not the old 2.6rem serif. Same
  * props as before, so every page keeps working.
  */
 export function SectionHeader({ title, eyebrow, actions }: Props) {

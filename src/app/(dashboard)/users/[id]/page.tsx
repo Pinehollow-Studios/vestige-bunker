@@ -44,7 +44,7 @@ type RoundRow = { course_id: string; date: string; gross_score: number | null };
 
 export default async function UserHubPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // Reject non-UUID ids up front — they can't match a row and would otherwise
+  // Reject non-UUID ids up front - they can't match a row and would otherwise
   // be interpolated into a PostgREST `.or()` filter further down.
   if (!isUuid(id)) notFound();
   const admin = await requireAdmin();
@@ -266,10 +266,10 @@ export default async function UserHubPage({ params }: { params: Promise<{ id: st
           />
           <Card title="Account">
             <dl className="space-y-2.5 text-xs">
-              <Row label="Home club" value={clubName ?? (user.home_club_id ? "—" : "Not set")} />
-              <Row label="Home county" value={countyName ?? (user.home_county_id ? "—" : "Not set")} />
+              <Row label="Home club" value={clubName ?? (user.home_club_id ? "-" : "Not set")} />
+              <Row label="Home county" value={countyName ?? (user.home_county_id ? "-" : "Not set")} />
               <Row label="Analytics" value={user.analytics_opt_out ? "Opted out" : "Opted in"} />
-              <Row label="Last seen" value={user.last_seen_app_version ?? "—"} />
+              <Row label="Last seen" value={user.last_seen_app_version ?? "-"} />
               <Row label="Joined" value={formatDate(user.created_at)} />
               {user.is_admin_hidden_from_public_leaderboards && (
                 <Row label="Hidden at" value={formatDate(user.admin_hidden_at)} />
@@ -361,9 +361,9 @@ function snippet(body: string): string {
   return t.length <= 80 ? t : t.slice(0, 77) + "…";
 }
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 function relativeTime(iso: string): string {

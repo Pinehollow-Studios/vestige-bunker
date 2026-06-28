@@ -44,7 +44,7 @@ export function BadgeEditor({
   lists: CuratedListOption[];
   courses: CourseOption[];
 }) {
-  // Editorial + visual + criteria state — the live preview reads from here so
+  // Editorial + visual + criteria state - the live preview reads from here so
   // every control updates the medallion instantly.
   const [name, setName] = useState(row.name);
   const [slug, setSlug] = useState(row.slug);
@@ -81,7 +81,7 @@ export function BadgeEditor({
     criteria,
   };
 
-  // Cheap, render-time diff against the loaded row — no memo (the patch object
+  // Cheap, render-time diff against the loaded row - no memo (the patch object
   // is rebuilt every render anyway, which would defeat one).
   const dirty =
     JSON.stringify(patch) !==
@@ -116,7 +116,7 @@ export function BadgeEditor({
 
       {/* Form */}
       <div className="space-y-6">
-        <Card title="Artwork" hint="An engraved seal — a slate plate, a brushed-metal tier rim, and one mint glyph. Composed natively, crisp at any size.">
+        <Card title="Artwork" hint="An engraved seal - a slate plate, a brushed-metal tier rim, and one mint glyph. Composed natively, crisp at any size.">
           <GlyphPicker glyph={glyph} setGlyph={setGlyph} />
           <Swatches label="Tier (metal rim)">
             {TIERS.map((t) => (
@@ -135,7 +135,7 @@ export function BadgeEditor({
           </Field>
         </Card>
 
-        <Card title="Editorial" hint="The words users read — keep them warm and specific.">
+        <Card title="Editorial" hint="The words users read - keep them warm and specific.">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
             <Field label="Slug" hint="URL-safe id."><Input value={slug} onChange={(e) => setSlug(e.target.value)} /></Field>
@@ -169,11 +169,11 @@ export function BadgeEditor({
           </div>
           <label className="flex items-center gap-2 text-sm text-ink-2">
             <input type="checkbox" checked={isSecret} onChange={(e) => setIsSecret(e.target.checked)} />
-            Secret — hidden in the app until earned
+            Secret - hidden in the app until earned
           </label>
         </Card>
 
-        <Card title="How it's earned" hint="The rule the server checks. No code — pick a metric and a target.">
+        <Card title="How it's earned" hint="The rule the server checks. No code - pick a metric and a target.">
           <CriteriaBuilder
             criteria={criteria}
             setCriteria={setCriteria}
@@ -291,7 +291,7 @@ function CriteriaBuilder({
           <option value="specific_county_complete">Completing a specific county</option>
           <option value="specific_list_complete">Completing a specific curated list</option>
           <option value="specific_course">Playing a specific course</option>
-          <option value="manual">Manual — awarded by an admin</option>
+          <option value="manual">Manual - awarded by an admin</option>
         </select>
       </Field>
 
@@ -331,7 +331,7 @@ function CriteriaBuilder({
           >
             <option value="">Select a course…</option>
             {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}{c.county_name ? ` — ${c.county_name}` : ""}</option>
+              <option key={c.id} value={c.id}>{c.name}{c.county_name ? ` - ${c.county_name}` : ""}</option>
             ))}
           </select>
         </Field>
@@ -371,7 +371,7 @@ function CountThresholdFields({
             {SELECTABLE_METRICS.map((m) => (
               <option key={m} value={m}>{METRIC_LABELS[m]}</option>
             ))}
-            {/* Tolerate a retired metric already saved on this row — keep it
+            {/* Tolerate a retired metric already saved on this row - keep it
                 selectable so the value isn't silently lost, but mark it. */}
             {ARCHIVED_METRICS.includes(criteria.metric) && (
               <option value={criteria.metric}>{METRIC_LABELS[criteria.metric]} (archived)</option>
@@ -437,7 +437,7 @@ function Lifecycle({
     start(async () => {
       const r = await setBadgePublished(row.id, published);
       if (!r.ok) toast.error(r.message);
-      else toast.success(published ? "Published — live in the app" : "Unpublished");
+      else toast.success(published ? "Published - live in the app" : "Unpublished");
     });
   }
   function archive(archived: boolean) {
@@ -471,7 +471,7 @@ function Lifecycle({
 
       {dirty && (
         <p className="rounded-md border border-amber/30 bg-amber/10 px-2 py-1 text-[11px] text-ink-2">
-          Unsaved changes — save before publishing.
+          Unsaved changes - save before publishing.
         </p>
       )}
 

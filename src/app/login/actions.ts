@@ -10,7 +10,7 @@ export type LoginState = {
 };
 
 /**
- * In-memory brute-force throttle. CAVEAT: this is per server *instance* — on
+ * In-memory brute-force throttle. CAVEAT: this is per server *instance* - on
  * serverless (Vercel) each instance keeps its own Map, so it's a best-effort
  * speed bump, not a guarantee. Supabase Auth's own rate-limiting is the real
  * backstop; a shared store (Vercel KV / Upstash) is the proper cross-instance
@@ -63,7 +63,7 @@ export async function signIn(
 
   if (error) {
     recordFailure(key);
-    // Deliberately generic — never leak whether the email exists, the admin
+    // Deliberately generic - never leak whether the email exists, the admin
     // gate, rate limits, or any Supabase internals to an anonymous visitor.
     return { status: "error", message: "Incorrect email or password." };
   }

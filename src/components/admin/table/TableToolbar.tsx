@@ -31,7 +31,7 @@ export function TableToolbar({
   const pathname = usePathname();
   const [value, setValue] = useState(initialQuery);
 
-  // Debounced URL write — every write inside the timer, never sync in render.
+  // Debounced URL write - every write inside the timer, never sync in render.
   useEffect(() => {
     if (value === initialQuery) return;
     const t = setTimeout(() => {

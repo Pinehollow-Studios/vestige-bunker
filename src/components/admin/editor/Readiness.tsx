@@ -10,7 +10,7 @@ export type ReadinessCheck = {
 };
 
 /**
- * A compact readiness checklist beside an editor — tells the author what's done
+ * A compact readiness checklist beside an editor - tells the author what's done
  * and what's missing before publishing, so editorial is a confident act, not a
  * guess. `warn` / `missing` items are the things to fix; `ok` is green; `info`
  * is neutral context.

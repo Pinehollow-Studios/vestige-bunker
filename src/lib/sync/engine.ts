@@ -9,18 +9,18 @@ import type { SyncClients } from "./clients";
  * Prod editorial is a pure downstream replica of dev. Course/county/
  * club/badge UUIDs differ across the two projects (the import never
  * sets `id`; badge defs were seeded independently), so EVERY reference
- * is resolved through stable natural keys — never raw UUIDs:
+ * is resolved through stable natural keys - never raw UUIDs:
  *   - courses   → matched by `legacy_fid` (fallback `slug`)
  *   - counties  → matched by `slug`
  *   - lists     → matched by `slug`
  *   - badges    → matched by `slug`
  *
  * Scope ("everything editorial"):
- *   1. Course editorial fields — UPDATE-by-key overlay (never insert/
+ *   1. Course editorial fields - UPDATE-by-key overlay (never insert/
  *      delete; the import owns course rows).
- *   2. Curated lists + membership + covers — FULL MIRROR (create /
+ *   2. Curated lists + membership + covers - FULL MIRROR (create /
  *      update / delete by slug).
- *   3. Badge definitions + art — FULL MIRROR with earned-badge-safe
+ *   3. Badge definitions + art - FULL MIRROR with earned-badge-safe
  *      deletes (a delete that would cascade earned `badges` is
  *      downgraded to archive).
  *
@@ -221,7 +221,7 @@ async function syncCourses(
         report,
         "skip",
         d.slug as string,
-        "no prod course with this legacy_fid/slug — re-run import-courses on prod",
+        "no prod course with this legacy_fid/slug - re-run import-courses on prod",
       );
       continue;
     }
@@ -230,7 +230,7 @@ async function syncCourses(
     const editorialDiffers = stable(pick(d, COURSE_EDITORIAL)) !== stable(pick(match, COURSE_EDITORIAL));
     const devHero = (d.hero_photo_storage_key as string | null) ?? null;
     const prodHero = (match.hero_photo_storage_key as string | null) ?? null;
-    // First-time copy / clear only — content drift on an existing cover
+    // First-time copy / clear only - content drift on an existing cover
     // isn't detected by key compare (keys embed differing ids). Covers
     // change rarely; documented limitation.
     const heroAction: "copy" | "clear" | "none" = devHero && !prodHero ? "copy" : !devHero && prodHero ? "clear" : "none";
@@ -260,7 +260,7 @@ async function syncCourses(
       }
       if (Object.keys(update).length > 0) {
         const { error } = await clients.prod.from("courses").update(update).eq("id", prodId);
-        if (error) report.warnings.push(`${d.slug}: update failed — ${error.message}`);
+        if (error) report.warnings.push(`${d.slug}: update failed - ${error.message}`);
       }
     }
   }
@@ -297,11 +297,11 @@ async function syncCuratedLists(
       const { error } = await clients.prod
         .from("curated_lists")
         .upsert(pick(d, CURATED_COLUMNS), { onConflict: "slug" });
-      if (error) report.warnings.push(`${slug}: upsert failed — ${error.message}`);
+      if (error) report.warnings.push(`${slug}: upsert failed - ${error.message}`);
     }
   }
 
-  // 2b. deletes — prod lists whose slug isn't in dev.
+  // 2b. deletes - prod lists whose slug isn't in dev.
   for (const p of prodListsBefore) {
     const slug = p.slug as string;
     if (devSlugs.has(slug)) continue;
@@ -310,7 +310,7 @@ async function syncCuratedLists(
       const cover = objPath(p.cover_storage_key as string | null);
       if (cover) await clients.prod.storage.from("list-covers").remove([cover]);
       const { error } = await clients.prod.from("curated_lists").delete().eq("id", p.id as string);
-      if (error) report.warnings.push(`${slug}: delete failed — ${error.message}`);
+      if (error) report.warnings.push(`${slug}: delete failed - ${error.message}`);
     }
   }
 
@@ -347,7 +347,7 @@ async function syncCuratedLists(
             .from("curated_lists")
             .update({ cover_storage_key: key })
             .eq("id", prodListId);
-          if (error) report.warnings.push(`${slug}: cover key update failed — ${error.message}`);
+          if (error) report.warnings.push(`${slug}: cover key update failed - ${error.message}`);
         } else {
           report.warnings.push(`${slug}: cover copy failed`);
         }
@@ -388,7 +388,7 @@ async function syncCuratedLists(
         if (desired.length > 0) {
           const rows = desired.map((r) => ({ ...r, curated_list_id: prodListId }));
           const { error } = await clients.prod.from("curated_list_courses").insert(rows);
-          if (error) report.warnings.push(`${slug}: membership insert failed — ${error.message}`);
+          if (error) report.warnings.push(`${slug}: membership insert failed - ${error.message}`);
         }
       }
     }
@@ -474,7 +474,7 @@ function rewriteCriteria(
         // dry-runs idempotent rather than re-reporting a diff).
         out.curated_list_id = prodId;
       } else if (mode === "apply") {
-        // Shouldn't happen — lists are mirrored before badges in apply.
+        // Shouldn't happen - lists are mirrored before badges in apply.
         unresolved.push("curated list");
       }
       // dry-run + list not yet in prod (brand-new): slug will resolve
@@ -525,14 +525,14 @@ async function syncBadgeDefinitions(
         const { error } = await clients.prod
           .from("badge_definitions")
           .upsert(devRow, { onConflict: "slug" });
-        if (error) report.warnings.push(`${slug}: upsert failed — ${error.message}`);
+        if (error) report.warnings.push(`${slug}: upsert failed - ${error.message}`);
       }
     }
 
     // Art: copy when dev has custom artwork (re-key to prod def id).
     const devArt = objPath(d.custom_image_key as string | null);
     if (devArt && mode === "apply") {
-      // Need prod def id — re-read once below would be heavy; fetch the one row.
+      // Need prod def id - re-read once below would be heavy; fetch the one row.
       const { data: prodDef } = await clients.prod
         .from("badge_definitions")
         .select("id")
@@ -554,7 +554,7 @@ async function syncBadgeDefinitions(
     }
   }
 
-  // 3b. deletes — prod defs whose slug isn't in dev. Earned-safe: if any
+  // 3b. deletes - prod defs whose slug isn't in dev. Earned-safe: if any
   // `badges` row references the def (ON DELETE CASCADE would wipe earned
   // badges), archive instead of deleting.
   for (const p of prodBefore) {
@@ -567,13 +567,13 @@ async function syncBadgeDefinitions(
       .eq("definition_id", prodId);
     const earned = count ?? 0;
     if (earned > 0) {
-      note(report, "archive", slug, `${earned} earned — archived (delete would wipe them)`);
+      note(report, "archive", slug, `${earned} earned - archived (delete would wipe them)`);
       if (mode === "apply") {
         const { error } = await clients.prod
           .from("badge_definitions")
           .update({ is_published: false, is_archived: true })
           .eq("id", prodId);
-        if (error) report.warnings.push(`${slug}: archive failed — ${error.message}`);
+        if (error) report.warnings.push(`${slug}: archive failed - ${error.message}`);
       }
     } else {
       note(report, "delete", slug, "not present in dev");
@@ -583,7 +583,7 @@ async function syncBadgeDefinitions(
           .from("badge_definitions")
           .delete()
           .eq("id", prodId);
-        if (error) report.warnings.push(`${slug}: delete failed — ${error.message}`);
+        if (error) report.warnings.push(`${slug}: delete failed - ${error.message}`);
       }
     }
   }
@@ -621,7 +621,7 @@ async function buildRefMaps(
   const listProdSlugs = new Set<string>(prodLists.map((l) => l.slug as string));
   for (const l of devLists) {
     listDevSlug.set(l.id as string, l.slug as string);
-    // After the list mirror, every dev slug exists in prod — so it's
+    // After the list mirror, every dev slug exists in prod - so it's
     // resolvable for criteria even when the prod row was just created.
     listProdSlugs.add(l.slug as string);
     const prodId = prodListIdBySlug.get(l.slug as string);
@@ -677,7 +677,7 @@ async function syncConfig(clients: SyncClients, mode: SyncMode): Promise<EntityR
         const { error } = await clients.prod
           .from(cfg.table)
           .upsert(pick(d, cfg.columns), { onConflict: cfg.idColumn });
-        if (error) report.warnings.push(`${cfg.table} #${key}: upsert failed — ${error.message}`);
+        if (error) report.warnings.push(`${cfg.table} #${key}: upsert failed - ${error.message}`);
       }
     }
   }

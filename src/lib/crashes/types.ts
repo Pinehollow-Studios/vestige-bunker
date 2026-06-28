@@ -1,5 +1,5 @@
 /**
- * Crash-reporting types — shared between the queue page, detail
+ * Crash-reporting types - shared between the queue page, detail
  * page, and the linked-crash card on `/feedback/[id]`.
  *
  * Mirrors the Postgres `crash_reports` table introduced by

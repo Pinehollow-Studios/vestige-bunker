@@ -81,7 +81,7 @@ function dedupeShippedVersions(rows: unknown): ShippedVersion[] {
 
 // --------------------------------------------------------------
 // Calm chip helpers (presentation-only, local to the feedback UI)
-// — single-tone bordered pills keyed to brand / amber / alert /
+// - single-tone bordered pills keyed to brand / amber / alert /
 // ink-3, matching the queue page.
 // --------------------------------------------------------------
 
@@ -172,7 +172,7 @@ export default async function FeedbackThreadPage({
       .from("app_version_changes")
       .select("version_id, app_versions ( id, version, status )")
       .eq("feedback_report_id", id),
-    // Versions in development — the "Ship in version" targets. Missing table
+    // Versions in development - the "Ship in version" targets. Missing table
     // (pre-migration) returns null data → the control renders its empty state.
     supabase
       .from("app_versions")
@@ -337,7 +337,7 @@ function ReportHeader({
               title={
                 released
                   ? `Shipped in the released v${v.version}`
-                  : `Queued for v${v.version} — not released yet`
+                  : `Queued for v${v.version} - not released yet`
               }
             >
               {released ? (
@@ -569,16 +569,16 @@ function SidebarMeta({ report }: { report: FeedbackReport }) {
     <SidebarCard title="Diagnostic">
       <ul className="space-y-2.5 text-xs text-ink-2">
         <MetaRow icon={Smartphone} label="Device">
-          {report.device_model ?? "—"}
+          {report.device_model ?? "-"}
         </MetaRow>
         <MetaRow icon={Smartphone} label="iOS">
-          {report.ios_version ?? "—"}
+          {report.ios_version ?? "-"}
         </MetaRow>
         <MetaRow icon={Hash} label="App version">
-          {report.app_version ?? "—"}
+          {report.app_version ?? "-"}
         </MetaRow>
         <MetaRow icon={Hash} label="Screen">
-          {report.screen ?? "—"}
+          {report.screen ?? "-"}
         </MetaRow>
         {report.linked_crash_id && (
           <MetaRow icon={Hash} label="Linked crash">

@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-// Calm, single-tone bordered chips — fatal/error read claret (alert),
+// Calm, single-tone bordered chips - fatal/error read claret (alert),
 // warning amber, info/debug muted. Kept local to the presentation
 // layer so the queue reads in the Atlas palette without touching the
 // shared lib helpers.
@@ -36,7 +36,7 @@ function environmentChip(env: string | null): string {
 }
 
 /**
- * Crash queue — every Sentry-issued event we've received via the
+ * Crash queue - every Sentry-issued event we've received via the
  * `sentry-webhook` Edge Function (CLAUDE.md §3 Crash row + §13.4).
  *
  * The local `crash_reports` table is the index; Sentry remains the
@@ -44,7 +44,7 @@ function environmentChip(env: string | null): string {
  * The detail page (`/crashes/[id]`) pulls richer event detail from
  * Sentry on demand and offers an "Open in Sentry" deep-link.
  *
- * Default sort is `last_seen desc` — the busiest crashes top the
+ * Default sort is `last_seen desc` - the busiest crashes top the
  * list. Filters: environment / release / level / fingerprint /
  * userId / text search across message + culprit. All in URL params
  * so the queue is shareable and bookmarkable.
@@ -354,7 +354,7 @@ function PaginationFooter({
         <span />
       )}
       <span>
-        Showing {offset + 1}–{offset + currentCount}
+        Showing {offset + 1}-{offset + currentCount}
       </span>
       {hasNext ? (
         <Link

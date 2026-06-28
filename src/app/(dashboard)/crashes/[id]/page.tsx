@@ -48,13 +48,13 @@ function environmentChip(env: string | null): string {
 
 /**
  * Crash detail. Three sections:
- *   1. Header — message, culprit, level / environment / release
+ *   1. Header - message, culprit, level / environment / release
  *      chips, "Open in Sentry" deep-link.
- *   2. Stack trace + breadcrumbs — pulled lazily from Sentry's Web
+ *   2. Stack trace + breadcrumbs - pulled lazily from Sentry's Web
  *      API (server-side, cached 60s). Renders an inline "Sentry not
  *      reachable" placeholder when the API is unconfigured or down
  *      so the local data is still useful.
- *   3. Linked feedback — any `feedback_reports` rows whose
+ *   3. Linked feedback - any `feedback_reports` rows whose
  *      `linked_crash_id` matches this crash's `sentry_event_id`.
  *      Closes the §13.4 close-the-loop story end-to-end.
  */
@@ -207,13 +207,13 @@ function CrashMetaGrid({ crash }: { crash: CrashReportEnriched }) {
         value={
           crash.device_model
             ? `${crash.device_model}${crash.os_version ? ` · iOS ${crash.os_version}` : ""}`
-            : "—"
+            : "-"
         }
       />
       <MetaRow
         icon={<Hash className="size-3.5" />}
         label="Fingerprint"
-        value={crash.fingerprint ?? "—"}
+        value={crash.fingerprint ?? "-"}
         mono
       />
       <MetaRow
@@ -287,7 +287,7 @@ async function SentryDetailSection({ eventId }: { eventId: string }) {
       return (
         <article className="rounded-xl border border-dashed border-rule/70 bg-paper-raised/50 p-4 text-sm text-ink-3">
           This event isn&apos;t in Sentry. New events take a few seconds to
-          propagate after the webhook fires — refresh in a moment. If this
+          propagate after the webhook fires - refresh in a moment. If this
           row was inserted by the smoke-test script (or any other path that
           bypassed the iOS SDK), the event will never appear in Sentry; the
           local row above is the only record.
@@ -429,7 +429,7 @@ function BreadcrumbsEntry({ data }: { data: unknown }) {
             className="flex flex-col rounded border border-rule/60 bg-paper-sunken/30 px-2 py-1"
           >
             <span className="font-mono text-[10px] text-ink-3">
-              {b.category ?? "—"} · {b.level ?? "info"}
+              {b.category ?? "-"} · {b.level ?? "info"}
             </span>
             {b.message && <span className="text-ink-2">{b.message}</span>}
           </li>
@@ -513,7 +513,7 @@ function LinkedFeedbackSection({ rows }: { rows: CrashLinkedFeedback[] }) {
 // --------------------------------------------------------------
 
 function formatAbsolute(iso: string): string {
-  // Locked en-GB per CLAUDE.md §3.6 — admin dashboard mirrors the
+  // Locked en-GB per CLAUDE.md §3.6 - admin dashboard mirrors the
   // iOS app's "regionless en, UK style by default" posture rather
   // than picking up the runtime's default (Vercel runs en-US).
   return new Date(iso).toLocaleString("en-GB", {

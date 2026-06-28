@@ -99,7 +99,7 @@ export type BroadcastRow = {
   updated_at: string;
 };
 
-/** Row from `admin_broadcasts_overview()` — adds the hand-picked target count. */
+/** Row from `admin_broadcasts_overview()` - adds the hand-picked target count. */
 export type BroadcastOverviewRow = BroadcastRow & {
   target_user_count: number;
 };
@@ -141,7 +141,7 @@ export function audienceSummary(
 }
 
 export function versionBoundsLabel(min: string | null, max: string | null): string | null {
-  if (min && max) return min === max ? `v${min}` : `v${min}–${max}`;
+  if (min && max) return min === max ? `v${min}` : `v${min}-${max}`;
   if (min) return `v${min}+`;
   if (max) return `≤v${max}`;
   return null;

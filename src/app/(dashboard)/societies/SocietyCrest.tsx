@@ -23,7 +23,7 @@ import type { CSSProperties } from "react";
 import { crestColorHex } from "./types";
 
 /**
- * Crest glyph options — the `token` is the iOS SF Symbol name stored in the
+ * Crest glyph options - the `token` is the iOS SF Symbol name stored in the
  * `crest` jsonb (so the phone renders the real glyph); the `icon` is the
  * closest lucide equivalent for the admin preview, and `label` is the picker
  * caption. Keep this list in lockstep with `SocietyCrestView.glyphChoices` on
@@ -60,7 +60,7 @@ function GlyphMark({ glyph, style }: { glyph: string | null | undefined; style: 
   return <Icon style={style} strokeWidth={2.2} />;
 }
 
-/** A native-composed society crest preview — glyph on an Atlas-colour tile. */
+/** A native-composed society crest preview - glyph on an Atlas-colour tile. */
 export function SocietyCrest({
   glyph,
   color,

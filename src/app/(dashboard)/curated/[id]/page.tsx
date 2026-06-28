@@ -12,7 +12,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
   const { id } = await props.params;
   const supabase = await createClient();
 
-  // Two queries in parallel — the editor no longer loads the whole catalogue
+  // Two queries in parallel - the editor no longer loads the whole catalogue
   // upfront (the picker searches it on demand via /api/courses/search):
   //  1. The list row itself (full payload)
   //  2. The course rows attached to it (joined to courses + clubs + counties for display)
@@ -45,7 +45,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
   if (!listResult.data) notFound();
 
   // Supabase JS returns joined relations as arrays even when the
-  // FK is one-to-one — that's the typed default and unwrapping
+  // FK is one-to-one - that's the typed default and unwrapping
   // here is the canonical pattern. Flatten into the display
   // shape the editor expects; missing relations stay null.
   const courses: CuratedCourseRow[] = (coursesResult.data ?? []).map((row) => {
@@ -61,7 +61,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
   });
 
   // Hydrate the row into the typed shape (no `course_count` join
-  // here — the editor renders its own list and counts client-side).
+  // here - the editor renders its own list and counts client-side).
   const row: CuratedListRow = {
     ...listResult.data,
     course_count: courses.length,
@@ -74,7 +74,7 @@ export default async function CuratedListEditorPage(props: { params: RouteParams
 
 // Local types for the joined relations Supabase JS returns.
 // `clubs` / `counties` come back as arrays even when the FK is
-// one-to-one — the runtime is always either an array or a single
+// one-to-one - the runtime is always either an array or a single
 // object depending on the embed kind. `unwrapRow` handles both.
 type CourseRowFromJoin = {
   name: string;

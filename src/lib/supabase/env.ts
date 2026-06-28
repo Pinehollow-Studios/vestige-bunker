@@ -1,18 +1,18 @@
 /**
  * Environment registry.
  *
- * The dashboard's DEFAULT and primary target is PROD — the live app that
+ * The dashboard's DEFAULT and primary target is PROD - the live app that
  * TestFlight / App Store users are on. Admins log in with their prod account
  * and the main view reads + writes prod directly. There is no separate
  * "workshop" environment for day-to-day use, and no read-only "prod view".
  *
  * A hidden DEV switch exists ONLY for developers: when
  * `NEXT_PUBLIC_ENABLE_DEV_SWITCH` is "true" (set in local + Vercel Preview,
- * NEVER in production) a toggle lets a developer point the whole dashboard —
- * data AND auth — at the dev project to test changes. The production
+ * NEVER in production) a toggle lets a developer point the whole dashboard -
+ * data AND auth - at the dev project to test changes. The production
  * deployment never sets the flag, so it is always prod with no switch in sight.
  *
- * ISOMORPHIC — must NOT import `next/headers` (it's pulled into the browser
+ * ISOMORPHIC - must NOT import `next/headers` (it's pulled into the browser
  * bundle via `supabase/client.ts`). The active-env COOKIE VALUE is passed in by
  * the caller: the server reads `next/headers` cookies, the client reads
  * `document.cookie`, middleware reads `request.cookies`.
@@ -31,10 +31,10 @@ export type AdminEnvConfig = {
 };
 
 /** Cookie that selects the active environment (only honoured when the dev
- *  switch is enabled — see `DEV_SWITCH_ENABLED`). */
+ *  switch is enabled - see `DEV_SWITCH_ENABLED`). */
 export const ENV_COOKIE = "vestige_env";
 
-/** The hidden dev switch only renders + functions when this is set — local
+/** The hidden dev switch only renders + functions when this is set - local
  *  + Vercel Preview, never the production deployment Jack uses. */
 export const DEV_SWITCH_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_DEV_SWITCH === "true";

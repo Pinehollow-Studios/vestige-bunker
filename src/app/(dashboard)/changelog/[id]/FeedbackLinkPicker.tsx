@@ -7,7 +7,7 @@ import { type FeedbackSearchRow, listOpenFeedback } from "../actions";
 
 /**
  * Inline pick-from-open-feedback for tagging a change line to a report. Loads
- * the open queue immediately (no search required — `listOpenFeedback` returns
+ * the open queue immediately (no search required - `listOpenFeedback` returns
  * every active, not-yet-shipped report); the text box only narrows the list.
  * Selecting a row hands the trimmed report up to the parent, which persists it.
  */

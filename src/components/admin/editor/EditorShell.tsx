@@ -4,7 +4,7 @@ import type { SaveState } from "@/lib/hooks/useFormAutosave";
 import { cn } from "@/lib/utils";
 
 /**
- * The shared editor chrome — every editor page (course, curated, badge,
+ * The shared editor chrome - every editor page (course, curated, badge,
  * announcement, changelog) sits in this. A back link, an eyebrow + title, a
  * live autosave indicator, an optional meta row, and an actions slot. The body
  * is composed of {@link EditorSection}s (essentials first) + an
@@ -29,7 +29,7 @@ export function EditorShell({
   saveState?: SaveState;
   actions?: React.ReactNode;
   meta?: React.ReactNode;
-  /** Optional sticky right column — a live preview + readiness checklist. */
+  /** Optional sticky right column - a live preview + readiness checklist. */
   aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -96,12 +96,12 @@ export function SaveIndicator({ state }: { state: SaveState }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-alert">
-      <TriangleAlert aria-hidden className="size-3.5" /> Couldn&rsquo;t save — keep editing to retry
+      <TriangleAlert aria-hidden className="size-3.5" /> Couldn&rsquo;t save - keep editing to retry
     </span>
   );
 }
 
-/** A titled card section — the essentials.
+/** A titled card section - the essentials.
  *
  *  `hint` is accepted (so existing call sites keep compiling) but intentionally
  *  not rendered: the dashboard dropped its grey helper/description text in the
@@ -129,7 +129,7 @@ export function EditorSection({
 }
 
 /** A collapsed-by-default section for rare / structural fields. Native
- *  `<details>` — no JS. The progressive-disclosure escape valve. */
+ *  `<details>` - no JS. The progressive-disclosure escape valve. */
 export function AdvancedSection({
   title = "Advanced",
   children,

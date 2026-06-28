@@ -21,7 +21,7 @@ export type SchemaStatusResult =
 
 export type DeployResult = { ok: true } | { ok: false; message: string };
 
-/** Sync writes to prod — super_admin only, regardless of the active env. */
+/** Sync writes to prod - super_admin only, regardless of the active env. */
 async function gateSuperAdmin(): Promise<{ ok: true } | { ok: false; message: string }> {
   const admin = await requireAdmin();
   if (admin.role !== "super_admin") {

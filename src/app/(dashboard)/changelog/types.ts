@@ -127,7 +127,7 @@ export function compareVersionsDesc(a: AppVersion, b: AppVersion): number {
 // "Fixed likes not working"). To avoid a schema change in this repo (migrations
 // live in Vestige-ios), the sub-items are encoded inside the existing `summary`
 // column as newline-separated lines: line 1 is the heading, every following
-// line is a bullet. A summary with no newline is exactly a flat line — fully
+// line is a bullet. A summary with no newline is exactly a flat line - fully
 // backward compatible with every existing row.
 
 export type ParsedChangeSummary = { heading: string; items: string[] };

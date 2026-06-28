@@ -9,7 +9,7 @@ const initialState: LoginState = { status: "idle" };
 
 /**
  * Deliberately anonymous sign-in. No branding, headings, help text, or product
- * name — a stranger who stumbles onto the page should learn nothing about what
+ * name - a stranger who stumbles onto the page should learn nothing about what
  * it guards. Just two fields and a button. (The page title + noindex live in
  * the sibling `layout.tsx`.)
  */

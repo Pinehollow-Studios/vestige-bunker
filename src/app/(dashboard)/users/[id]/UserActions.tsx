@@ -12,7 +12,7 @@ import {
 } from "../actions";
 
 /**
- * Inline admin actions on a user — set account status, hide/unhide from public
+ * Inline admin actions on a user - set account status, hide/unhide from public
  * leaderboards, message via the outreach thread. Sensitive moves confirm first;
  * everything reflects on the next refresh (the RPCs revalidate the hub).
  */
@@ -46,7 +46,7 @@ export function UserActions({
 
   const sendMessage = () => {
     if (!message.trim()) return;
-    run(() => messageUser(userId, message), "Message sent — opens their feedback thread");
+    run(() => messageUser(userId, message), "Message sent - opens their feedback thread");
     setMessage("");
   };
 

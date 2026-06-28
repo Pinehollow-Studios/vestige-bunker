@@ -30,13 +30,13 @@ type Row = {
 const STATES: FlagState[] = ["pending", "reviewed_clean", "reviewed_actioned", "auto_expired"];
 
 /**
- * Safeguarding queue — read-only v1.
+ * Safeguarding queue - read-only v1.
  *
  * Backed by `admin_safeguarding_queue()` (migration
  * 20260519140000_safeguarding_rpcs.sql). Lists every flag the
  * round-log trigger has raised, with state + evidence summary.
  * Hide-from-leaderboards / set-account-status / outreach controls
- * land next — they're all RPCs already in the migrations tree.
+ * land next - they're all RPCs already in the migrations tree.
  */
 export default async function SafeguardingPage({
   searchParams,

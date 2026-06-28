@@ -7,7 +7,7 @@ export type AdminUser = {
   id: string;
   email: string | null;
   role: AdminRole;
-  /** From public.users — nullable when an admin auth row has no
+  /** From public.users - nullable when an admin auth row has no
    *  matching user profile (admin-only accounts never finish
    *  onboarding). Falls back to email local-part at the call site. */
   displayName: string | null;
@@ -19,7 +19,7 @@ export type AdminUser = {
 //
 // Backed by the `public.admins` table + `is_admin()` / `admin_role()`
 // helpers introduced in Vestige-ios migration 20260502140000_admins.sql.
-// Bootstrap a first super_admin via docs/admin-runbook.md → "Setup —
+// Bootstrap a first super_admin via docs/admin-runbook.md → "Setup -
 // admin roster" before anyone can sign in.
 export async function requireAdmin(): Promise<AdminUser> {
   const supabase = await createDevClient();
@@ -34,7 +34,7 @@ export async function requireAdmin(): Promise<AdminUser> {
   // Three queries in parallel: the role check (auth gate), the optional
   // public.users profile (cosmetic), and the admin record's display name.
   // Admin-only accounts have no `public.users` row by design (they aren't
-  // app users — see migration 20260610120000), so their name lives on the
+  // app users - see migration 20260610120000), so their name lives on the
   // `admins` record; `admins_select` RLS lets an admin session read it.
   const [roleRes, profileRes, adminRes] = await Promise.all([
     supabase.rpc("admin_role"),
@@ -69,7 +69,7 @@ export async function requireAdmin(): Promise<AdminUser> {
 /**
  * Friendly display label for an admin. Tries display name, falls
  * back to @username, then the email local-part. Never returns the
- * full email — that's for the user-detail pill, not the greeting.
+ * full email - that's for the user-detail pill, not the greeting.
  */
 export function adminDisplayLabel(admin: AdminUser): string {
   if (admin.displayName && admin.displayName.trim().length > 0) {

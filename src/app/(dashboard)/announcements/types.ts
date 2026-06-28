@@ -138,7 +138,7 @@ export type AnnouncementRow = {
 };
 
 /**
- * Index row shape returned by `admin_announcements_overview()` — every
+ * Index row shape returned by `admin_announcements_overview()` - every
  * announcement plus the derived seen / dismissed / acted counts in one
  * round-trip.
  */
@@ -242,7 +242,7 @@ export const STATUS_LABELS: Record<AnnouncementStatus, string> = {
   archived: "Archived",
 };
 
-/** Coloured chip class per status — brand green for the live state,
+/** Coloured chip class per status - brand green for the live state,
  *  semantic info / alert tokens for the rest. Mirrors curated's table. */
 export const STATUS_CHIP: Record<AnnouncementStatus, string> = {
   draft: "border-border bg-paper-sunken/70 text-ink-2",
@@ -295,7 +295,7 @@ export function versionBoundsLabel(
   min: string | null,
   max: string | null,
 ): string | null {
-  if (min && max) return min === max ? `v${min}` : `v${min}–${max}`;
+  if (min && max) return min === max ? `v${min}` : `v${min}-${max}`;
   if (min) return `v${min}+`;
   if (max) return `≤v${max}`;
   return null;

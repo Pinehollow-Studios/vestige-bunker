@@ -19,7 +19,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Changelog — the full release log as a vertical timeline, newest first. A
+ * Changelog - the full release log as a vertical timeline, newest first. A
  * prominent banner derives the current shipped version; a draft banner jumps
  * straight back into the version in development. Each version node carries its
  * change lines (which may be umbrella headings with bullet sub-lists). This is
@@ -79,7 +79,7 @@ export default async function ChangelogPage() {
   }
 
   const current = currentVersion(versions);
-  // The version actively being worked on — the newest draft (list is sorted
+  // The version actively being worked on - the newest draft (list is sorted
   // newest-first). Surfaced as a one-click "continue" so it's never a hunt.
   const activeDraft = versions.find((v) => v.status === "draft") ?? null;
 

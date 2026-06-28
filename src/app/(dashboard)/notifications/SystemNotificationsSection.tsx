@@ -58,7 +58,7 @@ export function SystemNotificationsSection({ overrides }: { overrides: Record<st
           <Zap className="size-3" /> Automatic
         </span>
         <h2 className="font-display text-lg font-semibold text-ink">Sent by Vestige</h2>
-        <span className="text-sm text-ink-3">— the wording of every automatic notification</span>
+        <span className="text-sm text-ink-3">- the wording of every automatic notification</span>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -218,7 +218,7 @@ function KindEditorModal({
             </Block>
             <Block label="In-app inbox">
               <Field label="Headline (supports *bold*)" value={inboxTitle} placeholder={meta.defaults.inboxTitle} onChange={setInboxTitle} onFocus={() => setActive("inboxTitle")} />
-              <Field label="Subline (optional)" value={inboxBody} placeholder={meta.defaults.inboxBody || "—"} onChange={setInboxBody} onFocus={() => setActive("inboxBody")} />
+              <Field label="Subline (optional)" value={inboxBody} placeholder={meta.defaults.inboxBody || "-"} onChange={setInboxBody} onFocus={() => setActive("inboxBody")} />
             </Block>
 
             <p className="text-xs text-ink-3">Leave a field blank to keep the built-in default. Saving also updates the in-app copy of past notifications of this kind.</p>

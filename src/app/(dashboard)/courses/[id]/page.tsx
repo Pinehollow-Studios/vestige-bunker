@@ -107,7 +107,7 @@ export default async function CourseDetailPage(props: { params: RouteParams }) {
   const cover = courseCoverURL(row.hero_photo_storage_key);
 
   // Community gallery (kind='coursePhoto') lives in the active env's `photos`
-  // table — uploaded by real users, distinct from the editorial cover. No admin
+  // table - uploaded by real users, distinct from the editorial cover. No admin
   // SELECT policy, so read via service-role; absent key → empty (graceful).
   const { approved, pending } = await loadCommunityPhotos(id);
   // What users actually see leading the carousel: editorial cover, else the

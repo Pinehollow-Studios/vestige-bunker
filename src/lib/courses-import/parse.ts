@@ -6,15 +6,15 @@ import type { CountiesFile, CoursesFile } from "./types";
 /**
  * The upstream `src/counties.js` / `src/courses.js` are ES modules of the form
  * `const X = {…}; export default X`. Rather than write a temp file + dynamic-
- * import (the CLI's approach — awkward on a serverless filesystem), we strip
+ * import (the CLI's approach - awkward on a serverless filesystem), we strip
  * the `export default` line and evaluate the body in an isolated function,
  * returning the object. The input is our own private repo, fetched server-side
- * behind the admin gate — not user input.
+ * behind the admin gate - not user input.
  */
 function evalDefaultExport<T>(moduleText: string): T {
   const match = moduleText.match(/export\s+default\s+([A-Za-z0-9_$]+)\s*;?/);
   if (!match || match.index === undefined) {
-    throw new Error("Upstream file has no `export default` — shape changed?");
+    throw new Error("Upstream file has no `export default` - shape changed?");
   }
   const name = match[1];
   const body = moduleText.slice(0, match.index) + moduleText.slice(match.index + match[0].length);

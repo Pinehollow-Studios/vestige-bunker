@@ -1,9 +1,9 @@
 /**
- * Shared types for the societies admin surface — the **modes** editor.
+ * Shared types for the societies admin surface - the **modes** editor.
  *
  * A society mode is one of a small, fixed, dashboard-editable set of
  * formats a user picks when creating a society (Chase / Sprint / Match /
- * Duel — see `20260627130000_society_modes.sql`). The mechanic lives in
+ * Duel - see `20260627130000_society_modes.sql`). The mechanic lives in
  * code (keyed off `key`); identity, on/off, order, who-can-start, and the
  * per-mode rule knobs in `config` are editable here.
  *
@@ -19,7 +19,7 @@ export type WhoCanStart = "manager" | "anyone";
  *  but need a code mechanic before they do anything in the app. */
 export const KNOWN_MODE_KEYS = ["chase", "sprint", "match", "duel", "rally", "tour"] as const;
 
-/** Per-mode tunable rule knobs (the `config` jsonb). All optional — the
+/** Per-mode tunable rule knobs (the `config` jsonb). All optional - the
  *  editor renders the relevant ones per mode key. */
 export type ModeConfig = {
   allowed_targets?: string[];
@@ -55,7 +55,7 @@ export const CHASE_TARGETS: { value: string; label: string }[] = [
 ];
 
 // ---------------------------------------------------------------------
-// Crest tokens — must match iOS `SocietyCrestView.tint(for:)`.
+// Crest tokens - must match iOS `SocietyCrestView.tint(for:)`.
 // ---------------------------------------------------------------------
 
 export const CREST_COLORS: { token: string; label: string; hex: string }[] = [

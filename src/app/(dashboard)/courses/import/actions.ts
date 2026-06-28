@@ -32,7 +32,7 @@ export interface ImportStatus {
   error?: string;
 }
 
-/** Status panel — readable by any admin (read-only, no writes). */
+/** Status panel - readable by any admin (read-only, no writes). */
 export async function getImportStatus(): Promise<ImportStatus> {
   await requireAdmin();
   if (!fairwaysConfigured()) {
@@ -123,7 +123,7 @@ export type ApplyResult =
   | { ok: true; sha: string; counties: number; clubs: number; courses: number; indexRecomputed: boolean }
   | { ok: false; message: string };
 
-/** Apply the import to the LIVE app. Any admin may run it — Tom + Jack are
+/** Apply the import to the LIVE app. Any admin may run it - Tom + Jack are
  *  co-founders with equal access; the client's confirmation dialog is the
  *  safety gate, not a role wall. Writes prod course data with the service-role
  *  key; idempotent / upsert-only (nothing is ever deleted). */

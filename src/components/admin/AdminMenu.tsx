@@ -5,7 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * A small dropdown menu — a trigger button + an absolutely-positioned glass
+ * A small dropdown menu - a trigger button + an absolutely-positioned glass
  * panel that closes on outside-click / Escape. Used by the top bar's
  * quick-create, attention bell, and account menu. Children get a `close`
  * callback so items can dismiss after acting.
@@ -69,7 +69,7 @@ export function AdminMenu({
   );
 }
 
-/** A standard menu item — link or button. */
+/** A standard menu item - link or button. */
 export function MenuItem({
   icon,
   children,

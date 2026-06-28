@@ -71,11 +71,11 @@ function pillToneClasses(
  *
  * 2026-06-09 external/internal split: the controls are now grouped so the
  * line between what the reporter sees and what stays internal is obvious.
- *   • "Update the reporter" — the only two actions that notify (In progress
+ *   • "Update the reporter" - the only two actions that notify (In progress
  *     / Fixed), each with an optional attached message.
- *   • "Internal" — stage (New / Triaged / Won't fix), priority, owner,
+ *   • "Internal" - stage (New / Triaged / Won't fix), priority, owner,
  *     severity, duplicate-of. None of these reach the reporter.
- *   • "Danger zone" — block reporter, delete.
+ *   • "Danger zone" - block reporter, delete.
  */
 export function SidePanelControls({
   reportId,
@@ -155,7 +155,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 // --------------------------------------------------------------
-// External — the two reporter-facing actions. Each opens an inline
+// External - the two reporter-facing actions. Each opens an inline
 // composer (optional message + send). In progress posts the message as
 // a reply; Fixed stores it as the resolution note. Both notify the
 // reporter; nothing else does.
@@ -185,8 +185,8 @@ function ExternalControls({
       }
       toast.success(
         stage === "fixed"
-          ? "Marked fixed — reporter notified"
-          : "Marked in progress — reporter notified",
+          ? "Marked fixed - reporter notified"
+          : "Marked in progress - reporter notified",
       );
       setOpen(null);
       setNote("");
@@ -233,8 +233,8 @@ function ExternalControls({
         <div className="space-y-2 rounded-lg border border-rule/70 bg-paper-sunken/40 p-3">
           <FieldLabel>
             {open === "fixed"
-              ? "Resolution note — optional, shown to the reporter"
-              : "Message — optional, shown to the reporter"}
+              ? "Resolution note - optional, shown to the reporter"
+              : "Message - optional, shown to the reporter"}
           </FieldLabel>
           <textarea
             value={note}
@@ -243,7 +243,7 @@ function ExternalControls({
             autoFocus
             placeholder={
               open === "fixed"
-                ? "e.g. Fixed in 0.1.3 — please update the app."
+                ? "e.g. Fixed in 0.1.3 - please update the app."
                 : "e.g. We've reproduced this and are on it."
             }
             className="block w-full resize-y rounded-lg border border-rule/70 bg-paper-raised/60 p-2 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30"
@@ -286,7 +286,7 @@ function ExternalControls({
 function sendLabel(stage: ExternalStage, note: string, pending: boolean): string {
   if (pending) return "Sending…";
   const verb = stage === "fixed" ? "mark fixed" : "mark in progress";
-  return note.trim() ? `Send & ${verb}` : `Confirm — ${verb}`;
+  return note.trim() ? `Send & ${verb}` : `Confirm - ${verb}`;
 }
 
 function ExternalButton({
@@ -327,7 +327,7 @@ function ExternalButton({
 }
 
 // --------------------------------------------------------------
-// Internal stage — New / Triaged / Won't fix. Pure operator state:
+// Internal stage - New / Triaged / Won't fix. Pure operator state:
 // never notifies, never moves the reporter-facing status.
 // --------------------------------------------------------------
 
@@ -376,7 +376,7 @@ function InternalStageControl({
         {externalActive && (
           <span
             className={`${PILL_BASE} ${pillToneClasses(workStageTone(externalActive), true)} cursor-default opacity-90`}
-            title="Set from “Update the reporter” above"
+            title="Set from 'Update the reporter' above"
           >
             {workStageLabel(externalActive)}
           </span>
@@ -433,7 +433,7 @@ function PriorityControl({
 }
 
 // --------------------------------------------------------------
-// Owner (assignee — admins only)
+// Owner (assignee - admins only)
 // --------------------------------------------------------------
 
 function OwnerControl({
@@ -678,7 +678,7 @@ function DeleteReportControl({ reportId }: { reportId: string }) {
     }
     startTransition(async () => {
       const result = await deleteReport(reportId);
-      // delete redirects on success — only land here on error.
+      // delete redirects on success - only land here on error.
       if (result && "error" in result) {
         toast.error(result.error);
       }

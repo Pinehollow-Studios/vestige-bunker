@@ -215,7 +215,7 @@ function MetaCard({
 
   // Releasing (draft → released) routes through the confirmation dialog so the
   // operator can message every linked reporter as the fix ships. Reverting
-  // (released → draft) is a plain toggle — it never un-resolves a report.
+  // (released → draft) is a plain toggle - it never un-resolves a report.
   function toggleReleased(next: boolean) {
     if (next) {
       if (status === "released") return;
@@ -381,7 +381,7 @@ function AddChangeRow({
   versionId: string;
   onAdded: (row: AppVersionChange, linked?: FeedbackSearchRow) => void;
 }) {
-  // `kind` deliberately persists between adds — most runs of lines share a kind,
+  // `kind` deliberately persists between adds - most runs of lines share a kind,
   // so remembering the last-used one keeps rapid entry to type → Enter → type.
   const [kind, setKind] = useState<ChangeKind>("added");
   const [summary, setSummary] = useState("");
@@ -538,7 +538,7 @@ function ChangeLine({
   const [pending, startTransition] = useTransition();
 
   // Persist the heading + sub-items back through the existing `summary` column
-  // (serialized via the umbrella convention — see types.ts). No-ops when the
+  // (serialized via the umbrella convention - see types.ts). No-ops when the
   // serialized value is unchanged so blur-without-edit costs nothing.
   function persist(nextHeading: string, nextItems: string[]) {
     const next = serializeChangeSummary(nextHeading, nextItems);
@@ -671,7 +671,7 @@ function ChangeLine({
         </button>
       </div>
 
-      {/* Sub-items — the umbrella list (e.g. "Activity feed bug fixes" → … ). */}
+      {/* Sub-items - the umbrella list (e.g. "Activity feed bug fixes" → … ). */}
       <div className="ml-[104px] space-y-1.5">
           {items.length > 0 && (
             <ul className="space-y-1 border-l border-rule/50 pl-3">

@@ -16,7 +16,7 @@ export type ActionResult<T = void> =
  *
  * Slug rules: lowercase, hyphenated, alphanumeric only. If the
  * derivation collides with an existing slug, append a 6-char
- * suffix (UUID prefix) — admins can rename it later.
+ * suffix (UUID prefix) - admins can rename it later.
  */
 export async function createCuratedList(name: string): Promise<ActionResult<string>> {
   const trimmed = name.trim();
@@ -94,7 +94,7 @@ export async function updateCuratedList(
  * Set `published_at` on a curated list. Pass `null` to revert to
  * draft, `new Date()` (server-side; we just send the iso string)
  * to publish immediately, or a future ISO string to schedule.
- * Clears `is_archived` when publishing — un-archiving a list and
+ * Clears `is_archived` when publishing - un-archiving a list and
  * publishing it are the same intent on the editor.
  */
 export async function setPublishState(
@@ -151,7 +151,7 @@ export async function deleteCuratedList(listId: string): Promise<ActionResult> {
 
 /**
  * Add a course to a curated list at the next position. Idempotent
- * on the composite PK — re-adding silently no-ops via the
+ * on the composite PK - re-adding silently no-ops via the
  * `on conflict do nothing` shape.
  */
 export async function addCourseToList(
@@ -175,7 +175,7 @@ export async function addCourseToList(
     course_id: courseId,
     position: nextPosition,
   });
-  // Composite-PK conflict means the row already exists — treat
+  // Composite-PK conflict means the row already exists - treat
   // as success (idempotent add).
   if (error && !error.message.includes("duplicate key")) {
     return { ok: false, message: error.message };
@@ -201,7 +201,7 @@ export async function removeCourseFromList(
 
 /**
  * Rewrite the order of `listId`'s membership to match the
- * supplied array exactly — every position rewritten in a single
+ * supplied array exactly - every position rewritten in a single
  * upsert. Mirrors the iOS `UserListRepository.reorderCourses`
  * semantics for user lists.
  */
@@ -215,7 +215,7 @@ export async function reorderCourses(
     course_id: id,
     position: index + 1,
   }));
-  // Composite PK upsert — Postgres updates `position` on each row
+  // Composite PK upsert - Postgres updates `position` on each row
   // without touching `created_at` / `editor_note`.
   const { error } = await supabase
     .from("curated_list_courses")
@@ -248,7 +248,7 @@ export async function setEditorNote(
 /**
  * Cover-image upload. The browser POSTs the file via FormData;
  * we re-encode to JPEG via Storage's content-type header (no
- * server-side resize in v1 — admins should upload pre-cropped
+ * server-side resize in v1 - admins should upload pre-cropped
  * 16:9 imagery, mirroring the iOS crop-on-upload pattern).
  *
  * Path: `curated/<list_id>/cover.jpg` (matches the admin-write
@@ -291,7 +291,7 @@ export async function uploadCuratedCover(
 export async function removeCuratedCover(listId: string): Promise<ActionResult> {
   const supabase = await createDevClient();
   const { path } = curatedCoverStorageKey(listId);
-  // Storage 404 (object never existed) is benign — null the row
+  // Storage 404 (object never existed) is benign - null the row
   // anyway so the UI catches up.
   await supabase.storage.from("list-covers").remove([path]);
   const { error } = await supabase

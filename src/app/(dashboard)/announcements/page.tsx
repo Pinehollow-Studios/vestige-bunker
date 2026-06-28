@@ -166,7 +166,7 @@ function EmptyState() {
           <Megaphone className="size-5" />
         </span>
         <p className="font-display text-base font-semibold text-ink">No announcements yet</p>
-        <p className="text-sm text-ink-2">Author your first — a what&apos;s-new card, a spotlight, a note to the beta.</p>
+        <p className="text-sm text-ink-2">Author your first - a what&apos;s-new card, a spotlight, a note to the beta.</p>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { Bell, Images, MessageSquareWarning, Shield } from "lucide-react";
 import { AdminMenu, MenuItem, MenuLabel } from "@/components/admin/AdminMenu";
 
 /**
- * The top-bar attention bell — a single badge summarising what needs a human
+ * The top-bar attention bell - a single badge summarising what needs a human
  * across the operational queues (open feedback + pending photos + safeguarding
  * flags). Click → a list that jumps straight into each queue.
  */
@@ -38,7 +38,7 @@ export function AttentionBell({
         <>
           <MenuLabel>Needs attention</MenuLabel>
           {total === 0 ? (
-            <p className="px-2.5 py-3 text-center text-xs text-ink-3">All clear — nothing waiting.</p>
+            <p className="px-2.5 py-3 text-center text-xs text-ink-3">All clear - nothing waiting.</p>
           ) : (
             <>
               <MenuItem

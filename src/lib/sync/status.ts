@@ -5,7 +5,7 @@ import { migrationStatus } from "./migrations";
  * Lightweight dev↔prod sync summary for the global indicator. Schema-level
  * only (the migration gap is cheap + reliable); the full picture incl.
  * editorial lives on the /sync console. "In sync" = nothing pushable
- * (held migrations don't count — they're intentionally withheld).
+ * (held migrations don't count - they're intentionally withheld).
  */
 
 export type SyncSummary = {

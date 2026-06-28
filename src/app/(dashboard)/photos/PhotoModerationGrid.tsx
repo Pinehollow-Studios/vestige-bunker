@@ -9,7 +9,7 @@ import { setPhotoModeration, setPhotoModerationBulk, type ModerationState } from
 
 export type PhotoKind = "roundPhoto" | "avatar" | "coursePhoto";
 
-/** Fully server-resolved photo — the grid is pure presentation. */
+/** Fully server-resolved photo - the grid is pure presentation. */
 export type GridPhoto = {
   id: string;
   kind: PhotoKind;
@@ -26,7 +26,7 @@ export type GridPhoto = {
 };
 
 /**
- * The photo moderation grid — a fast, keyboard-first triage surface. Big
+ * The photo moderation grid - a fast, keyboard-first triage surface. Big
  * thumbnails; click a tile to select; bulk approve/reject/flag/reset; or fly
  * solo with the keyboard. Optimistic: an acted photo leaves the bucket instantly
  * (hidden until the server refresh confirms), so triaging 30 photos never waits
@@ -325,7 +325,7 @@ function Tile({
             onFocus={onFocus}
             className="block aspect-square w-full bg-paper-sunken outline-none focus-visible:ring-2 focus-visible:ring-brand"
             aria-pressed={selected}
-            aria-label={`${p.isCourse ? "Course photo" : p.kind === "avatar" ? "Avatar" : "Round photo"} by ${p.uploaderName ?? "user"} — select`}
+            aria-label={`${p.isCourse ? "Course photo" : p.kind === "avatar" ? "Avatar" : "Round photo"} by ${p.uploaderName ?? "user"} - select`}
           >
             {p.thumbUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -374,7 +374,7 @@ function Tile({
         <figcaption className="flex flex-1 flex-col gap-1.5 p-2.5">
           <span className="truncate text-xs font-medium text-ink">{p.uploaderName ?? "Unknown"}</span>
           <span className="truncate text-[11px] text-ink-3">
-            {p.contextLabel ?? "—"}
+            {p.contextLabel ?? "-"}
           </span>
           <span className="text-[10px] tabular-nums text-ink-3">
             {p.dims ? `${p.dims} · ` : ""}

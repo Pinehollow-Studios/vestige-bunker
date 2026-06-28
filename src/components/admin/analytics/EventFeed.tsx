@@ -48,7 +48,7 @@ function propsPreview(props: Record<string, unknown> | null): string {
   return parts.join(" · ");
 }
 
-/** Raw event stream — newest first. The "go look at it" surface. */
+/** Raw event stream - newest first. The "go look at it" surface. */
 export function EventFeed({ rows, emptyLabel = "No events yet." }: { rows: AppEventRow[]; emptyLabel?: string }) {
   if (rows.length === 0) return <EmptyHint>{emptyLabel}</EmptyHint>;
   return (

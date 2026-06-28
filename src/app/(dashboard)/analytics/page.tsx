@@ -24,7 +24,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** Percent delta of `now` vs `prior`; "—" when the base is 0 and now is 0. */
+/** Percent delta of `now` vs `prior`; "-" when the base is 0 and now is 0. */
 function deltaPct(now: number, prior: number): number {
   if (prior > 0) return Math.round(((now - prior) / prior) * 100);
   return now > 0 ? 100 : 0;
@@ -37,7 +37,7 @@ export default async function AnalyticsOverviewPage() {
     return (
       <Shell>
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-amber">
-          Service-role key not configured — set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
+          Service-role key not configured - set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
           analytics views.
         </div>
       </Shell>
@@ -137,7 +137,7 @@ export default async function AnalyticsOverviewPage() {
           <PulseCard>
             <BigStat
               label="Analytics opt-out"
-              value={optOutPct === null ? "—" : `${optOutPct}%`}
+              value={optOutPct === null ? "-" : `${optOutPct}%`}
               sub={
                 sellablePct === null
                   ? "No users yet"

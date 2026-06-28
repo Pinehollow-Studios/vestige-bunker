@@ -10,7 +10,7 @@ export type ActionResult = { ok: true } | { ok: false; message: string };
  * Per-course community-photo management (CLAUDE.md §5.2).
  *
  * Community course photos live in the `photos` table (kind='coursePhoto'),
- * uploaded by real users to the ACTIVE environment (prod by default) — distinct
+ * uploaded by real users to the ACTIVE environment (prod by default) - distinct
  * from the editorial cover (`course-covers` bucket, authored on dev + synced).
  * `public.photos` has no admin SELECT/UPDATE policy, so every mutation here
  * goes through the service-role client for the active env (same pattern as
@@ -54,7 +54,7 @@ export async function setCoursePhotoModeration(
   return { ok: true };
 }
 
-/** Remove a course photo from the gallery (soft-delete — the read RPC filters
+/** Remove a course photo from the gallery (soft-delete - the read RPC filters
  *  `deleted_at is null`, so it vanishes from the app + admin immediately). */
 export async function removeCoursePhoto(courseId: string, photoId: string): Promise<ActionResult> {
   let supabase;
@@ -80,7 +80,7 @@ export async function removeCoursePhoto(courseId: string, photoId: string): Prom
  * Persist a new gallery order. `orderedIds` is the desired top-to-bottom order;
  * each photo's `course_sort_index` is set to its position (0-based), so the
  * iOS reader (`course_photos_for_course`, ordered by sort_index asc nulls last)
- * and the admin manager render the same sequence. Position 0 is the lead — the
+ * and the admin manager render the same sequence. Position 0 is the lead - the
  * course's effective hero when there's no editorial cover.
  */
 export async function reorderCoursePhotos(
@@ -94,7 +94,7 @@ export async function reorderCoursePhotos(
     return { ok: false, message: err instanceof Error ? err.message : "Service-role not configured" };
   }
 
-  // Small N (a course's gallery) — individual updates keep it simple and avoid
+  // Small N (a course's gallery) - individual updates keep it simple and avoid
   // an upsert that would trip the table's NOT NULL columns on its INSERT arm.
   for (let i = 0; i < orderedIds.length; i++) {
     const { error } = await supabase

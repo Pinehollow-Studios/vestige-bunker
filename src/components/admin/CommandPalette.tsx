@@ -76,7 +76,7 @@ export function CommandPalette({
   }, [close]);
 
   // Debounced server search. Every state write happens inside the timer
-  // callback (async) — never synchronously in the effect body.
+  // callback (async) - never synchronously in the effect body.
   useEffect(() => {
     const q = query.trim();
     const id = ++reqId.current;

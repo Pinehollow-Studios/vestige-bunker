@@ -10,7 +10,7 @@ import type { CourseCatalogRow } from "../types";
 /**
  * Course picker for adding rows to a curated list. Searches the catalogue on
  * demand via `/api/courses/search` (debounced) instead of receiving the whole
- * 2000-row catalogue as a prop — so the editor page loads fast and the picker
+ * 2000-row catalogue as a prop - so the editor page loads fast and the picker
  * stays snappy regardless of catalogue size. Already-on-list rows render
  * disabled; an added row flips to "On list" optimistically.
  */
@@ -117,7 +117,7 @@ export function CoursePicker({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{row.course_name}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {[row.club_name, row.county_name].filter(Boolean).join(" · ") || "—"}
+                      {[row.club_name, row.county_name].filter(Boolean).join(" · ") || "-"}
                     </p>
                   </div>
                   {onList ? (

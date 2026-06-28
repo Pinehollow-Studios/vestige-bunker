@@ -21,7 +21,7 @@ export type ManagedPhoto = {
  * Per-course community photo manager (CLAUDE.md §5.2). Curates the user-
  * contributed gallery that follows the editorial cover in the app's hero
  * carousel: approve / reject pending contributions, remove any photo, and
- * reorder the approved set (position 0 leads — the course's effective hero
+ * reorder the approved set (position 0 leads - the course's effective hero
  * when there's no editorial cover). All mutations hit the active env's
  * `photos` table through service-role server actions; optimistic locally.
  */

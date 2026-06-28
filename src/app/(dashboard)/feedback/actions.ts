@@ -13,7 +13,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
  * UI reflects the new state on the next render.
  *
  * Errors come back as { error: string } objects rather than
- * throwing — `useFormState` callers branch on the shape and render
+ * throwing - `useFormState` callers branch on the shape and render
  * a toast + error message inline. The dashboard's existing pattern
  * (see `lists/actions.ts`).
  */
@@ -216,7 +216,7 @@ export async function bulkResolve(
 /**
  * Bulk-set the internal work stage on many reports at once (inbox bulk bar).
  * Restricted to INTERNAL stages so a bulk action can never mass-notify
- * reporters — the two external stages (In progress / Fixed) stay one-at-a-time
+ * reporters - the two external stages (In progress / Fixed) stay one-at-a-time
  * on the thread. Each report goes through the same `set_work_stage` RPC.
  */
 export async function bulkSetWorkStage(

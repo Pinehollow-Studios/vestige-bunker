@@ -7,7 +7,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * The dense, sortable list table that every list page inherits — the answer to
+ * The dense, sortable list table that every list page inherits - the answer to
  * the fat-card walls. Built as a div-grid (not a <table>) so each row is a real
  * <Link> (clean navigation, right-click, keyboard) and columns flex cleanly.
  * Sort + filters + pagination all live in the URL, so a view is shareable and

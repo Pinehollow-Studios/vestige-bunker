@@ -14,7 +14,7 @@ import type { CuratedCourseRow } from "../types";
 /**
  * Editable course rows for a curated list. Each row carries:
  *   • position number + course name + club / county subtitle
- *   • Up / Down nudge buttons (no HTML5 drag — overkill for v1
+ *   • Up / Down nudge buttons (no HTML5 drag - overkill for v1
  *     and breaks on touch; nudge buttons are unambiguous)
  *   • Editor note inline (collapsed by default; click "Note" to
  *     expand and edit)
@@ -147,7 +147,7 @@ function CourseRow({
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{row.course_name}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {[row.club_name, row.county_name].filter(Boolean).join(" · ") || "—"}
+            {[row.club_name, row.county_name].filter(Boolean).join(" · ") || "-"}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -183,7 +183,7 @@ function CourseRow({
       </div>
       {row.editor_note && !editingNote && (
         <p className="ml-9 rounded-md bg-paper-sunken/40 px-3 py-1.5 text-xs italic text-ink-2">
-          “{row.editor_note}”
+          &quot;{row.editor_note}&quot;
         </p>
       )}
       {editingNote && (

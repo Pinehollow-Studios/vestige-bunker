@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Hidden developer-only environment switch. Only rendered when the dev switch
- * is enabled (`enabled` — local + Preview, never production), so Jack never
+ * is enabled (`enabled` - local + Preview, never production), so Jack never
  * sees it. Flips the dashboard (data + auth) between prod and dev. When on dev,
  * it shows a loud amber badge so a developer can never forget they're off prod.
  */
@@ -27,7 +27,7 @@ export function EnvToggle({
       type="button"
       onClick={() => startTransition(() => void setEnv(onDev ? "prod" : "dev"))}
       disabled={pending}
-      title={onDev ? "On DEV — click to return to prod" : "Switch to dev (developer only)"}
+      title={onDev ? "On DEV - click to return to prod" : "Switch to dev (developer only)"}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors disabled:opacity-60",
         onDev
@@ -36,7 +36,7 @@ export function EnvToggle({
       )}
     >
       <FlaskConical aria-hidden className="size-3" />
-      {onDev ? "DEV — switch to prod" : "Dev"}
+      {onDev ? "DEV - switch to prod" : "Dev"}
     </button>
   );
 }

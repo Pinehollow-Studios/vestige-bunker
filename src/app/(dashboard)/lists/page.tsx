@@ -8,13 +8,13 @@ import { QueueActions } from "./QueueActions";
 export const dynamic = "force-dynamic";
 
 /**
- * List-verification queue — public user lists awaiting the verified (Community)
+ * List-verification queue - public user lists awaiting the verified (Community)
  * stamp.
  *
  * Reads `user_lists` directly through the SERVICE-ROLE client: the old
  * `admin_list_verification_queue()` RPC was permanently dropped by the PII-drop
  * migration (`20260606140100`) because it referenced the removed
- * `users.first_name` column — so calling it 404s ("function … without
+ * `users.first_name` column - so calling it 404s ("function … without
  * parameters in the schema cache"). The queue itself still matters (Community
  * lists), so we rebuild it here from the table: lists where
  * `verification_requested_at is not null and verified_at is null`, oldest first.
@@ -375,7 +375,7 @@ function CourseList({ courses, totalCount }: { courses: CourseRow[]; totalCount:
               <p className="truncate font-medium text-ink">{course.course_name}</p>
               <p className="flex items-center gap-1 truncate text-xs text-ink-3">
                 {course.county_name && <MapPin aria-hidden className="size-3" />}
-                {[course.club_name, course.county_name].filter(Boolean).join(" · ") || "—"}
+                {[course.club_name, course.county_name].filter(Boolean).join(" · ") || "-"}
               </p>
             </div>
           </li>

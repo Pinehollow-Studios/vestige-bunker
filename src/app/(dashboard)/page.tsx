@@ -24,9 +24,9 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const isoMsAgo = (ms: number) => new Date(Date.now() - ms).toISOString();
 
 /**
- * Overview — a balanced digest + command center. The header (with the mantra
- * one-liner) + quick actions paint instantly; the three data sections — Pulse,
- * Needs you, Live & shipped — stream in behind their own Suspense boundaries so
+ * Overview - a balanced digest + command center. The header (with the mantra
+ * one-liner) + quick actions paint instantly; the three data sections - Pulse,
+ * Needs you, Live & shipped - stream in behind their own Suspense boundaries so
  * the page never blocks on the slowest query.
  */
 export default async function OverviewPage() {
@@ -66,7 +66,7 @@ function Header() {
         Overview
       </h1>
       <p className="max-w-2xl text-sm italic leading-relaxed text-ink-3">
-        &ldquo;If you don&rsquo;t open one of our apps for a month, that is a successful outcome — for
+        &ldquo;If you don&rsquo;t open one of our apps for a month, that is a successful outcome - for
         both of us.&rdquo;
       </p>
     </header>
@@ -269,7 +269,7 @@ async function NeedsYouSection() {
       <OverviewCard
         href="/feedback"
         title="Feedback"
-        description="In-app reports. Triage in the live inbox — reply, stage, prioritise."
+        description="In-app reports. Triage in the live inbox - reply, stage, prioritise."
         status="live"
         count={openFeedback.length}
         accent={openFeedback.length === 0 ? "Inbox clear" : "open"}
@@ -392,7 +392,7 @@ async function LiveShippedSection() {
       <OverviewCard
         href="/curated"
         title="Curated lists"
-        description="Editorial collections — title, bio, cover, courses, publish state."
+        description="Editorial collections - title, bio, cover, courses, publish state."
         status="live"
         count={curated.length}
         accent="lists total"
@@ -439,7 +439,7 @@ async function LiveShippedSection() {
       <OverviewCard
         href="/changelog"
         title="Changelog"
-        description="What shipped in each release — and the bugs each version tackled."
+        description="What shipped in each release - and the bugs each version tackled."
         status="live"
         accent={
           activeDraft

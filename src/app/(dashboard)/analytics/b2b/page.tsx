@@ -29,18 +29,18 @@ export const dynamic = "force-dynamic";
 /** Readable labels for the demographic band wire values. */
 const BAND_LABEL: Record<string, string> = {
   // age bands
-  "17_24": "17–24",
-  "25_34": "25–34",
-  "35_44": "35–44",
-  "45_54": "45–54",
-  "55_64": "55–64",
+  "17_24": "17-24",
+  "25_34": "25-34",
+  "35_44": "35-44",
+  "45_54": "45-54",
+  "55_64": "55-64",
   "65_plus": "65+",
   // handicap bands
   scratch_or_better: "Scratch+",
-  "1_5": "1–5",
-  "6_12": "6–12",
-  "13_20": "13–20",
-  "21_28": "21–28",
+  "1_5": "1-5",
+  "6_12": "6-12",
+  "13_20": "13-20",
+  "21_28": "21-28",
   "29_plus": "29+",
   no_handicap: "No handicap",
   // player type
@@ -112,8 +112,8 @@ export default async function B2BPreviewPage() {
           <ShieldCheck className="size-4" />
         </span>
         <p className="text-[12px] leading-relaxed text-ink-2">
-          <span className="font-semibold text-ink">Internal preview — not a club export.</span> Every figure is
-          aggregated, excludes opted-out users, and suppresses any cell under {MIN_COHORT_N} users — so this is exactly
+          <span className="font-semibold text-ink">Internal preview - not a club export.</span> Every figure is
+          aggregated, excludes opted-out users, and suppresses any cell under {MIN_COHORT_N} users - so this is exactly
           what a club would see. External delivery is Phase 4, legal-gated.
         </p>
       </div>
@@ -125,7 +125,7 @@ export default async function B2BPreviewPage() {
           <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-[220px_1fr] sm:items-center">
             <BigStat
               label="Conversion rate"
-              value={conversionPct === null ? "—" : `${conversionPct}%`}
+              value={conversionPct === null ? "-" : `${conversionPct}%`}
               sub={
                 conversion && conversion.intended > 0
                   ? `${conversion.converted.toLocaleString()} of ${conversion.intended.toLocaleString()} want-to-play became played`
@@ -170,7 +170,7 @@ export default async function B2BPreviewPage() {
         <Reveal delay={80}>
           <section className="space-y-3 rounded-xl glass-panel p-4">
             <SectionLabel>Intent · want-to-play by club</SectionLabel>
-            <p className="text-[11px] text-ink-3">Distinct users with the club on a list — the demand signal.</p>
+            <p className="text-[11px] text-ink-3">Distinct users with the club on a list - the demand signal.</p>
             <BarList items={intentItems} tone="amber" emptyLabel="No club passes the cohort threshold yet." />
             <ThresholdNote n={MIN_COHORT_N} />
           </section>
@@ -182,7 +182,7 @@ export default async function B2BPreviewPage() {
         <section className="space-y-3 rounded-xl glass-panel p-4">
           <SectionLabel>Catchment · visitor home counties</SectionLabel>
           <p className="text-[11px] text-ink-3">
-            Where players come from. County-level only — no finer location is collected.
+            Where players come from. County-level only - no finer location is collected.
           </p>
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_280px] lg:items-start">
             <CatchmentMap shapes={countyShapes} values={catchmentValues} />
@@ -243,7 +243,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 const notConfigured = (
   <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-amber">
-    Service-role key not configured — set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
+    Service-role key not configured - set <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> to read the
     analytics views.
   </div>
 );

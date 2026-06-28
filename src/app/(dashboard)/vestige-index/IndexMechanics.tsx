@@ -13,7 +13,7 @@ import { projectIndex } from "./formula";
 const EXAMPLE = { prestige: 70, rarity: 90 } as const;
 
 /**
- * The Vestige Index control panel — the global mechanics, laid bare. Shows the
+ * The Vestige Index control panel - the global mechanics, laid bare. Shows the
  * exact blend formula, a live worked example, the one global knob (rarity
  * swing) as a slider + numeric bound together, and a recompute-now action.
  * Built so Jack can see *why* every Index is what it is and tune the blend with
@@ -89,7 +89,7 @@ export function IndexMechanics({
           (1 + <span className="text-ink">swing</span> × (<span className="text-ink">rarity</span> − 50) / 50), 0, 100 )
         </p>
         <p className="mt-1 text-xs text-ink-3">
-          Prestige is your editorial anchor (0–100). Rarity (0–100, 100 = rarest) is computed live from plays. Swing
+          Prestige is your editorial anchor (0-100). Rarity (0-100, 100 = rarest) is computed live from plays. Swing
           is how far rarity may push prestige, ±.
         </p>
       </div>
@@ -163,7 +163,7 @@ export function IndexMechanics({
       >
         <p>
           Setting the swing to <strong className="text-ink">±{pct}%</strong> recomputes the Vestige
-          Index for <strong className="text-ink">every course</strong> — shifting rankings across
+          Index for <strong className="text-ink">every course</strong> - shifting rankings across
           the app.
         </p>
         <p className="mt-2 text-ink-3">Reversible: set it back and re-apply.</p>

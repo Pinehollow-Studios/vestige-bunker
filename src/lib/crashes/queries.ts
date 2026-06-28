@@ -9,7 +9,7 @@ import type {
 
 /**
  * Server-side query helpers for `public.crash_reports`. Mirrors the
- * shape of `@/lib/feedback` — server components import from here,
+ * shape of `@/lib/feedback` - server components import from here,
  * RLS enforces admin-only-read at the Postgres layer.
  */
 
@@ -53,7 +53,7 @@ export async function listCrashes(
     // PostgREST `or` for "either column matches". Wildcard match on
     // both message and culprit; sufficient for the v1 admin's "find
     // me the crash with this string in it" workflow. Sanitise the value
-    // first — a raw `,`/`.`/`%` etc. would break out of the filter string.
+    // first - a raw `,`/`.`/`%` etc. would break out of the filter string.
     const escaped = sanitizeFilterValue(filters.query);
     if (escaped.length > 0) {
       q = q.or(`message.ilike.%${escaped}%,culprit.ilike.%${escaped}%`);
@@ -117,7 +117,7 @@ export async function getCrash(
 /**
  * Feedback reports linked to this crash. The link is by
  * `feedback_reports.linked_crash_id = crash_reports.sentry_event_id`
- * — the iOS form captures `SentrySDK.lastEventId` immediately
+ * - the iOS form captures `SentrySDK.lastEventId` immediately
  * before submit (see `FeedbackReportFormModel.submit`). Returns
  * `[]` when nothing is linked.
  */
@@ -131,7 +131,7 @@ export async function getLinkedFeedbackForCrash(
     .eq("linked_crash_id", sentryEventId)
     .order("created_at", { ascending: false });
   if (error) {
-    // Non-fatal — feedback link is enrichment, not core to the
+    // Non-fatal - feedback link is enrichment, not core to the
     // crash detail page. Log + return empty.
     console.error("crash linked-feedback query failed", error);
     return [];

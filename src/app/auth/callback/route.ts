@@ -5,7 +5,7 @@ import { safeNextPath } from "@/lib/security/redirect";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  // Validate `next` is a local path — an attacker-supplied absolute/`//`/`.host`
+  // Validate `next` is a local path - an attacker-supplied absolute/`//`/`.host`
   // value would otherwise redirect off-site after a successful login.
   const next = safeNextPath(searchParams.get("next"));
 

@@ -15,7 +15,7 @@ const ALLOWED: ModerationState[] = ["pending", "approved", "rejected", "flagged"
  *
  * Writes through the service-role client: `photos.moderation_state` (and the
  * sibling `moderation_*` columns) carry an admin-only column GRANT, so the
- * authenticated session can't touch them — service-role bypasses both RLS and
+ * authenticated session can't touch them - service-role bypasses both RLS and
  * the column grant. Gated by `requireAdmin()` (defence in depth; the layout
  * already gates every /photos request).
  *

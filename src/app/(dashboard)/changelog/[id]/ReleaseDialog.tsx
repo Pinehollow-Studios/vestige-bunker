@@ -16,7 +16,7 @@ import {
  * but first surfaces every linked-and-still-open feedback report so the operator
  * can attach a per-report message that ships to the reporter as the resolution
  * note. Confirming marks each included report Fixed (notifying its reporter) and
- * releases the version — the changelog↔feedback loop closed at the one moment a
+ * releases the version - the changelog↔feedback loop closed at the one moment a
  * fix actually reaches users.
  */
 export function ReleaseDialog({
@@ -87,7 +87,7 @@ export function ReleaseDialog({
       const { fixed, failed } = res.data ?? { fixed: 0, failed: 0 };
       toast.success(
         fixed > 0
-          ? `Released v${version} — ${fixed} report${fixed === 1 ? "" : "s"} marked fixed`
+          ? `Released v${version} - ${fixed} report${fixed === 1 ? "" : "s"} marked fixed`
           : `Released v${version}`,
       );
       if (failed > 0) toast.error(`${failed} report${failed === 1 ? "" : "s"} failed to update`);
@@ -114,7 +114,7 @@ export function ReleaseDialog({
               {rows === null
                 ? "Loading linked reports…"
                 : rows.length === 0
-                  ? "No open reports are linked to this version — releasing won't notify anyone."
+                  ? "No open reports are linked to this version - releasing won't notify anyone."
                   : `${includeCount} of ${rows.length} reporter${rows.length === 1 ? "" : "s"} will be told their issue is fixed.`}
             </p>
           </div>
@@ -240,7 +240,7 @@ function ReportCard({
         ) : (
           <span
             className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-ink-3"
-            title="Reporter's account was deleted — the report is still marked fixed, but no notification is sent."
+            title="Reporter's account was deleted - the report is still marked fixed, but no notification is sent."
           >
             <UserX aria-hidden className="size-3" />
             Anonymous
@@ -289,14 +289,14 @@ function ReportCard({
  */
 function snippetsFor(reportKind: string, version: string): string[] {
   const base = [
-    `This is fixed in v${version} — please update to the latest version of Vestige.`,
-    "Thanks for flagging this — it's fixed in the latest update.",
+    `This is fixed in v${version} - please update to the latest version of Vestige.`,
+    "Thanks for flagging this - it's fixed in the latest update.",
     "Fixed. Thanks for your patience, and for helping make Vestige better.",
   ];
   if (reportKind === "featureRequest") {
     return [
       `The feature you asked for just shipped in v${version} 🎉`,
-      `Good news — this is live as of v${version}. Thanks for the suggestion!`,
+      `Good news - this is live as of v${version}. Thanks for the suggestion!`,
       ...base,
     ];
   }

@@ -56,8 +56,8 @@ type Props = {
 };
 
 /**
- * The feedback inbox — a live two-pane master/detail. The list renders straight
- * from props (always fresh after a server refresh — mutations revalidate, and
+ * The feedback inbox - a live two-pane master/detail. The list renders straight
+ * from props (always fresh after a server refresh - mutations revalidate, and
  * Realtime / tab-focus call router.refresh), so picking a report and acting on
  * it never reloads the page or loses your filters. Keyboard: J/K move + select,
  * X toggles the focused row's checkbox.
@@ -80,7 +80,7 @@ export function FeedbackInbox({
   const { live } = useLiveRefresh("feedback_reports", {
     onInsert: () => toast("New feedback arrived", { icon: "📨" }),
   });
-  // Keyboard focus index — only ever read/written inside handlers, never render.
+  // Keyboard focus index - only ever read/written inside handlers, never render.
   const focusRef = useRef<number>(
     initialSelectedId ? rows.findIndex((r) => r.report_id === initialSelectedId) : -1,
   );
@@ -383,7 +383,7 @@ function Row({
                 <img src={avatar} alt="" className="size-4 rounded-full bg-paper-sunken object-cover" />
               ) : (
                 <span className="flex size-4 items-center justify-center rounded-full bg-paper-sunken text-[8px] font-semibold uppercase text-ink-3">
-                  {row.user_id ? display.slice(0, 2) : "—"}
+                  {row.user_id ? display.slice(0, 2) : "-"}
                 </span>
               )}
               {row.user_id ? display : "Anon"}

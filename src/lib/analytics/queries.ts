@@ -4,12 +4,12 @@ import { ONBOARDING_STEPS, ONBOARDING_STEP_LABEL } from "./config";
 
 /**
  * Analytics read layer. Every function reads through a **service-role**
- * client (`createServiceClient()` from `lib/supabase/admin`) — `app_events`
+ * client (`createServiceClient()` from `lib/supabase/admin`) - `app_events`
  * and the domain tables have no admin SELECT policy, so the session client
  * would read zero rows.
  *
  * Aggregation lives in **version-controlled SQL views** (`analytics_*` /
- * `b2b_*`, granted to `service_role`) in the iOS migrations — not in code.
+ * `b2b_*`, granted to `service_role`) in the iOS migrations - not in code.
  * Each `b2b_*` view already excludes opted-out users and suppresses cells
  * below the cohort threshold IN SQL, so this layer is thin typed reads. The
  * functions here just `.select()` the views and hand back typed rows; the

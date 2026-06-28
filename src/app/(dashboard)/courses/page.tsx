@@ -67,7 +67,7 @@ export default async function CoursesPage(props: { searchParams: SearchParams })
  * in the active env. `public.photos` has no admin SELECT policy, so this reads
  * through service-role; an absent key / pre-migration env → empty set (a course
  * just falls back to its editorial-cover state). Lets the grid count an approved
- * community photo as the course having a hero — the fix for "approved photos
+ * community photo as the course having a hero - the fix for "approved photos
  * don't show as the hero in the dashboard".
  */
 async function coursesWithCommunityPhotos(): Promise<Set<string>> {
@@ -105,7 +105,7 @@ async function CountyLanding({
     const s = stats.get(key) ?? { total: 0, missingPhoto: 0 };
     s.total += 1;
     // A course "has a photo" if it has an editorial cover OR an approved
-    // community photo — so approving a contribution clears the gap.
+    // community photo - so approving a contribution clears the gap.
     if (!r.hero_photo_storage_key && !community.has(r.id)) s.missingPhoto += 1;
     stats.set(key, s);
   }
@@ -135,7 +135,7 @@ async function CountyLanding({
       <TableToolbar
         initialQuery={initialQuery}
         searchPlaceholder="Search every course by name…"
-        countLabel={`${totalCourses.toLocaleString()} courses across ${counties.length} counties — pick a county or search`}
+        countLabel={`${totalCourses.toLocaleString()} courses across ${counties.length} counties - pick a county or search`}
       />
 
       {aggRes.error ? (

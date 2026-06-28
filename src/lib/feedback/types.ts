@@ -1,5 +1,5 @@
 /**
- * Feedback / bug-reporting types — shared between the queue page,
+ * Feedback / bug-reporting types - shared between the queue page,
  * thread detail page, and any client components that branch on
  * status / kind / severity.
  *
@@ -33,7 +33,7 @@ export type FeedbackSeverity = "low" | "medium" | "high" | "critical";
  * Admin-only operator pipeline (Vestige-ios 2026-06-08 admin-workflow
  * slice). A superset of `FeedbackStatus` with four internal-only states
  * (backlog / needsInfo / fixed / released). The reporter-facing
- * `FeedbackStatus` is derived from this — see `workStageDerivedStatus`.
+ * `FeedbackStatus` is derived from this - see `workStageDerivedStatus`.
  * Never surfaced in the iOS app. */
 export type FeedbackWorkStage =
   | "new"
@@ -48,7 +48,7 @@ export type FeedbackWorkStage =
 /** Admin-only do-next ordering, distinct from `FeedbackSeverity` (triage
  * scale) and `FeedbackUserSeverity` (reporter impact). */
 export type FeedbackPriority = "low" | "normal" | "high";
-/** Reporter's own impact read (beta depth) — distinct from the
+/** Reporter's own impact read (beta depth) - distinct from the
  * admin-set `FeedbackSeverity` triage scale. */
 export type FeedbackUserSeverity = "blocker" | "major" | "minor" | "cosmetic";
 /** How reliably the issue reproduces (beta depth). */
@@ -284,11 +284,11 @@ export function statusChipClasses(status: FeedbackStatus): string {
 
 // MARK: - Work stage / priority / owner (admin work-tracking layer)
 
-/** Shared calm-chip tone union — the feedback UI keys every pill to one of
+/** Shared calm-chip tone union - the feedback UI keys every pill to one of
  * these four families (brand / amber / alert / neutral). */
 export type FeedbackChipTone = "brand" | "amber" | "alert" | "neutral";
 
-/** Full operator-pipeline order — mirrors the `feedback_work_stage` enum.
+/** Full operator-pipeline order - mirrors the `feedback_work_stage` enum.
  * Kept for label/tone lookups on legacy rows in dropped stages; the UI
  * surfaces only `FEEDBACK_UI_WORK_STAGES`. */
 export const FEEDBACK_WORK_STAGES: FeedbackWorkStage[] = [
@@ -316,7 +316,7 @@ export const FEEDBACK_UI_WORK_STAGES: FeedbackWorkStage[] = [
   "wontFix",
 ];
 
-/** Internal-only stages — the operator-side controls that never notify the
+/** Internal-only stages - the operator-side controls that never notify the
  * reporter or move the reporter-facing status. */
 export const FEEDBACK_INTERNAL_WORK_STAGES: FeedbackWorkStage[] = [
   "new",
@@ -365,9 +365,9 @@ export function priorityLabel(priority: FeedbackPriority | null): string {
 /** The reporter-facing status this stage maps to (2026-06-09 split).
  * Only the two EXTERNAL stages move the reporter status:
  * `inProgress` ⇒ inProgress, `fixed` ⇒ resolved ("Fixed" on iOS). Every
- * internal stage leaves the reporter where they were — modelled here as a
+ * internal stage leaves the reporter where they were - modelled here as a
  * no-op derivation (the dashboard reads the live `status` column, not this,
- * for internal stages). Mirrors the SQL `set_work_stage` — keep in sync. */
+ * for internal stages). Mirrors the SQL `set_work_stage` - keep in sync. */
 export function workStageDerivedStatus(stage: FeedbackWorkStage): FeedbackStatus {
   switch (stage) {
     case "new":
@@ -387,12 +387,12 @@ export function workStageDerivedStatus(stage: FeedbackWorkStage): FeedbackStatus
   }
 }
 
-/** The two external stages — the only ones that notify the reporter. */
+/** The two external stages - the only ones that notify the reporter. */
 export function workStageIsExternal(stage: FeedbackWorkStage): boolean {
   return stage === "inProgress" || stage === "fixed";
 }
 
-/** Stages that count as "done" — drives the Active / Done partition on the
+/** Stages that count as "done" - drives the Active / Done partition on the
  * queue. Fixed + the legacy resolved/released, plus the silent Won't-fix
  * close. */
 export function workStageIsDone(stage: FeedbackWorkStage): boolean {
@@ -404,7 +404,7 @@ export function workStageIsDone(stage: FeedbackWorkStage): boolean {
   );
 }
 
-/** Work stages that are NOT done — the Active set. */
+/** Work stages that are NOT done - the Active set. */
 export const FEEDBACK_ACTIVE_WORK_STAGES: FeedbackWorkStage[] =
   FEEDBACK_WORK_STAGES.filter((s) => !workStageIsDone(s));
 
@@ -457,7 +457,7 @@ export function userSeverityLabel(value: FeedbackUserSeverity | null): string {
     case "cosmetic":
       return "Cosmetic";
     default:
-      return "—";
+      return "-";
   }
 }
 
@@ -492,11 +492,11 @@ export function reproducibilityLabel(
     case "unsure":
       return "Not sure";
     default:
-      return "—";
+      return "-";
   }
 }
 
-/** All report types — drives the queue kind filter. */
+/** All report types - drives the queue kind filter. */
 export const FEEDBACK_KINDS: FeedbackKind[] = [
   "bug",
   "crash",
@@ -517,7 +517,7 @@ export const FEEDBACK_USER_SEVERITIES: FeedbackUserSeverity[] = [
 ];
 
 /**
- * Top-level page-location areas — the `feedback_reports.area` slug the
+ * Top-level page-location areas - the `feedback_reports.area` slug the
  * queue filter matches on. Mirrors the top level of the iOS
  * `FeedbackArea.tree`. The full breadcrumb lives in `area_label`.
  */
@@ -534,6 +534,6 @@ export const FEEDBACK_AREAS: { slug: string; label: string }[] = [
 ];
 
 export function areaSlugLabel(slug: string | null): string {
-  if (!slug) return "—";
+  if (!slug) return "-";
   return FEEDBACK_AREAS.find((a) => a.slug === slug)?.label ?? slug;
 }

@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Shared navigation surface for the desktop {@link Sidebar} and the
- * {@link MobileNav} drawer. Grouped by domain — the way the team actually works
+ * {@link MobileNav} drawer. Grouped by domain - the way the team actually works
  * (Editorial, Operations, …) rather than a flat list. Collapse-aware: every
  * label / count / group heading carries a class the `.sidebar-collapsed` CSS
  * hides, leaving an icon rail.
@@ -81,7 +81,7 @@ export function NavContent({
 }: {
   counts?: Record<string, number | undefined>;
   onNavigate?: () => void;
-  /** Show the collapse toggle (desktop sidebar only — not the mobile drawer). */
+  /** Show the collapse toggle (desktop sidebar only - not the mobile drawer). */
   collapsible?: boolean;
 }) {
   const pathname = usePathname();
@@ -174,7 +174,7 @@ function BrandHeader({ onNavigate, collapsible }: { onNavigate?: () => void; col
     <div className="nav-brand flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/70 px-4">
       <Link href="/" onClick={onNavigate} className="brand-wordmark min-w-0 leading-tight">
         <p className="font-display text-base font-semibold tracking-tight text-ink">Vestige</p>
-        <p className="text-[10px] uppercase tracking-[0.18em] text-ink-3">Admin</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-ink-3">The Bunker</p>
       </Link>
       {collapsible && <SidebarCollapseToggle />}
     </div>
@@ -182,7 +182,7 @@ function BrandHeader({ onNavigate, collapsible }: { onNavigate?: () => void; col
 }
 
 /**
- * The Vestige flag mark — kept for the login + unauthorized screens (the
+ * The Vestige flag mark - kept for the login + unauthorized screens (the
  * dashboard sidebar no longer uses it). Pin/flag silhouette in brand mint.
  */
 export function BrandMark({ className }: { className?: string }) {

@@ -7,7 +7,7 @@ import type { CuratedCourseRow, CuratedListTier } from "../types";
  * App-accurate preview of the iOS curated-list detail screen, rebuilt to mirror
  * `CuratedListDetailView`: a full-bleed cover hero fading to paper with a tier
  * pill and serif title, an editorial kicker (region · tags), a mint-ruled bio
- * pull-quote, a glass stat strip, then the course rows — each with a cover tile,
+ * pull-quote, a glass stat strip, then the course rows - each with a cover tile,
  * a position stamp on ordered lists, and the editor's note. Rendered from live
  * editor values; sits inside a {@link PreviewFrame}.
  */
@@ -64,7 +64,7 @@ export function CuratedPreviewContent({
       </div>
 
       <div className="space-y-4 px-4 pt-4">
-        {/* Editorial kicker — region · tags */}
+        {/* Editorial kicker - region · tags */}
         {kicker.length > 0 && (
           <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-3">
             {kicker.map((part, i) => (
@@ -123,7 +123,7 @@ export function CuratedPreviewContent({
                     {c.course_name}
                   </p>
                   <p className="mt-0.5 truncate text-[10.5px] text-ink-3">
-                    {[c.club_name, c.county_name].filter(Boolean).join(" · ") || "—"}
+                    {[c.club_name, c.county_name].filter(Boolean).join(" · ") || "-"}
                   </p>
                   {c.editor_note?.trim() && (
                     <p className="mt-1 border-l border-brand/60 pl-2 text-[10.5px] italic leading-snug text-ink-2">

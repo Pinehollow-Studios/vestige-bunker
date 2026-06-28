@@ -17,14 +17,14 @@ type Props = {
 /**
  * 16:9 photo cropper for the course-cover upload flow. Forked from
  * the curated-cover crop dialog so the two surfaces can drift
- * independently if their shapes ever diverge — same code today,
+ * independently if their shapes ever diverge - same code today,
  * but the courses cover lives next to course-only state and the
  * curated cover lives next to curated-only state, so duplication
  * is preferable to a shared component that grows props.
  *
  * Inputs:
- *   • Mouse wheel → zoom (1×–4×, clamped). Pinch on touchpads
- *     fires wheel events with `ctrlKey === true` — handled the
+ *   • Mouse wheel → zoom (1×-4×, clamped). Pinch on touchpads
+ *     fires wheel events with `ctrlKey === true` - handled the
  *     same as wheel.
  *   • Mouse / touch drag → pan. Hard-clamped per `cropClamp.ts`
  *     so the image always covers the viewport.
@@ -148,7 +148,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
   // Portal to <body> so the fixed overlay escapes the dashboard's
   // `z-10` content column (which establishes a stacking context).
   // Without this the modal renders *beneath* the `z-30` fixed
-  // sidebar — its left controls land behind the sidebar and can't
+  // sidebar - its left controls land behind the sidebar and can't
   // be clicked, no matter how high this `z-50` is set.
   return createPortal(
     <div
@@ -164,7 +164,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
           <div>
             <h2 className="font-heading text-base">Crop hero photo</h2>
             <p className="text-xs text-muted-foreground">
-              16:9 — drag to reframe, pinch / scroll to zoom. Output
+              16:9 - drag to reframe, pinch / scroll to zoom. Output
               is 1600×900 JPEG.
             </p>
           </div>

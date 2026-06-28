@@ -7,7 +7,7 @@ import type { AdminRole } from "@/lib/auth/requireAdmin";
 export { BrandMark } from "@/components/admin/nav";
 
 /**
- * Desktop navigation rail — `position: fixed` at `lg+`, hidden below that
+ * Desktop navigation rail - `position: fixed` at `lg+`, hidden below that
  * (the {@link MobileNav} drawer takes over on phones/tablets). The nav body
  * itself lives in {@link NavContent}, shared with the drawer.
  */

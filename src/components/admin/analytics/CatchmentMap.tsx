@@ -4,7 +4,7 @@ import type { CountyShape, GeoPolygon } from "@/lib/analytics/queries";
  * Dependency-free England catchment choropleth. Server-renders the county
  * GeoJSON into SVG paths (equirectangular projection, latitude-corrected) and
  * shades each county by its threshold-cleared player count from b2b_catchment.
- * Counties below the cohort threshold (absent from `values`) render neutral —
+ * Counties below the cohort threshold (absent from `values`) render neutral -
  * so the map shows exactly what a club would be allowed to see.
  */
 
@@ -91,7 +91,7 @@ export function CatchmentMap({
               strokeWidth={0.6}
               fillRule="evenodd"
             >
-              <title>{`${s.name}${values[s.id] ? ` — ${values[s.id]} players` : ""}`}</title>
+              <title>{`${s.name}${values[s.id] ? ` - ${values[s.id]} players` : ""}`}</title>
             </path>
           ))}
         </svg>

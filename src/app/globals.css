@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================
-   Vestige Admin — Atlas palette.
+   Vestige Admin - Atlas palette.
 
    Aligned with the iOS app's Atlas design system + the
    marketing site (vestige-marketing/src/components/marketing
@@ -15,7 +15,7 @@
 
    Light mode is preserved as a cream "almanac" alternative for
    editors who prefer it (think country-house guidebook). The
-   default is dark — that's the brand.
+   default is dark - that's the brand.
 
    shadcn semantic tokens are aliased to brand tokens so all
    `bg-card`, `bg-muted`, `border-border` utilities pick up the
@@ -93,12 +93,12 @@
 
 /* ---------- Default (dark): Atlas ocean ---------- */
 :root {
-  /* Surfaces — keyed to iOS Atlas Paper / PaperRaised / PaperSunken. */
+  /* Surfaces - keyed to iOS Atlas Paper / PaperRaised / PaperSunken. */
   --paper:        #0E1822;
   --paper-raised: #131F2B;
   --paper-sunken: #0A1118;
 
-  /* Text — warm cream, mirroring Atlas Ink. */
+  /* Text - warm cream, mirroring Atlas Ink. */
   --ink:          #F3F0E5;
   --ink-2:        #A8B3C0;
   --ink-3:        #6E7A89;
@@ -107,11 +107,11 @@
 
   /* Brand = Atlas mint. Mirrors iOS Accent + marketing-site --accent. */
   --brand:        #5BE4C3;
-  --brand-deep:   #2FB89A; /* mint, pressed/darker — used for nav active fg */
+  --brand-deep:   #2FB89A; /* mint, pressed/darker - used for nav active fg */
   --brand-soft:   #8FE85B; /* lime gradient pair, never solo */
   --brand-fg:     #0A1A22; /* near-black for text on mint fills */
 
-  /* Secondary signals — amber for bucket-list/achievement, claret for alert. */
+  /* Secondary signals - amber for bucket-list/achievement, claret for alert. */
   --amber:        #F4A85C;
   --claret:       #E2664E;
   --info:         #5B9BE4;
@@ -154,9 +154,9 @@
   --chart-4: #1A4D2E; /* peak */
   --chart-5: var(--brand); /* mint */
 
-  --radius: 0.875rem; /* 14px — matches Atlas / marketing --r-md */
+  --radius: 0.875rem; /* 14px - matches Atlas / marketing --r-md */
 
-  /* Sidebar — slightly deeper than paper. Active row uses a soft
+  /* Sidebar - slightly deeper than paper. Active row uses a soft
      mint wash so it reads as in-family rather than neutral grey. */
   --sidebar:                      #0B131C;
   --sidebar-foreground:           var(--ink);
@@ -168,7 +168,7 @@
   --sidebar-ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 }
 
-/* Dark-only — the dashboard matches the iOS app (Atlas is dark, full stop).
+/* Dark-only - the dashboard matches the iOS app (Atlas is dark, full stop).
    The light "almanac" theme + toggle were removed 2026-06-07. `.dark` is kept
    as an alias of :root only so any stray next-themes class is a no-op. */
 .dark {
@@ -243,10 +243,10 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Atlas atmosphere — one faint static mint glow + a touch of amber warmth,
+  /* Atlas atmosphere - one faint static mint glow + a touch of amber warmth,
      pinned behind everything on a fixed layer so it never repaints on scroll
      (the old `background-attachment: fixed` on <body> was a scroll-jank source).
-     A whisper, not a light show — calm enough to sit behind dense data all day. */
+     A whisper, not a light show - calm enough to sit behind dense data all day. */
   body::before {
     content: "";
     position: fixed;
@@ -288,7 +288,7 @@
 
 /* ---------- Decorative helpers ---------- */
 
-/* Soft mint wash — used on hero headers, callouts, stat tiles. */
+/* Soft mint wash - used on hero headers, callouts, stat tiles. */
 .surface-brand {
   background:
     linear-gradient(
@@ -298,7 +298,7 @@
     );
 }
 
-/* Deep-mint gradient — used on hero panels, primary CTAs. */
+/* Deep-mint gradient - used on hero panels, primary CTAs. */
 .surface-brand-deep {
   background:
     linear-gradient(
@@ -310,7 +310,7 @@
   color: var(--brand-fg);
 }
 
-/* Glass — mirrors marketing-site .fw-glass at lower density so
+/* Glass - mirrors marketing-site .fw-glass at lower density so
    admin reads as panels-on-paper, not floating overlay. */
 .surface-glass {
   background: color-mix(in oklab, var(--paper-raised) 78%, transparent);
@@ -322,7 +322,7 @@
     0 18px 40px -24px rgba(0, 0, 0, 0.6);
 }
 
-/* Subtle textured paper — light, only visible on raised cards. */
+/* Subtle textured paper - light, only visible on raised cards. */
 .surface-paper {
   background-color: var(--paper-raised);
   background-image:
@@ -333,7 +333,7 @@
     );
 }
 
-/* Topographic backdrop — concentric arcs in muted ink, evokes the
+/* Topographic backdrop - concentric arcs in muted ink, evokes the
    iOS county-fill maps. Drop on any container with position:relative. */
 .bg-topo {
   background-image:
@@ -341,7 +341,7 @@
     repeating-radial-gradient(circle at 90% -10%, transparent 0 38px, color-mix(in oklab, var(--ink-3) 10%, transparent) 38px 39px);
 }
 
-/* Aurora panel — for hero strips on the overview, mirrors the
+/* Aurora panel - for hero strips on the overview, mirrors the
    marketing site's animated blobs but static (admin is a tool). */
 .surface-aurora {
   position: relative;
@@ -353,7 +353,7 @@
   border: 1px solid color-mix(in oklab, white 8%, transparent);
 }
 
-/* Tiny "live" dot pulse — used in TopBar / Sidebar to signal
+/* Tiny "live" dot pulse - used in TopBar / Sidebar to signal
    that a queue has items. Light footprint, no JS. */
 @keyframes fw-pulse {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 55%, transparent); }
@@ -381,7 +381,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Modern layer — ported from the marketing site (glass + motion).
+   Modern layer - ported from the marketing site (glass + motion).
    Premium frosted glass over an animated aurora; gradient mint CTAs;
    scroll-reveal + count-up + scroll progress. The dashboard reads like
    the same product as vestige.golf, just denser.
@@ -393,7 +393,7 @@
   --gradient-accent-tilt: linear-gradient(160deg, #5be4c3 0%, #8fe85b 100%);
 }
 
-/* Panel — a solid raised surface with a hairline rule. No backdrop-blur:
+/* Panel - a solid raised surface with a hairline rule. No backdrop-blur:
    the instrument reads as crisp panels-on-paper, and we drop the per-card
    compositor cost that made dense pages feel sluggish. Named `.glass-panel`
    for call-site compatibility (40+ surfaces inherit this one definition). */
@@ -403,8 +403,8 @@
   box-shadow: inset 0 1px 0 0 color-mix(in oklab, white 4%, transparent);
 }
 
-/* Interactive panel — a calm, fast hover (border brighten + faint lift in
-   tint). No translate, no glow, no 400ms easing — instrument, not landing page. */
+/* Interactive panel - a calm, fast hover (border brighten + faint lift in
+   tint). No translate, no glow, no 400ms easing - instrument, not landing page. */
 .glass-card {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
@@ -443,7 +443,7 @@
   color: transparent;
 }
 
-/* Mount-rise — cards fade + lift in on render. Stagger via inline delay. */
+/* Mount-rise - cards fade + lift in on render. Stagger via inline delay. */
 @keyframes adm-rise {
   from {
     opacity: 0;
@@ -458,7 +458,7 @@
   animation: adm-rise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Live status dot — a calm steady pulse for "this queue has items". One small
+/* Live status dot - a calm steady pulse for "this queue has items". One small
    element, cheap; replaces the old animated-aurora + scroll-progress theater. */
 @keyframes adm-pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -477,7 +477,7 @@
 /* ═══════════════════════════════════════════════════════════════
    Collapsible sidebar rail. One CSS var drives both the fixed
    sidebar width and the main column's left padding, so collapsing
-   is pure CSS off a `.sidebar-collapsed` class on <html> — toggled
+   is pure CSS off a `.sidebar-collapsed` class on <html> - toggled
    client-side + persisted, set pre-paint by an inline script (no
    flash, no server/client state to coordinate).
    ═══════════════════════════════════════════════════════════════ */

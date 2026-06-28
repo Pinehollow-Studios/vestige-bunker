@@ -1,5 +1,5 @@
 // Fairways-web shape → iOS schema rows. Ported verbatim from
-// `Vestige-ios/scripts/import-courses/transform.ts` (pure functions — no I/O).
+// `Vestige-ios/scripts/import-courses/transform.ts` (pure functions - no I/O).
 //
 // Editorial defaults baked in for v1 (Jack overrides via the dashboard):
 // - each course is its own implicit "club" (web data has no club entity)
@@ -17,7 +17,7 @@ import type {
   GeoJsonGeometry,
 } from "./types";
 
-/** Deterministic slug — ported verbatim from the iOS `lib/slug.ts` that minted
+/** Deterministic slug - ported verbatim from the iOS `lib/slug.ts` that minted
  *  the EXISTING `counties.slug` / `courses.slug` values. Must match exactly, or
  *  `onConflict` upserts would create duplicate rows instead of updating. */
 export function slugify(input: string): string {
@@ -100,7 +100,7 @@ function inferLayout(props: CourseFeature["properties"]): {
 
 function polygonCentroid(geom: GeoJsonGeometry): { lat: number; lng: number } | null {
   // Polygon → outer ring; MultiPolygon → outer ring of its first sub-polygon.
-  // (~12% of courses are MultiPolygon — merged from several OSM ways. The CLI
+  // (~12% of courses are MultiPolygon - merged from several OSM ways. The CLI
   // import left these with a null centre; handling them here backfills a real
   // map pin on the next apply.)
   const ring = geom.type === "MultiPolygon" ? geom.coordinates[0]?.[0] : geom.coordinates[0];

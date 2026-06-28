@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Dev→prod promotion console. Dev is the workshop; prod is the live app.
- * Review + push the *built product* — schema migrations, editorial content,
- * and (next) config/seed — from dev up to prod. Never touches live user data.
+ * Review + push the *built product* - schema migrations, editorial content,
+ * and (next) config/seed - from dev up to prod. Never touches live user data.
  * Super_admin only; schema applies via the prod-deploy GitHub Action, editorial
  * via the service-role mirror.
  */

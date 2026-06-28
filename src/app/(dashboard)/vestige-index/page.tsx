@@ -126,7 +126,7 @@ async function CountyLanding({
         searchPlaceholder="Search every course by name…"
         countLabel={`${totalCourses.toLocaleString()} courses across ${counties.length} counties${
           totalUnranked > 0 ? ` · ${totalUnranked.toLocaleString()} still to rank` : ""
-        } — pick a county or search`}
+        } - pick a county or search`}
       />
 
       {aggRes.error ? (

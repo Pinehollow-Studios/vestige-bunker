@@ -14,7 +14,7 @@ export function Skeleton({ className }: { className?: string }) {
   );
 }
 
-/** A generic queue/list page skeleton — header + filter bar + a stack of rows. */
+/** A generic queue/list page skeleton - header + filter bar + a stack of rows. */
 export function PageSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6">

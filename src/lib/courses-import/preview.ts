@@ -24,7 +24,7 @@ export interface ImportPreview {
  * Diffs the transformed source dataset against the live DB by `legacy_fid`
  * (courses) and `slug` (counties). No writes. "New" = not yet in the DB;
  * "updated" = present and will be re-upserted. We don't deep-diff polygons
- * (too heavy) — the headline signal Jack wants is *which courses are new*.
+ * (too heavy) - the headline signal Jack wants is *which courses are new*.
  */
 export async function buildPreview(
   supabase: SupabaseClient,

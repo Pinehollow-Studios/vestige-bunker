@@ -39,7 +39,7 @@ export function StatsStrip({ stats }: { stats: Stat[] }) {
             <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
               {stat.label}
             </span>
-            {/* Manrope numeral that counts up — mirrors the app's HeroNumeral. */}
+            {/* Manrope numeral that counts up - mirrors the app's HeroNumeral. */}
             <CountUp
               value={isNull ? null : stat.value}
               className={cn(

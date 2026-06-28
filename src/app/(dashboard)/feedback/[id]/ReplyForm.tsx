@@ -15,7 +15,7 @@ type Props = {
  *
  * Submits via the `postReply` server action. On success the form
  * resets and the page revalidates so the new reply appears in the
- * timeline. On error we toast the server message — admin-side, so
+ * timeline. On error we toast the server message - admin-side, so
  * exposing the raw Postgres error string is fine.
  */
 export function ReplyForm({ reportId }: Props) {
@@ -32,7 +32,7 @@ export function ReplyForm({ reportId }: Props) {
         toast.error(result.error);
         return;
       }
-      toast.success("Reply sent — they'll see it next time they open the app.");
+      toast.success("Reply sent - they'll see it next time they open the app.");
       setBody("");
     });
   };
@@ -51,7 +51,7 @@ export function ReplyForm({ reportId }: Props) {
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={5}
-        placeholder="Tell them what's happening — that you're looking into it, that it's fixed, that you need more info."
+        placeholder="Tell them what's happening - that you're looking into it, that it's fixed, that you need more info."
         disabled={isPending}
         className="block w-full resize-y rounded-lg border border-rule/70 bg-paper-sunken/40 p-3 text-sm leading-relaxed text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 disabled:opacity-60"
       />

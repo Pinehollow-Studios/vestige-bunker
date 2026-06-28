@@ -38,7 +38,7 @@ function persistHero(h: Hero) {
 /**
  * The hero slot at the top of the overview. A little switch picks the lens;
  * the choice is persisted to a cookie (`analytics_hero`) so it sticks and the
- * server can render the right lens on the next load — no flash.
+ * server can render the right lens on the next load - no flash.
  */
 export function HeroSwitcher(props: HeroData) {
   const [hero, setHero] = useState<Hero>(props.initial);

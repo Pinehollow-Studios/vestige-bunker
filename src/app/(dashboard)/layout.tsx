@@ -15,7 +15,7 @@ import type { AdminRole, AdminUser } from "@/lib/auth/requireAdmin";
  *
  * The layout itself awaits only the admin gate (one fast query) so page
  * content streams the instant the page's own data resolves. The sidebar +
- * top-bar badge counts — non-critical chrome — stream in behind their own
+ * top-bar badge counts - non-critical chrome - stream in behind their own
  * Suspense boundaries via {@link getDashboardCounts}; they never block a page.
  * No animated aurora, no scroll-progress: the canvas is the static Atlas
  * atmosphere from globals.css. This is an instrument, not a landing page.
@@ -30,7 +30,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="relative min-h-dvh">
-      {/* ⌘K palette — mounted once, available on every surface. */}
+      {/* ⌘K palette - mounted once, available on every surface. */}
       <CommandPalette devSwitchEnabled={DEV_SWITCH_ENABLED} currentEnv={env} />
 
       {/* Sidebar shell paints immediately (no count pips); counts stream in. */}
@@ -50,7 +50,7 @@ export default async function DashboardLayout({
             <FlaskConical aria-hidden className="mt-0.5 size-4 shrink-0" />
             <p className="leading-relaxed">
               <strong className="font-semibold">Developer dev view.</strong> You&apos;re on the DEV
-              database, not the live app — changes here do not affect TestFlight users. Switch back
+              database, not the live app - changes here do not affect TestFlight users. Switch back
               to prod from the toggle when you&apos;re done.
             </p>
           </div>

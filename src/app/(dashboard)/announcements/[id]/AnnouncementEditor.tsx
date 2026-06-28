@@ -72,7 +72,7 @@ export function AnnouncementEditor({
   heroURL: string | null;
   isSuperAdmin: boolean;
 }) {
-  // Content state — the live preview reads from here so every control updates
+  // Content state - the live preview reads from here so every control updates
   // the pop-up card instantly.
   const [kind, setKind] = useState<AnnouncementKind>(row.kind);
   const [eyebrow, setEyebrow] = useState(row.eyebrow ?? "");
@@ -216,7 +216,7 @@ export function AnnouncementEditor({
           </div>
           <label className="flex items-center gap-2 text-sm text-ink-2">
             <input type="checkbox" checked={isDismissible} onChange={(e) => setIsDismissible(e.target.checked)} />
-            Dismissible — the user can close it without acting
+            Dismissible - the user can close it without acting
           </label>
         </Card>
 
@@ -289,7 +289,7 @@ function PreviewCard({
             "radial-gradient(circle at 50% 30%, #16242F 0%, #0A1218 80%)",
         }}
       >
-        {/* The pop-up card — dark glass, mint eyebrow, serif title. */}
+        {/* The pop-up card - dark glass, mint eyebrow, serif title. */}
         <div className="w-full max-w-[280px] overflow-hidden rounded-2xl border border-white/10 bg-[#101D27] shadow-2xl">
           {heroURL && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -342,7 +342,7 @@ function PreviewCard({
         </div>
       </div>
       <p className="text-[11px] leading-snug text-muted-foreground">
-        Approximate — the iOS card composes the same fields with the app&apos;s native styling.
+        Approximate - the iOS card composes the same fields with the app&apos;s native styling.
       </p>
     </section>
   );
@@ -367,7 +367,7 @@ function HighlightsEditor({
     setHighlights([...highlights, ""]);
   }
   return (
-    <Field label="Highlights" hint="The checkmark bullets — what's new, what changed.">
+    <Field label="Highlights" hint="The checkmark bullets - what's new, what changed.">
       <div className="space-y-2">
         {highlights.map((h, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -482,7 +482,7 @@ function FilteredCohort({
   return (
     <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
-        Cohort filters — all conditions must match
+        Cohort filters - all conditions must match
       </p>
 
       <TristateRow
@@ -725,7 +725,7 @@ function IndividualsPicker({
                   className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-paper-sunken/60 disabled:opacity-50"
                 >
                   <span className="min-w-0 truncate">
-                    <span className="text-ink">{u.display_name ?? "—"}</span>
+                    <span className="text-ink">{u.display_name ?? "-"}</span>
                     {u.username && <span className="ml-1 text-ink-3">@{u.username}</span>}
                   </span>
                   {already ? (
@@ -775,7 +775,7 @@ function Lifecycle({
         unpublishAt ? new Date(unpublishAt).toISOString() : null,
       );
       if (!r.ok) toast.error(r.message);
-      else toast.success("Published — live in the app");
+      else toast.success("Published - live in the app");
     });
   }
   function schedule() {
@@ -978,7 +978,7 @@ function RecipientsSection({
         <p className="text-xs text-ink-3">
           Per-user receipts. Reach is{" "}
           {stats?.is_reach_estimate
-            ? "an estimate (a version window is set — based on each user's last-seen app version)"
+            ? "an estimate (a version window is set - based on each user's last-seen app version)"
             : "the exact targeted set"}
           .
         </p>
@@ -1021,7 +1021,7 @@ function RecipientsSection({
           {recipients.map((r) => (
             <li key={r.user_id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span className="min-w-0 truncate">
-                <span className="text-ink">{r.display_name ?? "—"}</span>
+                <span className="text-ink">{r.display_name ?? "-"}</span>
                 {r.username && <span className="ml-1 text-ink-3">@{r.username}</span>}
               </span>
               <span className="flex shrink-0 items-center gap-2 text-xs text-ink-3">
@@ -1052,7 +1052,7 @@ function RecipientsSection({
 function StatTile({ label, value }: { label: string; value: number | undefined }) {
   return (
     <div className="rounded-lg border border-rule/70 bg-paper-sunken/40 p-3">
-      <p className="font-heading text-2xl font-semibold tabular-nums text-ink">{value ?? "—"}</p>
+      <p className="font-heading text-2xl font-semibold tabular-nums text-ink">{value ?? "-"}</p>
       <p className="text-[11px] uppercase tracking-wider text-ink-3">{label}</p>
     </div>
   );

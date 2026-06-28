@@ -5,7 +5,7 @@
  * TEMPLATE with `{token}` placeholders. This file holds, per kind: a label, the
  * tokens it exposes (with a sample value for the live preview), and the
  * built-in DEFAULT copy (shown as a placeholder / reference). Mirrors the iOS
- * `NotificationPresentation` + `send-apns` built-in strings — when a field is
+ * `NotificationPresentation` + `send-apns` built-in strings - when a field is
  * left blank, the client falls back to that built-in, so this is reference
  * text, not the source of truth. `admin_broadcast` is excluded (free-form).
  */
@@ -75,7 +75,7 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "Badge earned",
     category: "Collection",
     tokens: [{ token: "badge", sample: "Surrey complete", desc: "The badge name" }],
-    defaults: { pushTitle: "Badge earned", pushBody: "You earned a badge — tap to see it", inboxTitle: "You earned a badge", inboxBody: "" },
+    defaults: { pushTitle: "Badge earned", pushBody: "You earned a badge - tap to see it", inboxTitle: "You earned a badge", inboxBody: "" },
   },
   {
     kind: "your_list_verified",
@@ -103,7 +103,7 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "Course photo rejected",
     category: "Collection",
     tokens: [{ token: "course", sample: "Sunningdale", desc: "The course name" }],
-    defaults: { pushTitle: "Photo not used", pushBody: "Your photo of {course} couldn’t be used", inboxTitle: "Your photo of {course} couldn’t be used", inboxBody: "" },
+    defaults: { pushTitle: "Photo not used", pushBody: "Your photo of {course} couldn't be used", inboxTitle: "Your photo of {course} couldn't be used", inboxBody: "" },
   },
   {
     kind: "county_courses_added",
@@ -115,25 +115,25 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
       { token: "played", sample: "34", desc: "How many they've played" },
       { token: "total", sample: "36", desc: "Total courses in the county" },
     ],
-    defaults: { pushTitle: "New course added", pushBody: "{courses} added to {county}", inboxTitle: "{courses} added to {county}", inboxBody: "You’re now at {played} of {total}" },
+    defaults: { pushTitle: "New course added", pushBody: "{courses} added to {county}", inboxTitle: "{courses} added to {county}", inboxBody: "You're now at {played} of {total}" },
   },
   {
     kind: "feedback_in_progress",
-    label: "Feedback — working on it",
+    label: "Feedback - working on it",
     category: "Feedback",
-    tokens: [{ token: "message", sample: "We’re looking into it", desc: "Your note to the user (shown as the message)" }],
+    tokens: [{ token: "message", sample: "We're looking into it", desc: "Your note to the user (shown as the message)" }],
     defaults: { pushTitle: "Vestige", pushBody: "{message}", inboxTitle: "{message}", inboxBody: "" },
   },
   {
     kind: "feedback_message_posted",
-    label: "Feedback — admin replied",
+    label: "Feedback - admin replied",
     category: "Feedback",
     tokens: [],
     defaults: { pushTitle: "Vestige", pushBody: "The team replied to your feedback", inboxTitle: "The team replied to your feedback", inboxBody: "" },
   },
   {
     kind: "feedback_resolved",
-    label: "Feedback — resolved",
+    label: "Feedback - resolved",
     category: "Feedback",
     tokens: [],
     defaults: { pushTitle: "Vestige", pushBody: "Something you flagged was fixed", inboxTitle: "Something you flagged was fixed", inboxBody: "" },
@@ -143,14 +143,14 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "Admin outreach",
     category: "Safeguarding",
     tokens: [],
-    defaults: { pushTitle: "Vestige", pushBody: "A message from Vestige — tap to read", inboxTitle: "A message from Vestige", inboxBody: "" },
+    defaults: { pushTitle: "Vestige", pushBody: "A message from Vestige - tap to read", inboxTitle: "A message from Vestige", inboxBody: "" },
   },
   {
     kind: "account_status_changed",
     label: "Account status changed",
     category: "Safeguarding",
     tokens: [{ token: "status", sample: "restricted", desc: "The new account status" }],
-    defaults: { pushTitle: "Vestige", pushBody: "Your account status changed — tap for details", inboxTitle: "Your account status changed", inboxBody: "Check your feedback inbox for the details" },
+    defaults: { pushTitle: "Vestige", pushBody: "Your account status changed - tap for details", inboxTitle: "Your account status changed", inboxBody: "Check your feedback inbox for the details" },
   },
   {
     kind: "society_invite_received",
@@ -164,7 +164,7 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "Society challenge (Singles)",
     category: "Societies",
     tokens: [NAME, { token: "society", sample: "The Saturday Four", desc: "The society name" }],
-    defaults: { pushTitle: "Head to head", pushBody: "{name} challenged you — tap to accept", inboxTitle: "*{name}* challenged you head-to-head", inboxBody: "Tap to accept or decline" },
+    defaults: { pushTitle: "Head to head", pushBody: "{name} challenged you - tap to accept", inboxTitle: "*{name}* challenged you head-to-head", inboxBody: "Tap to accept or decline" },
   },
   {
     kind: "society_format_finished",

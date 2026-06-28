@@ -14,7 +14,7 @@ export function SidebarCollapseToggle() {
     try {
       localStorage.setItem("vestige.sidebar", collapsed ? "collapsed" : "expanded");
     } catch {
-      /* private mode — ignore */
+      /* private mode - ignore */
     }
   };
   return (

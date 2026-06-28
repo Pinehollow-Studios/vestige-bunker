@@ -12,7 +12,7 @@ export type AccountStatus = "active" | "restricted" | "suspended";
  * Admin actions on a user, all backed by the existing `is_admin()`-gated
  * SECURITY DEFINER RPCs (safeguarding migrations). They run on the SESSION
  * client so the action is attributed to the signed-in admin and the RPC's own
- * role checks apply (suspend is super_admin-only — the RPC enforces it).
+ * role checks apply (suspend is super_admin-only - the RPC enforces it).
  */
 
 export async function setAccountStatus(

@@ -4,7 +4,7 @@ import type { CourseCatalogRow } from "@/app/(dashboard)/curated/types";
 
 /**
  * Course catalogue search for the curated-list picker. Lets the editor load
- * fast (no 2000-row upfront fetch) and search the catalogue on demand — same
+ * fast (no 2000-row upfront fetch) and search the catalogue on demand - same
  * model as the ⌘K palette. `courses` is `select_authenticated`, so the session
  * client reads it; admin-gated all the same.
  */

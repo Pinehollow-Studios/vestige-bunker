@@ -170,7 +170,7 @@ export function BroadcastEditor({
                 <span className="inline-flex items-center gap-1 font-medium text-alert">
                   <Zap aria-hidden className="size-3.5" /> Critical
                 </span>{" "}
-                — bypass the user&apos;s &ldquo;Announcements&rdquo; opt-out. Service messages only.
+                - bypass the user&apos;s &ldquo;Announcements&rdquo; opt-out. Service messages only.
               </span>
             </label>
           )}
@@ -388,7 +388,7 @@ function FilteredCohort({
   return (
     <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
-        Cohort filters — all conditions must match
+        Cohort filters - all conditions must match
       </p>
 
       <TristateRow label="Founding member" value={target.is_founding_member} onChange={(v) => patch({ is_founding_member: v })} />

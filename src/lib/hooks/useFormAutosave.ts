@@ -10,7 +10,7 @@ type SaveResult = { ok: boolean; message?: string };
  * Form-level autosave. Holds the form's values; whenever a field changes it
  * debounces, diffs against the last saved snapshot, and persists ONLY the
  * changed fields via `save(patch)`. One page-level {@link SaveState} drives the
- * "Saved / Saving…" indicator. The editor model the whole admin uses — type and
+ * "Saved / Saving…" indicator. The editor model the whole admin uses - type and
  * it saves, no Save button.
  *
  * Refs are read only inside effects (never during render) to satisfy the
@@ -36,7 +36,7 @@ export function useFormAutosave<V extends Record<string, unknown>>(
   }, []);
 
   useEffect(() => {
-    // Diff against the last saved snapshot — primitives, so Object.is is right.
+    // Diff against the last saved snapshot - primitives, so Object.is is right.
     const patch: Partial<V> = {};
     let changed = false;
     for (const k in values) {

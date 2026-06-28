@@ -5,7 +5,7 @@ import { AdminMenu, MenuItem, MenuLabel } from "@/components/admin/AdminMenu";
 
 /**
  * The top-bar "New" quick-create. Jumps to the create surface for the common
- * editorial objects — start a list / announcement / version / badge from
+ * editorial objects - start a list / announcement / version / badge from
  * anywhere, not just its index page.
  */
 export function QuickCreate() {

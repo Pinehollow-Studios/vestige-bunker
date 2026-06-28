@@ -18,7 +18,7 @@ export type CuratedListStatus =
   | "archived"; // is_archived = true (overrides the others for display)
 
 /**
- * Compact row shape used by the index table — read straight off
+ * Compact row shape used by the index table - read straight off
  * `curated_lists` plus a server-side count of the join table.
  */
 export type CuratedListRow = {
@@ -42,7 +42,7 @@ export type CuratedListRow = {
 };
 
 /**
- * Course row attached to a curated list — the editor pages render
+ * Course row attached to a curated list - the editor pages render
  * one row per course in `curated_list_courses` joined to `courses`
  * + `clubs` + `counties` for display names.
  */
@@ -56,7 +56,7 @@ export type CuratedCourseRow = {
 };
 
 /**
- * Course catalog row used by the picker sheet — every course in
+ * Course catalog row used by the picker sheet - every course in
  * the dataset, joined to its club + county names so admins can
  * pick by recognisable label.
  */
@@ -87,7 +87,7 @@ export const STATUS_LABELS: Record<CuratedListStatus, string> = {
   archived: "Archived",
 };
 
-/** Tailwind class hint for the status badge variant — picked to
+/** Tailwind class hint for the status badge variant - picked to
  *  match the dashboard's badge.tsx variants without forking it. */
 export const STATUS_VARIANT: Record<
   CuratedListStatus,

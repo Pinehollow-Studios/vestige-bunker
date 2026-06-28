@@ -78,7 +78,7 @@ export function ShipInVersionControl({
         </div>
       )}
       <p className="text-[10px] text-ink-3">
-        Adds a prefilled “Fixed” line to that version, tagged to this report. Tweak
+        Adds a prefilled &quot;Fixed&quot; line to that version, tagged to this report. Tweak
         the wording in the changelog.
       </p>
     </div>

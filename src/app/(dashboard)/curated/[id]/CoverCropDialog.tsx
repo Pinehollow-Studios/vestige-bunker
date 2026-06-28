@@ -16,15 +16,15 @@ type Props = {
 
 /**
  * 16:9 photo cropper for the dashboard's cover-upload flow.
- * Direct sibling to the iOS `ListCoverCropView` — same viewport
- * aspect, same hard-clamped pan, same 1×–4× zoom range, same
+ * Direct sibling to the iOS `ListCoverCropView` - same viewport
+ * aspect, same hard-clamped pan, same 1×-4× zoom range, same
  * 1600×900 opaque JPEG output. Lives in the same shape so the
  * cover bytes that hit Storage from either client look the
  * same on the iOS app.
  *
  * Inputs:
- *   • Mouse wheel → zoom (1×–4×, clamped). Pinch on touchpads
- *     fires wheel events with `ctrlKey === true` — handled the
+ *   • Mouse wheel → zoom (1×-4×, clamped). Pinch on touchpads
+ *     fires wheel events with `ctrlKey === true` - handled the
  *     same as wheel.
  *   • Mouse / touch drag → pan. Hard-clamped per `cropClamp.ts`
  *     so the image always covers the viewport.
@@ -57,7 +57,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
   // every file pick (via the `pickedFile` state going from null
   // → File → null), so this effect only ever runs with a
   // non-null `file`. State resets happen at mount time via the
-  // `useState` initialisers above — no setState-in-effect on
+  // `useState` initialisers above - no setState-in-effect on
   // prop change, which keeps the React 19 lint happy.
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
   // Portal to <body> so the fixed overlay escapes the dashboard's
   // `z-10` content column (which establishes a stacking context).
   // Without this the modal renders *beneath* the `z-30` fixed
-  // sidebar — its left controls land behind the sidebar and can't
+  // sidebar - its left controls land behind the sidebar and can't
   // be clicked, no matter how high this `z-50` is set.
   return createPortal(
     <div
@@ -194,7 +194,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
           <div>
             <h2 className="font-heading text-base">Crop cover image</h2>
             <p className="text-xs text-muted-foreground">
-              16:9 — drag to reframe, pinch / scroll to zoom. Output
+              16:9 - drag to reframe, pinch / scroll to zoom. Output
               is 1600×900 JPEG, same shape as the iOS app&apos;s crop
               tool.
             </p>
@@ -216,7 +216,7 @@ export function CoverCropDialog({ file, onClose, onConfirm }: Props) {
               Loading…
             </div>
           ) : (
-            // Plain <img> with CSS transforms — the cropper preview
+            // Plain <img> with CSS transforms - the cropper preview
             // is purely visual, the final render goes through a
             // canvas (see `renderCrop`). Setting `draggable={false}`
             // because the browser's native image-drag would race
@@ -303,7 +303,7 @@ const RENDER_HEIGHT = 900;
 /**
  * Render the visible viewport region into a 1600×900 opaque
  * JPEG blob. The source rect is computed in image-natural
- * coordinates from the live (offset, scale) state — exactly
+ * coordinates from the live (offset, scale) state - exactly
  * what the user is staring at in the preview becomes the bytes
  * we upload.
  */
@@ -340,7 +340,7 @@ async function renderCrop(args: {
   if (!ctx) return null;
 
   // Opaque fill so the JPEG encoder doesn't carry an alpha
-  // channel — mirrors the iOS-side `UIGraphicsImageRendererFormat
+  // channel - mirrors the iOS-side `UIGraphicsImageRendererFormat
   // .opaque = true` re-encode path. Black so any rounding gap at
   // the edges (shouldn't happen with the clamp, but defence in
   // depth) reads as a deliberate frame rather than a glitch.

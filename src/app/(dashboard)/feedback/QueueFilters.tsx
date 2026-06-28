@@ -28,7 +28,7 @@ const KINDS: FeedbackKind[] = FEEDBACK_KINDS;
 /**
  * Filter bar above the feedback queue (slice 6 polish). Status,
  * severity, kind, and free-text search drive `searchParams` on
- * the URL — every flip rewrites the URL via
+ * the URL - every flip rewrites the URL via
  * `router.replace(url, { scroll: false })` so deep-linkable
  * triage views are first-class.
  *
@@ -66,11 +66,11 @@ export function QueueFilters({
     const all = next.getAll(key);
     next.delete(key);
     if (present) {
-      // Toggle on — keep existing + add this
+      // Toggle on - keep existing + add this
       for (const v of all) next.append(key, v);
       if (!all.includes(value)) next.append(key, value);
     } else {
-      // Toggle off — keep existing minus this
+      // Toggle off - keep existing minus this
       for (const v of all) {
         if (v !== value) next.append(key, v);
       }

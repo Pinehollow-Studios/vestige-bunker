@@ -3,7 +3,7 @@ import { Signal, Smartphone, Wifi } from "lucide-react";
 /**
  * A phone frame for the live in-app preview that sits beside an editor. The
  * dashboard already uses the iOS Atlas palette (paper / ink / mint), so content
- * rendered inside reads app-accurate. Turns "data entry" into "authoring" —
+ * rendered inside reads app-accurate. Turns "data entry" into "authoring" -
  * you see what users will see as you type.
  */
 export function PreviewFrame({

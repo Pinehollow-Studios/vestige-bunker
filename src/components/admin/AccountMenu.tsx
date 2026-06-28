@@ -9,7 +9,7 @@ import type { AdminEnvKey } from "@/lib/supabase/env";
 type Role = "super_admin" | "moderator" | "editor";
 
 /**
- * The consolidated account menu — avatar → name + role, the dev/prod switch
+ * The consolidated account menu - avatar → name + role, the dev/prod switch
  * (when enabled), and sign out. Replaces the old row of separate role badge /
  * user pill / sign-out button / env toggle.
  */

@@ -14,7 +14,7 @@ export async function signOut() {
 /**
  * Hidden developer-only environment switch. Points the whole dashboard (data +
  * auth) at dev or prod by setting the `vestige_env` cookie. No-op unless the
- * dev switch is enabled (local + Preview only — never the production build).
+ * dev switch is enabled (local + Preview only - never the production build).
  * Redirects to the overview so every surface re-fetches against the new source;
  * the active env's own session cookie drives auth, so switching may land on the
  * login screen for that environment.

@@ -59,7 +59,7 @@ type Thread = {
 };
 
 /**
- * The inbox's right pane — one feedback thread, fetched client-side so picking
+ * The inbox's right pane - one feedback thread, fetched client-side so picking
  * a report never navigates (filters + scroll preserved). Refetches when the
  * selected report's `signature` changes (its row's updated_at / last message),
  * which is how a mutation made via the controls reflects here: the action
@@ -93,7 +93,7 @@ export function FeedbackThreadPane({
     const id = ++reqId.current;
     // All state writes live inside this async IIFE, never synchronously in the
     // effect body (the strict set-state-in-effect rule). Stale thread state from
-    // a previous report is harmless — the component renders the empty state
+    // a previous report is harmless - the component renders the empty state
     // whenever reportId is null, before reading `thread`.
     void (async () => {
       setLoading(true);
@@ -124,7 +124,7 @@ export function FeedbackThreadPane({
         </span>
         <p className="font-display text-base font-semibold text-ink">Pick a report</p>
         <p className="max-w-xs text-sm text-ink-3">
-          Select a report on the left to read the thread and triage it — without leaving the queue.
+          Select a report on the left to read the thread and triage it - without leaving the queue.
           Use <kbd className="kbd">J</kbd> / <kbd className="kbd">K</kbd> to move.
         </p>
       </div>
@@ -316,7 +316,7 @@ function Header({
           <img src={reporterAvatarUrl} alt="" className="size-7 rounded-full bg-paper-sunken object-cover" />
         ) : (
           <span className="flex size-7 items-center justify-center rounded-full bg-paper-sunken text-[10px] font-semibold uppercase text-ink-3">
-            {reporter ? display.slice(0, 2) : "—"}
+            {reporter ? display.slice(0, 2) : "-"}
           </span>
         )}
         <span className="font-medium text-ink">{reporter ? display : "Anonymous (deleted)"}</span>
@@ -397,10 +397,10 @@ function Diagnostic({ report }: { report: FeedbackReport }) {
   return (
     <Card title="Diagnostic">
       <ul className="space-y-2.5 text-xs text-ink-2">
-        <Row icon={Smartphone} label="Device">{report.device_model ?? "—"}</Row>
-        <Row icon={Smartphone} label="iOS">{report.ios_version ?? "—"}</Row>
-        <Row icon={Hash} label="App version">{report.app_version ?? "—"}</Row>
-        <Row icon={Hash} label="Screen">{report.screen ?? "—"}</Row>
+        <Row icon={Smartphone} label="Device">{report.device_model ?? "-"}</Row>
+        <Row icon={Smartphone} label="iOS">{report.ios_version ?? "-"}</Row>
+        <Row icon={Hash} label="App version">{report.app_version ?? "-"}</Row>
+        <Row icon={Hash} label="Screen">{report.screen ?? "-"}</Row>
       </ul>
     </Card>
   );

@@ -138,14 +138,14 @@ export function CourseEditor({
       {/* Essentials: photo + the editorial content users actually see */}
       <EditorSection
         title="Hero photo"
-        hint="The official cover. 16:9 — pick any photo, the cropper opens to frame it. Leads the app carousel."
+        hint="The official cover. 16:9 - pick any photo, the cropper opens to frame it. Leads the app carousel."
       >
         <CoverEditor row={row} coverURL={coverURL} />
       </EditorSection>
 
       <EditorSection
         title="Community photos"
-        hint="Golfer-contributed photos that follow the cover in the app. Approve, remove, or reorder — the top one is the hero when there's no cover."
+        hint="Golfer-contributed photos that follow the cover in the app. Approve, remove, or reorder - the top one is the hero when there's no cover."
       >
         <CoursePhotoManager
           courseId={row.id}
@@ -157,7 +157,7 @@ export function CourseEditor({
 
       <EditorSection
         title="Course boundary"
-        hint="The polygon Jack hand-mapped — the shape Vestige uses to place this course on the Atlas. Read-only here; edited via the import script or Supabase Studio."
+        hint="The polygon Jack hand-mapped - the shape Vestige uses to place this course on the Atlas. Read-only here; edited via the import script or Supabase Studio."
       >
         <PolygonPreview polygon={row.polygon} centerLat={row.center_lat} centerLng={row.center_lng} />
       </EditorSection>
@@ -201,13 +201,13 @@ export function CourseEditor({
 
       <EditorSection
         title="Vestige Index"
-        hint="The flagship 0–100 metric. Set prestige; the Index recomputes (prestige × live rarity)."
+        hint="The flagship 0-100 metric. Set prestige; the Index recomputes (prestige × live rarity)."
       >
         <PrestigeEditor row={row} />
       </EditorSection>
 
-      {/* Advanced: structural / classification — rarely touched */}
-      <AdvancedSection title="Structure & classification" hint="Layout, tier, hole count, year founded — rarely changes.">
+      {/* Advanced: structural / classification - rarely touched */}
+      <AdvancedSection title="Structure & classification" hint="Layout, tier, hole count, year founded - rarely changes.">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Layout" hint="Physical shape.">
             <select
@@ -235,7 +235,7 @@ export function CourseEditor({
               ))}
             </select>
           </Field>
-          <Field label="Hole count" hint="9, 18 — sometimes other.">
+          <Field label="Hole count" hint="9, 18 - sometimes other.">
             <input
               type="number"
               inputMode="numeric"
@@ -260,8 +260,8 @@ export function CourseEditor({
           </Field>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <ReadOnlyField label="Slug" value={row.slug} hint="Referenced by import idempotency — rename is a v2 feature." />
-          <ReadOnlyField label="Club · County" value={`${row.club_name ?? "—"} · ${row.county_name ?? "no county"}`} />
+          <ReadOnlyField label="Slug" value={row.slug} hint="Referenced by import idempotency - rename is a v2 feature." />
+          <ReadOnlyField label="Club · County" value={`${row.club_name ?? "-"} · ${row.county_name ?? "no county"}`} />
         </div>
       </AdvancedSection>
 

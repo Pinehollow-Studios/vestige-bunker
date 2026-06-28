@@ -8,7 +8,7 @@ import { NavContent } from "@/components/admin/nav";
 
 /**
  * Mobile / tablet navigation. Below `lg` the fixed desktop {@link Sidebar} is
- * hidden, so this is the only way to move between pages — a hamburger in the
+ * hidden, so this is the only way to move between pages - a hamburger in the
  * TopBar that opens a slide-in drawer carrying the full {@link NavContent}.
  *
  * Built so Jack can run the dashboard one-handed from his phone: taps a link
@@ -23,7 +23,7 @@ export function MobileNav({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // Close on navigation — covers the back button and any programmatic routing,
+  // Close on navigation - covers the back button and any programmatic routing,
   // not just link taps (which also call `onNavigate`). Adjusting state during
   // render off a changed value is the React-recommended alternative to an
   // effect here.

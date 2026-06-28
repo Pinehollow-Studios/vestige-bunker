@@ -17,7 +17,7 @@
  *
  * The base URL must match whichever Supabase project the page read its data
  * from. The dashboard defaults to prod (dev only via the hidden developer
- * switch), so the default base resolves to prod when configured — pinning it
+ * switch), so the default base resolves to prod when configured - pinning it
  * to dev made every prod-data image 404. Server components that honour the dev
  * switch pass an explicit `baseUrl` from `activeStorageBaseUrl()`
  * (`lib/supabase/admin.ts`) for exact parity with the active env.
@@ -28,8 +28,8 @@
 
 import { envConfig } from "./supabase/env";
 
-/** Storage base URL. Defaults to the active-env default — prod when
- *  configured, dev otherwise (`envConfig` falls back) — matching the data
+/** Storage base URL. Defaults to the active-env default - prod when
+ *  configured, dev otherwise (`envConfig` falls back) - matching the data
  *  client in `supabase/server.ts`. Pass `explicit` to target a specific env. */
 function resolveBase(explicit?: string): string {
   return explicit ?? envConfig("prod").url;
@@ -56,7 +56,7 @@ export function listCoverURL(
   const base = resolveBase(baseUrl);
   if (!key || !base) return null;
   // The storage key may include a `?v=<UUID>` cache-buster query
-  // suffix — split + re-mount the parts so the URL is well-formed
+  // suffix - split + re-mount the parts so the URL is well-formed
   // (path doesn't contain `?`, query slot carries the buster).
   // Mirrors `LiveListCoverURLProvider.coverURL(forStorageKey:)`.
   const [path, query] = key.split("?", 2);

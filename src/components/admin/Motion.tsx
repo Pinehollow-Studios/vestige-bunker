@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * Lightweight motion primitives. CSS-driven — no animation library. All
+ * Lightweight motion primitives. CSS-driven - no animation library. All
  * respect prefers-reduced-motion (via the CSS layer + the reveal hook
  * short-circuit). The old animated-aurora backdrop + scroll-progress sliver
- * were removed in the instrument rebuild — calm + fast over decorated.
+ * were removed in the instrument rebuild - calm + fast over decorated.
  */
 
-/* ── Scroll-reveal hook — true once the element scrolls into view. */
+/* ── Scroll-reveal hook - true once the element scrolls into view. */
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [shown, setShown] = useState(false);
@@ -40,7 +40,7 @@ function useReveal<T extends HTMLElement>() {
   return [ref, shown] as const;
 }
 
-/* ── Reveal — fade + lift a block as it enters the viewport. Wrap sections
+/* ── Reveal - fade + lift a block as it enters the viewport. Wrap sections
    or grid items; it's a plain block so it doesn't disturb layout. */
 export function Reveal({
   children,
@@ -70,7 +70,7 @@ export function Reveal({
   );
 }
 
-/* ── CountUp — animates a number up to its value when it scrolls into view.
+/* ── CountUp - animates a number up to its value when it scrolls into view.
    Renders an em-dash for null (so unbuilt stats fit the grid). */
 export function CountUp({
   value,
@@ -99,7 +99,7 @@ export function CountUp({
   }, [shown, value, duration]);
   return (
     <span ref={ref} className={className}>
-      {value == null ? "—" : n.toLocaleString("en-GB")}
+      {value == null ? "-" : n.toLocaleString("en-GB")}
     </span>
   );
 }

@@ -2,14 +2,14 @@ import "server-only";
 
 /**
  * Fetches the canonical course/county dataset from a pinned commit of the
- * (private) `Pinehollow-Studios/Fairways-web` repo — the same source the
+ * (private) `Pinehollow-Studios/Fairways-web` repo - the same source the
  * `Vestige-ios/scripts/import-courses` CLI uses. Pinning to a concrete 40-char
  * SHA (never `main`, never a tag) keeps an import reproducible.
  *
  * Auth: needs a GitHub token with **Contents: read on Fairways-web**. Reuses
  * `GITHUB_DISPATCH_TOKEN` (the PAT already wired for the prod-deploy console)
  * unless `GITHUB_CONTENT_TOKEN` is set to override. The PAT's scope must
- * include Fairways-web, not just the iOS repo — a 403/404 here means the token
+ * include Fairways-web, not just the iOS repo - a 403/404 here means the token
  * can't see the repo.
  */
 
@@ -28,7 +28,7 @@ export function fairwaysConfigured(): boolean {
 
 function authHeaders(accept: string): HeadersInit {
   const t = token();
-  if (!t) throw new Error("No GitHub token — set GITHUB_DISPATCH_TOKEN (or GITHUB_CONTENT_TOKEN).");
+  if (!t) throw new Error("No GitHub token - set GITHUB_DISPATCH_TOKEN (or GITHUB_CONTENT_TOKEN).");
   return {
     Authorization: `Bearer ${t}`,
     Accept: accept,

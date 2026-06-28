@@ -1,11 +1,11 @@
 /**
  * Drag-bound math shared by every photo cropper. Direct port of
- * the iOS-side `Vestige/DesignSystem/CropClamp.swift` — same
+ * the iOS-side `Vestige/DesignSystem/CropClamp.swift` - same
  * formulas, same hard-clamp semantics, so the cropping UX is
  * identical across the two clients.
  *
  * The contract: at any zoom level, the image must fully cover
- * the viewport — no part of the page background ever leaks
+ * the viewport - no part of the page background ever leaks
  * through, regardless of how the user drags. Mirrors what the
  * iOS-side `CropClamp.swift` enforces and what iOS Photos /
  * Instagram crop UIs feel like.

@@ -36,7 +36,7 @@ export function NewBroadcastButton() {
     <div className="flex items-center gap-2">
       <Input
         autoFocus
-        placeholder="Heads up — we shipped something"
+        placeholder="Heads up - we shipped something"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {

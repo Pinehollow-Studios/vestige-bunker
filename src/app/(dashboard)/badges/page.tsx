@@ -37,7 +37,7 @@ export const dynamic = "force-dynamic";
 const STATUS_ORDER: BadgeStatus[] = ["live", "draft", "archived"];
 const STATUS_RANK: Record<BadgeStatus, number> = { live: 0, draft: 1, archived: 2 };
 
-/** Group metadata — mirrors how badges are grouped on the iOS Badges wall. */
+/** Group metadata - mirrors how badges are grouped on the iOS Badges wall. */
 const CATEGORY_META: Record<BadgeCategory, { label: string; blurb: string; icon: LucideIcon }> = {
   collection: { label: "Collection", blurb: "Courses played", icon: Layers },
   counties: { label: "Counties", blurb: "County completion", icon: MapPin },
@@ -133,7 +133,7 @@ function GroupLanding({
       <TableToolbar
         initialQuery=""
         searchPlaceholder="Search every badge…"
-        countLabel={`${defs.length} ${defs.length === 1 ? "badge" : "badges"} across ${groups.length} groups — pick a group or search`}
+        countLabel={`${defs.length} ${defs.length === 1 ? "badge" : "badges"} across ${groups.length} groups - pick a group or search`}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

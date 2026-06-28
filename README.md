@@ -1,4 +1,4 @@
-# Vestige Admin
+# Vestige Bunker
 
 Internal admin dashboard for Vestige — operational queues and editorial
 surfaces, consuming the same Supabase backend as the iOS app with elevated

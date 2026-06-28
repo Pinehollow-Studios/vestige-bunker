@@ -162,7 +162,7 @@ export async function setReleasedAt(
   return { ok: true };
 }
 
-/** Hard delete a version (cascades its change lines) — super_admin only. */
+/** Hard delete a version (cascades its change lines) - super_admin only. */
 export async function deleteVersion(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (admin.role !== "super_admin") {
@@ -346,7 +346,7 @@ export async function unlinkFeedback(
  * List the *open* feedback reports for the link picker, newest-priority first.
  * Reuses the existing `admin_feedback_queue` SECURITY DEFINER RPC, filtered to
  * the active work stages so anything already Fixed (or otherwise done) never
- * shows. An optional `query` narrows by free text — but with no query the full
+ * shows. An optional `query` narrows by free text - but with no query the full
  * open set is returned immediately, so the picker needs no search to be useful.
  *
  * Reports already tagged to any changelog line are filtered out so the same
@@ -406,7 +406,7 @@ export type ReleaseReportRow = {
   changeSummary: string;
   reportKind: string;
   reportBody: string;
-  /** False for anonymised reporters (account deleted) — still markable
+  /** False for anonymised reporters (account deleted) - still markable
    *  fixed, just no notification fires. */
   hasReporter: boolean;
 };
@@ -460,7 +460,7 @@ export async function listReportsForRelease(
   for (const c of changes) {
     const rep = byId.get(c.feedback_report_id);
     if (!rep) continue;
-    if (rep.status === "resolved") continue; // already fixed — never re-notify
+    if (rep.status === "resolved") continue; // already fixed - never re-notify
     if (seen.has(rep.id)) continue; // first linked line per report
     seen.add(rep.id);
     out.push({
@@ -487,7 +487,7 @@ export type ReleaseItem = {
  * Release a version and, in one gesture, close every selected linked report.
  *
  * For each included report we call the existing `set_work_stage(_, 'fixed', note)`
- * RPC — which sets status=resolved, stores the note as the resolution card, and
+ * RPC - which sets status=resolved, stores the note as the resolution card, and
  * fires `feedback_resolved` (the SQL skips the notification for anonymised
  * reporters). Then the version flips to released. Already-resolved reports were
  * filtered out by listReportsForRelease, so re-releasing won't double-notify.
@@ -497,7 +497,7 @@ export async function releaseVersion(
   items: ReleaseItem[],
 ): Promise<ActionResult<{ fixed: number; failed: number }>> {
   const admin = await requireAdmin();
-  // Releasing fires a batch of reporter notifications — gate it to super_admin.
+  // Releasing fires a batch of reporter notifications - gate it to super_admin.
   if (admin.role !== "super_admin") {
     return { ok: false, message: "Releasing a version requires super_admin." };
   }
@@ -521,7 +521,7 @@ export async function releaseVersion(
     }
   }
 
-  // Flip the version to released (stamp released_at when not already set —
+  // Flip the version to released (stamp released_at when not already set -
   // mirrors setReleased).
   const { data: existing } = await supabase
     .from("app_versions")
@@ -556,7 +556,7 @@ function summaryFromBody(body: string): string {
  * Ship a feedback report into a version from the *feedback* side: append a new
  * change line to `versionId`, tagged to `reportId` and prefilled from the report
  * body (defaulting the kind to "fixed"). Closes the changelog↔feedback loop from
- * the thread page in a single click — the mirror of addChange + linkFeedback.
+ * the thread page in a single click - the mirror of addChange + linkFeedback.
  */
 export async function shipReportInVersion(
   versionId: string,

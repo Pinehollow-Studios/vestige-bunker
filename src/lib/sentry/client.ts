@@ -1,5 +1,5 @@
 /**
- * Thin Sentry Web API client. Server-only — never import from a
+ * Thin Sentry Web API client. Server-only - never import from a
  * client component (the auth token would leak to the browser).
  *
  * Used by the `/crashes/[id]` detail page to lazily pull stack
@@ -8,13 +8,13 @@
  * Web API is the canonical store for forensic detail.
  *
  * ENVIRONMENT
- *   - SENTRY_AUTH_TOKEN  — Internal Integration auth token. Mint at
+ *   - SENTRY_AUTH_TOKEN  - Internal Integration auth token. Mint at
  *                          sentry.io → pinehollow-studios → Settings →
  *                          Developer Settings → vestige-admin →
  *                          Tokens. Permissions: Project: Read,
  *                          Issue & Event: Read, Member: Read.
- *   - SENTRY_ORG_SLUG    — `pinehollow-studios`.
- *   - SENTRY_PROJECT_SLUG — `vestige-ios`.
+ *   - SENTRY_ORG_SLUG    - `pinehollow-studios`.
+ *   - SENTRY_PROJECT_SLUG - `vestige-ios`.
  *
  * All three live in `.env.local` (dev) and Vercel env (prod). Never
  * committed.
@@ -44,7 +44,7 @@ export function isSentryConfigured(): boolean {
   return readEnv() !== null;
 }
 
-/** Build the canonical Sentry Issue URL. Public URL — only needs
+/** Build the canonical Sentry Issue URL. Public URL - only needs
  *  the org slug (not the auth token), so the "Open in Sentry"
  *  deep-link works as soon as `SENTRY_ORG_SLUG` is configured,
  *  even if the API token isn't set yet. Returns null when org
@@ -75,19 +75,19 @@ export type SentryEventDetail = {
  * Three distinct failure modes the detail page should render
  * differently:
  *
- *   - `not_configured` — the SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG /
+ *   - `not_configured` - the SENTRY_AUTH_TOKEN / SENTRY_ORG_SLUG /
  *     SENTRY_PROJECT_SLUG triple isn't all set on the deploy. The
  *     queue itself works (Supabase reads); only the inline stack
  *     trace section needs the API.
  *
- *   - `not_found` — the API call succeeded with a 404. Sentry
+ *   - `not_found` - the API call succeeded with a 404. Sentry
  *     genuinely doesn't have this event id. Common cases: the
  *     webhook landed an event id Sentry hasn't propagated yet
  *     (race; refresh fixes), the event was deleted server-side,
  *     or this is a synthetic test row inserted via curl that
  *     never went through Sentry at all.
  *
- *   - `unreachable` — network failure, 5xx, malformed response,
+ *   - `unreachable` - network failure, 5xx, malformed response,
  *     auth failure. Distinct from 404 because the recovery is
  *     different (retry later vs accept it's not coming).
  */
@@ -101,7 +101,7 @@ export type SentryEventResult =
  * detail page can render the right inline message for each
  * failure mode.
  *
- * Cached for 60s via Next.js `fetch` cache headers — admin browsing
+ * Cached for 60s via Next.js `fetch` cache headers - admin browsing
  * the same crash twice in a minute hits cache instead of Sentry's
  * rate limit.
  */

@@ -78,7 +78,7 @@ export function eventGroup(name: string): EventGroup {
   return EVENT_CATALOG[name]?.group ?? "other";
 }
 
-/** Onboarding wizard step order — drives the activation funnel ordering.
+/** Onboarding wizard step order - drives the activation funnel ordering.
  *  Mirrors `OnboardingStep` in the iOS `AnalyticsEvents.swift`. */
 export const ONBOARDING_STEPS = [
   "name",

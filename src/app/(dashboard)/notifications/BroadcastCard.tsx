@@ -9,7 +9,7 @@ import {
 } from "./types";
 import { IOSNotification } from "./_components/previews";
 
-/** One team broadcast as a card — with a realistic iOS preview + a TEAM tag. */
+/** One team broadcast as a card - with a realistic iOS preview + a TEAM tag. */
 export function BroadcastCard({ row }: { row: BroadcastOverviewRow }) {
   const count = row.audience_kind === "individuals" ? row.target_user_count : undefined;
   return (

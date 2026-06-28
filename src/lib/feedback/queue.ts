@@ -12,7 +12,7 @@ import {
 } from "./types";
 
 /**
- * Shared feedback-queue data layer — one source of truth for filter parsing +
+ * Shared feedback-queue data layer - one source of truth for filter parsing +
  * the `admin_feedback_queue` RPC call + the changelog "shipped in vX" overlay.
  * Used by both the server page (first paint) and the `/api/feedback/queue`
  * route handler (live refresh + pagination from the client inbox), so the two

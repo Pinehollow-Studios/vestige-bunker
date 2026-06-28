@@ -24,7 +24,7 @@ const dmHero = DM_Sans({
   weight: ["600", "700"],
 });
 
-// Manrope — the app's modern display sans (stat numerals + headings).
+// Manrope - the app's modern display sans (stat numerals + headings).
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-display",
@@ -39,7 +39,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vestige Admin",
+  title: "The Bunker",
   description: "Operational queues and editorial surfaces for Vestige.",
 };
 

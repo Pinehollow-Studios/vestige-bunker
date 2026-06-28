@@ -90,7 +90,7 @@ export default async function FeedbackQueuePage({
   );
 }
 
-// ── View tabs — Active / Done / All partition over the queue ───────────
+// ── View tabs - Active / Done / All partition over the queue ───────────
 function ViewTabs({
   view,
   params,

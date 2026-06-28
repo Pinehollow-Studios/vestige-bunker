@@ -55,7 +55,7 @@ export type BroadcastPatch = {
 
 /**
  * Patch draft / scheduled fields directly (RLS-gated). Refuses once the
- * broadcast has sent — use `editSentCopy` for that (it also rewrites the
+ * broadcast has sent - use `editSentCopy` for that (it also rewrites the
  * delivered inbox rows).
  */
 export async function updateBroadcast(id: string, patch: BroadcastPatch): Promise<ActionResult> {
@@ -71,7 +71,7 @@ export async function updateBroadcast(id: string, patch: BroadcastPatch): Promis
   if (readErr) return { ok: false, message: readErr.message };
   if (!current) return { ok: false, message: "Broadcast not found." };
   if (current.status === "sent" || current.status === "sending") {
-    return { ok: false, message: "This broadcast has sent — edit its in-app copy instead." };
+    return { ok: false, message: "This broadcast has sent - edit its in-app copy instead." };
   }
 
   const update: Record<string, unknown> = {};
@@ -131,7 +131,7 @@ export async function cancelBroadcast(id: string): Promise<ActionResult> {
 }
 
 /**
- * Edit the in-app copy of an already-sent broadcast — updates the source row +
+ * Edit the in-app copy of an already-sent broadcast - updates the source row +
  * every delivered inbox notification (the lock-screen alert already landed and
  * can't change). Returns the number of inbox rows rewritten.
  */
@@ -159,7 +159,7 @@ export async function editSentCopy(
   return { ok: true, data: (data as number) ?? 0 };
 }
 
-/** Hard delete — super_admin only. */
+/** Hard delete - super_admin only. */
 export async function deleteBroadcast(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (admin.role !== "super_admin") {

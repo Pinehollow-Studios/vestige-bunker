@@ -6,11 +6,11 @@
  * (`20260605140000_editorial_badge_system.sql`) so what Jack designs here is
  * exactly what ships in the app.
  *
- * 2026-06-17 badge rework — the badge artwork became a uniform **engraved
+ * 2026-06-17 badge rework - the badge artwork became a uniform **engraved
  * seal** (a flat slate plate + a brushed-metal tier rim + a mint glyph),
  * replacing the old glossy medallion. Consequence: `tier`, `glyph` and the
  * optional `tint_hex` are the only fields the renderer reads. `shape`,
- * `effect` and `theme` are now **deprecated** — kept here (and on the DB row)
+ * `effect` and `theme` are now **deprecated** - kept here (and on the DB row)
  * so existing rows and the insert path don't break, but they no longer affect
  * how a badge looks. The `THEME_*` / `SHAPE` / `EFFECT` exports survive only
  * as safe defaults for inserts and tolerance of legacy rows. The `TIER_RING`
@@ -33,7 +33,7 @@ export type BadgeEffect = "none" | "glow" | "metallic" | "holographic";
 export type BadgeCategory =
   | "collection" | "counties" | "lists" | "social" | "rounds" | "milestones" | "special";
 
-/** The engraved plate face — flat deep slate, matches iOS `Theme.Color.paperRaised`
+/** The engraved plate face - flat deep slate, matches iOS `Theme.Color.paperRaised`
  *  (`rgb(0.078,0.133,0.208)` = #142235). The mint glyph reads against it. */
 export const PLATE_COLOR = "#142235";
 /** The mint glyph colour (iOS `Theme.Color.accent`), unless a `tint_hex` override. */
@@ -62,7 +62,7 @@ export const THEME_INK: Record<BadgeTheme, string> = {
 };
 
 /**
- * Brushed-metal tier rim gradient (topLeft→bottomRight) — the ONE visual that
+ * Brushed-metal tier rim gradient (topLeft→bottomRight) - the ONE visual that
  * varies by tier, matching iOS `BadgeTier.ringColors`. Restrained linear, no
  * gloss sheen.
  */
@@ -91,7 +91,7 @@ export const TIER_LABELS: Record<BadgeTier, string> = {
   legendary: "Legendary",
 };
 
-/** Catalogue grouping order — rarest (most prestigious) first. */
+/** Catalogue grouping order - rarest (most prestigious) first. */
 export const TIER_ORDER: BadgeTier[] = ["legendary", "platinum", "gold", "silver", "bronze"];
 export const SHAPES: BadgeShape[] = ["rosette", "shield", "coin", "hexagon", "seal"];
 export const EFFECTS: BadgeEffect[] = ["none", "glow", "metallic", "holographic"];
@@ -155,7 +155,7 @@ export type CriteriaMetric =
   | "counties_complete"
   | "lists_complete"
   | "partners_best_round"
-  // Archived in the 2026-06-17 rework — kept so existing rows still decode and
+  // Archived in the 2026-06-17 rework - kept so existing rows still decode and
   // their summaries render. NOT selectable when authoring a new badge.
   | "rounds_logged"
   | "friends"
@@ -178,7 +178,7 @@ export const METRIC_LABELS: Record<CriteriaMetric, string> = {
  * Metrics an admin can pick when authoring. The collection-purist catalogue
  * dropped `rounds_logged` / `friends` / `photos_added` / `bucket_list_size`;
  * they remain valid on existing rows (tolerated everywhere) but are no longer
- * offered. `partners_best_round` (the Fourball badge — most playing-partners
+ * offered. `partners_best_round` (the Fourball badge - most playing-partners
  * tagged on a single round) is the new addition.
  */
 export const SELECTABLE_METRICS: CriteriaMetric[] = [
@@ -188,7 +188,7 @@ export const SELECTABLE_METRICS: CriteriaMetric[] = [
   "partners_best_round",
 ];
 
-/** Metrics retired in the 2026-06-17 rework — tolerated, never offered. */
+/** Metrics retired in the 2026-06-17 rework - tolerated, never offered. */
 export const ARCHIVED_METRICS: CriteriaMetric[] = [
   "rounds_logged", "friends", "photos_added", "bucket_list_size",
 ];
@@ -211,7 +211,7 @@ export type CriteriaScope = {
   style?: string;
 };
 
-/** Human one-liner for a criteria blob — used on the index cards. */
+/** Human one-liner for a criteria blob - used on the index cards. */
 export function criteriaSummary(
   criteria: Criteria,
   lookups?: {

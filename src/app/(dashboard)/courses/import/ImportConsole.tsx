@@ -43,7 +43,7 @@ export function ImportConsole({ status }: { status: ImportStatus }) {
       setPreview(res.preview);
       setPreviewedSha(res.sha);
       const total = res.preview.newCourses.length + res.preview.newCounties.length;
-      toast.success(total > 0 ? `${total} new item${total === 1 ? "" : "s"} to add` : "Nothing new — already in sync");
+      toast.success(total > 0 ? `${total} new item${total === 1 ? "" : "s"} to add` : "Nothing new - already in sync");
     });
   };
 
@@ -124,7 +124,7 @@ export function ImportConsole({ status }: { status: ImportStatus }) {
             Apply to live app
           </Button>
           <p className="text-[11px] text-ink-3">
-            Writes to the live app — you&rsquo;ll get a confirmation first. Preview a commit to
+            Writes to the live app - you&rsquo;ll get a confirmation first. Preview a commit to
             enable.
           </p>
         </div>
@@ -151,7 +151,7 @@ export function ImportConsole({ status }: { status: ImportStatus }) {
           .
         </p>
         <p className="mt-2 text-ink-3">
-          Upsert-only — nothing is deleted, so it&rsquo;s reversible by re-applying an earlier
+          Upsert-only - nothing is deleted, so it&rsquo;s reversible by re-applying an earlier
           commit.
         </p>
       </ConfirmDialog>
@@ -194,7 +194,7 @@ function StatusPanel({ status }: { status: ImportStatus }) {
                 {latestCommit.sha.slice(0, 10)}
               </span>
               <span className="block truncate text-xs text-ink-3" title={latestCommit.message}>
-                {latestCommit.message || "—"}
+                {latestCommit.message || "-"}
               </span>
             </span>
           ) : (
@@ -207,7 +207,7 @@ function StatusPanel({ status }: { status: ImportStatus }) {
               <span className="font-mono text-[11px] text-ink-2">{lastImport.sha.slice(0, 10)}</span>
               <span className="block text-xs text-ink-3">
                 {lastImport.finishedAt
-                  ? `${lastImport.courses ?? "—"} courses · ${formatDate(lastImport.finishedAt)}`
+                  ? `${lastImport.courses ?? "-"} courses · ${formatDate(lastImport.finishedAt)}`
                   : lastImport.error
                     ? `failed · ${formatDate(lastImport.startedAt)}`
                     : `in progress · ${formatDate(lastImport.startedAt)}`}
@@ -248,14 +248,14 @@ function PreviewResult({ preview }: { preview: ImportPreview }) {
             {preview.newCourses.map((c) => (
               <li key={c.fid} className="flex items-baseline justify-between gap-3">
                 <span className="truncate">{c.name}</span>
-                <span className="shrink-0 text-[10px] text-ink-3">{c.county ?? "—"}</span>
+                <span className="shrink-0 text-[10px] text-ink-3">{c.county ?? "-"}</span>
               </li>
             ))}
           </ul>
         </div>
       ) : (
         <p className="text-xs text-ink-3">
-          No new courses at this commit — existing rows would be refreshed in place.
+          No new courses at this commit - existing rows would be refreshed in place.
         </p>
       )}
     </div>

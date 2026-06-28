@@ -9,13 +9,13 @@ import {
  *
  * The mirror reads dev and writes prod regardless of which env the
  * dashboard is currently viewing, so it can't use the cookie-driven
- * anon clients in `supabase/server.ts`. Service-role bypasses RLS —
+ * anon clients in `supabase/server.ts`. Service-role bypasses RLS -
  * needed to read dev `courses` (authenticated-only) and to
  * upsert/delete/storage-copy on prod.
  *
  * Keys are SERVER-ONLY (never `NEXT_PUBLIC`) and live only in Vercel /
- * local env, never the (public) repo. The single caller — the /sync
- * server action — is gated on `requireAdmin()` + `super_admin`.
+ * local env, never the (public) repo. The single caller - the /sync
+ * server action - is gated on `requireAdmin()` + `super_admin`.
  */
 
 export type SyncClients = { dev: SupabaseClient; prod: SupabaseClient };
@@ -42,12 +42,12 @@ export function syncConfigStatus() {
 export function createSyncClients(): SyncClients {
   if (!DEV_URL || !DEV_KEY) {
     throw new Error(
-      "Dev service-role not configured — set NEXT_PUBLIC_SUPABASE_URL_DEV (or NEXT_PUBLIC_SUPABASE_URL) + SUPABASE_SERVICE_ROLE_KEY_DEV.",
+      "Dev service-role not configured - set NEXT_PUBLIC_SUPABASE_URL_DEV (or NEXT_PUBLIC_SUPABASE_URL) + SUPABASE_SERVICE_ROLE_KEY_DEV.",
     );
   }
   if (!PROD_URL || !PROD_KEY) {
     throw new Error(
-      "Prod service-role not configured — set NEXT_PUBLIC_SUPABASE_URL_PROD + SUPABASE_SERVICE_ROLE_KEY_PROD.",
+      "Prod service-role not configured - set NEXT_PUBLIC_SUPABASE_URL_PROD + SUPABASE_SERVICE_ROLE_KEY_PROD.",
     );
   }
   const opts = { auth: { persistSession: false, autoRefreshToken: false } };

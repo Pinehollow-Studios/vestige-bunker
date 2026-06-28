@@ -88,8 +88,8 @@ export function CuratedEditor({
       : { state: "warn", label: "No summary", hint: "The one-line subtitle in the hero." },
     values.bio.trim() ? { state: "ok", label: "Bio set" } : { state: "info", label: "No bio (optional)" },
     status === "live"
-      ? { state: "ok", label: "Published — live on iOS" }
-      : { state: "info", label: `${STATUS_LABELS[status]} — not visible to users yet` },
+      ? { state: "ok", label: "Published - live on iOS" }
+      : { state: "info", label: `${STATUS_LABELS[status]} - not visible to users yet` },
   ];
 
   const aside = (
@@ -142,7 +142,7 @@ export function CuratedEditor({
     >
       <PublishSection row={row} />
 
-      <EditorSection title="Cover image" hint="16:9 — pick any photo, the cropper opens to frame it.">
+      <EditorSection title="Cover image" hint="16:9 - pick any photo, the cropper opens to frame it.">
         <CoverEditor row={row} coverURL={coverURL} />
       </EditorSection>
 
@@ -170,7 +170,7 @@ export function CuratedEditor({
 
       <CourseSection row={row} courses={courses} />
 
-      <AdvancedSection title="Classification & ordering" hint="Slug, region, tier, tags, priority, ordering — rarely changes.">
+      <AdvancedSection title="Classification & ordering" hint="Slug, region, tier, tags, priority, ordering - rarely changes.">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Slug" hint="URL-safe identifier.">
             <input value={values.slug} onChange={(e) => setField("slug", e.target.value)} className={fieldInputClass} />
@@ -344,7 +344,7 @@ function PublishSection({ row }: { row: CuratedListRow }) {
     >
       <div className="flex flex-wrap items-end gap-3">
         <Button
-          onClick={() => run(() => setPublishState(row.id, new Date().toISOString(), unpublishAt ? new Date(unpublishAt).toISOString() : null), "Published — live on iOS")}
+          onClick={() => run(() => setPublishState(row.id, new Date().toISOString(), unpublishAt ? new Date(unpublishAt).toISOString() : null), "Published - live on iOS")}
           disabled={pending || status === "live"}
           className="bg-brand text-brand-fg hover:bg-brand-deep"
         >
@@ -435,7 +435,7 @@ function CourseSection({ row, courses }: { row: CuratedListRow; courses: Curated
     >
       {courses.length === 0 ? (
         <div className="rounded-lg border border-rule/70 bg-paper-sunken/30 p-6 text-center text-sm text-ink-3">
-          No courses on this list yet — add some from the picker.
+          No courses on this list yet - add some from the picker.
         </div>
       ) : (
         <CourseRowList listId={row.id} courses={courses} />

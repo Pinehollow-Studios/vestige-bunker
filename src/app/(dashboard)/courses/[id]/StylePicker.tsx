@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /**
- * Style picker — free-text combobox backed by the live distinct
+ * Style picker - free-text combobox backed by the live distinct
  * set of `courses.style` values (fetched server-side and passed in
  * as `suggestions`).
  *
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  *   • shows the suggestions filtered against the current input;
  *   • lets the user pick by clicking a chip or by typing a new
  *     value (including one that doesn't exist yet);
- *   • normalises Title Case on commit only — server-side
+ *   • normalises Title Case on commit only - server-side
  *     `normaliseStyle` repeats the same rule defensively.
  */
 export function StylePicker({
@@ -54,7 +54,7 @@ export function StylePicker({
               key={entry}
               type="button"
               onMouseDown={(e) => {
-                // mousedown fires before blur — pick the entry without
+                // mousedown fires before blur - pick the entry without
                 // dropping the dropdown first.
                 e.preventDefault();
                 onChange(entry);
