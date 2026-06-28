@@ -46,8 +46,8 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     kind: "friend_reacted_to_round",
     label: "Reaction on your round",
     category: "Social",
-    tokens: [NAME, { token: "others", sample: "2", desc: "How many other people also reacted" }],
-    defaults: { pushTitle: "Your round", pushBody: "{name} reacted to your round", inboxTitle: "*{name}* reacted to your round", inboxBody: "" },
+    tokens: [NAME, { token: "reactors", sample: "Sarah and 2 others", desc: "The reactor(s), pluralised" }],
+    defaults: { pushTitle: "Your round", pushBody: "{reactors} reacted to your round", inboxTitle: "*{name}* reacted to your round", inboxBody: "" },
   },
   {
     kind: "round_commented",
@@ -89,7 +89,7 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "Saved list updated",
     category: "Collection",
     tokens: [{ token: "list", sample: "Heathland gems", desc: "The list name" }],
-    defaults: { pushTitle: "List updated", pushBody: "“{list}” has a new course", inboxTitle: "“{list}” has a new course", inboxBody: "" },
+    defaults: { pushTitle: "List updated", pushBody: "{list} has a new course", inboxTitle: "{list} has a new course", inboxBody: "" },
   },
   {
     kind: "course_photo_approved",
@@ -110,19 +110,19 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     label: "New course in a completed county",
     category: "Collection",
     tokens: [
-      { token: "count", sample: "2", desc: "How many new courses" },
+      { token: "courses", sample: "2 new courses", desc: "New courses, pluralised (e.g. 1 new course)" },
       { token: "county", sample: "Surrey", desc: "The county name" },
       { token: "played", sample: "34", desc: "How many they've played" },
       { token: "total", sample: "36", desc: "Total courses in the county" },
     ],
-    defaults: { pushTitle: "New course added", pushBody: "{count} new courses were added to {county}", inboxTitle: "{count} new courses were added to {county}", inboxBody: "You’re now at {played} of {total}" },
+    defaults: { pushTitle: "New course added", pushBody: "{courses} added to {county}", inboxTitle: "{courses} added to {county}", inboxBody: "You’re now at {played} of {total}" },
   },
   {
     kind: "feedback_in_progress",
     label: "Feedback — working on it",
     category: "Feedback",
-    tokens: [{ token: "message", sample: "We’re on it", desc: "Your note to the user (optional)" }],
-    defaults: { pushTitle: "Vestige", pushBody: "We’re looking into your report", inboxTitle: "We’re looking into your report", inboxBody: "" },
+    tokens: [{ token: "message", sample: "We’re looking into it", desc: "Your note to the user (shown as the message)" }],
+    defaults: { pushTitle: "Vestige", pushBody: "{message}", inboxTitle: "{message}", inboxBody: "" },
   },
   {
     kind: "feedback_message_posted",
@@ -174,7 +174,7 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
       { token: "title", sample: "Surrey Sprint", desc: "The Format's name" },
       { token: "winner", sample: "Sarah", desc: "The winner's name (if any)" },
     ],
-    defaults: { pushTitle: "Format finished", pushBody: "{title} finished — {winner} won", inboxTitle: "{title} finished — {winner} won", inboxBody: "" },
+    defaults: { pushTitle: "Format finished", pushBody: "{title} has finished", inboxTitle: "{title} has finished", inboxBody: "" },
   },
 ];
 

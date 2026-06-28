@@ -64,7 +64,7 @@ export function SystemNotificationsSection({ overrides }: { overrides: Record<st
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {TEMPLATE_KINDS.map((meta) => {
           const o = overrides[meta.kind];
-          const edited = Boolean(o && (o.push_title || o.push_body || o.inbox_title || o.inbox_body));
+          const edited = Boolean(o?.updated_by);
           const copy = resolved(meta, o);
           return (
             <button
@@ -133,33 +133,26 @@ function KindEditorModal({
 
   const setters = { pushTitle: setPushTitle, pushBody: setPushBody, inboxTitle: setInboxTitle, inboxBody: setInboxBody };
   const values = { pushTitle, pushBody, inboxTitle, inboxBody };
-  const overridden = Boolean(override && (override.push_title || override.push_body || override.inbox_title || override.inbox_body));
+  const overridden = Boolean(override?.updated_by);
 
   function insertToken(tok: string) {
     const cur = values[active];
     setters[active](cur ? `${cur} {${tok}}` : `{${tok}}`);
   }
   function save() {
-    // Only store fields the admin actually changed from the default — an
-    // unchanged field stays a blank override (keeps the built-in default + the
-    // accurate "Edited" badge).
-    const d = meta.defaults;
-    const changed = (v: string, def: string) => (v.trim() === def.trim() ? "" : v);
+    // Store the full copy so the entry stays complete; `updated_by` (set by the
+    // RPC) is what marks it as customised.
     start(async () => {
-      const r = await saveNotificationTemplate(
-        meta.kind,
-        changed(pushTitle, d.pushTitle),
-        changed(pushBody, d.pushBody),
-        changed(inboxTitle, d.inboxTitle),
-        changed(inboxBody, d.inboxBody),
-      );
+      const r = await saveNotificationTemplate(meta.kind, pushTitle, pushBody, inboxTitle, inboxBody, false);
       if (!r.ok) toast.error(r.message);
       else { toast.success(`Saved · ${r.data ?? 0} past notification${r.data === 1 ? "" : "s"} updated`); onClose(); }
     });
   }
   function reset() {
+    const d = meta.defaults;
     start(async () => {
-      const r = await saveNotificationTemplate(meta.kind, "", "", "", "");
+      // Restore the default copy + clear the customised flag (is_default).
+      const r = await saveNotificationTemplate(meta.kind, d.pushTitle, d.pushBody, d.inboxTitle, d.inboxBody, true);
       if (!r.ok) toast.error(r.message);
       else { toast.success("Reset to default"); onClose(); }
     });

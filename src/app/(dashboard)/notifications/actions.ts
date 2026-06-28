@@ -209,6 +209,7 @@ export type NotificationTemplateRow = {
   inbox_title: string | null;
   inbox_body: string | null;
   updated_at: string;
+  updated_by: string | null; // null = seeded default; set = admin-customised
 };
 
 /** All overridden templates (kinds with no override simply aren't returned). */
@@ -231,6 +232,7 @@ export async function saveNotificationTemplate(
   pushBody: string,
   inboxTitle: string,
   inboxBody: string,
+  isDefault = false,
 ): Promise<ActionResult<number>> {
   await requireAdmin();
   const supabase = await createClient();
@@ -240,6 +242,7 @@ export async function saveNotificationTemplate(
     p_push_body: pushBody.trim() || null,
     p_inbox_title: inboxTitle.trim() || null,
     p_inbox_body: inboxBody.trim() || null,
+    p_is_default: isDefault,
   });
   if (error) return { ok: false, message: error.message };
   revalidatePath("/notifications");
