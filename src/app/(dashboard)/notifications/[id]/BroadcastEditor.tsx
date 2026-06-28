@@ -116,11 +116,11 @@ export function BroadcastEditor({
       <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
         <div className="space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">On the lock screen</p>
-          <IOSNotification title={title || "Title"} body={body} />
+          <IOSNotification title={title} body={body} />
         </div>
         <div className="space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">In the app</p>
-          <VestigeInboxRow title={title || "Title"} body={body} icon={<Send className="size-4" />} />
+          <VestigeInboxRow title={title} body={body} icon={<Send className="size-4" />} />
         </div>
         <p className="text-xs text-ink-3">
           {destinationURL ? `Tap → ${destinationURL}` : "Tap → opens the inbox"}

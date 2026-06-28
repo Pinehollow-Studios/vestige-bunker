@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { saveNotificationTemplate, type NotificationTemplateRow } from "./actions";
 import { previewTemplate, TEMPLATE_KINDS, type TemplateKindMeta } from "./templates-meta";
 import { IOSNotification, VestigeInboxRow } from "./_components/previews";
@@ -72,18 +71,15 @@ export function SystemNotificationsSection({ overrides }: { overrides: Record<st
               key={meta.kind}
               type="button"
               onClick={() => setEditing(meta)}
-              className="group flex flex-col gap-2 rounded-2xl border border-rule/60 bg-paper-sunken/20 p-3 text-left transition-colors hover:border-brand/40"
+              className="group flex flex-col gap-2.5 rounded-2xl glass-panel p-3 text-left transition-colors hover:border-brand/40"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-ink">{meta.label}</span>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-                    edited ? "border-brand/40 bg-brand/10 text-brand" : "border-rule/60 bg-paper-sunken/60 text-ink-3",
-                  )}
-                >
-                  {edited ? "Edited" : "Default"}
-                </span>
+                {edited && (
+                  <span className="shrink-0 rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
+                    Edited
+                  </span>
+                )}
               </div>
               <IOSNotification title={copy.pushTitle} body={copy.pushBody} />
             </button>
@@ -114,10 +110,12 @@ function KindEditorModal({
   icon?: ReactNode;
   onClose: () => void;
 }) {
-  const [pushTitle, setPushTitle] = useState(override?.push_title ?? "");
-  const [pushBody, setPushBody] = useState(override?.push_body ?? "");
-  const [inboxTitle, setInboxTitle] = useState(override?.inbox_title ?? "");
-  const [inboxBody, setInboxBody] = useState(override?.inbox_body ?? "");
+  // Pre-fill with the real copy (the saved override, else the built-in default)
+  // so opening an entry shows its actual editable text, not an empty box.
+  const [pushTitle, setPushTitle] = useState(override?.push_title ?? meta.defaults.pushTitle);
+  const [pushBody, setPushBody] = useState(override?.push_body ?? meta.defaults.pushBody);
+  const [inboxTitle, setInboxTitle] = useState(override?.inbox_title ?? meta.defaults.inboxTitle);
+  const [inboxBody, setInboxBody] = useState(override?.inbox_body ?? meta.defaults.inboxBody);
   const [active, setActive] = useState<"pushTitle" | "pushBody" | "inboxTitle" | "inboxBody">("pushTitle");
   const [pending, start] = useTransition();
 
@@ -142,8 +140,19 @@ function KindEditorModal({
     setters[active](cur ? `${cur} {${tok}}` : `{${tok}}`);
   }
   function save() {
+    // Only store fields the admin actually changed from the default — an
+    // unchanged field stays a blank override (keeps the built-in default + the
+    // accurate "Edited" badge).
+    const d = meta.defaults;
+    const changed = (v: string, def: string) => (v.trim() === def.trim() ? "" : v);
     start(async () => {
-      const r = await saveNotificationTemplate(meta.kind, pushTitle, pushBody, inboxTitle, inboxBody);
+      const r = await saveNotificationTemplate(
+        meta.kind,
+        changed(pushTitle, d.pushTitle),
+        changed(pushBody, d.pushBody),
+        changed(inboxTitle, d.inboxTitle),
+        changed(inboxBody, d.inboxBody),
+      );
       if (!r.ok) toast.error(r.message);
       else { toast.success(`Saved · ${r.data ?? 0} past notification${r.data === 1 ? "" : "s"} updated`); onClose(); }
     });

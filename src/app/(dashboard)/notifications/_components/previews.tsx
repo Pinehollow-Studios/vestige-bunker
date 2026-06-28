@@ -79,7 +79,8 @@ function NotificationPlatter({ title, body, time }: { title: string; body: strin
       <div className="min-w-0 flex-1" style={{ paddingTop: 1 }}>
         <div className="flex items-baseline justify-between gap-2">
           <p style={{ fontSize: 15, fontWeight: 600, color: "#000", lineHeight: 1.2 }} className="truncate">
-            {stripStars(title) || "Title"}
+            {/* No title set → iOS shows the app name. */}
+            {stripStars(title) || "Vestige"}
           </p>
           <span style={{ fontSize: 12.5, color: "rgba(0,0,0,0.42)", fontWeight: 400 }} className="shrink-0">
             {time}
@@ -128,7 +129,7 @@ export function VestigeInboxRow({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p style={{ fontSize: 14, color: "#F3F0E5", lineHeight: 1.35 }}>{boldSegments(title)}</p>
+        <p style={{ fontSize: 14, color: "#F3F0E5", lineHeight: 1.35 }}>{title.trim() ? boldSegments(title) : "Vestige"}</p>
         {stripStars(body) && (
           <p style={{ fontSize: 12.5, color: "rgba(243,240,229,0.55)", lineHeight: 1.35 }}>{stripStars(body)}</p>
         )}
