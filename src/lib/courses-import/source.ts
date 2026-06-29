@@ -2,19 +2,19 @@ import "server-only";
 
 /**
  * Fetches the canonical course/county dataset from a pinned commit of the
- * (private) `Pinehollow-Studios/Fairways-web` repo - the same source the
+ * (private) `Pinehollow-Studios/vestige-tool` repo - the same source the
  * `Vestige-ios/scripts/import-courses` CLI uses. Pinning to a concrete 40-char
  * SHA (never `main`, never a tag) keeps an import reproducible.
  *
- * Auth: needs a GitHub token with **Contents: read on Fairways-web**. Reuses
+ * Auth: needs a GitHub token with **Contents: read on vestige-tool**. Reuses
  * `GITHUB_DISPATCH_TOKEN` (the PAT already wired for the prod-deploy console)
  * unless `GITHUB_CONTENT_TOKEN` is set to override. The PAT's scope must
- * include Fairways-web, not just the iOS repo - a 403/404 here means the token
+ * include vestige-tool, not just the iOS repo - a 403/404 here means the token
  * can't see the repo.
  */
 
-export const FAIRWAYS_REPO =
-  process.env.GITHUB_FAIRWAYS_REPO ?? "Pinehollow-Studios/Fairways-web";
+export const DATASET_REPO =
+  process.env.GITHUB_DATASET_REPO ?? "Pinehollow-Studios/vestige-tool";
 const API = "https://api.github.com";
 
 function token(): string | undefined {
@@ -22,7 +22,7 @@ function token(): string | undefined {
   return t && t.trim() !== "" ? t.trim() : undefined;
 }
 
-export function fairwaysConfigured(): boolean {
+export function datasetSourceConfigured(): boolean {
   return Boolean(token());
 }
 
@@ -49,14 +49,14 @@ export function pinnedSource(sha: string): PinnedSource {
   return {
     sha,
     async fetchText(path: string): Promise<string> {
-      const url = `${API}/repos/${FAIRWAYS_REPO}/contents/${path}?ref=${sha}`;
+      const url = `${API}/repos/${DATASET_REPO}/contents/${path}?ref=${sha}`;
       const res = await fetch(url, {
         headers: authHeaders("application/vnd.github.raw"),
         cache: "no-store",
       });
       if (!res.ok) {
         throw new Error(
-          `Couldn't fetch ${path}@${sha.slice(0, 7)} from ${FAIRWAYS_REPO} ` +
+          `Couldn't fetch ${path}@${sha.slice(0, 7)} from ${DATASET_REPO} ` +
             `(${res.status} ${res.statusText}). Check the token has Contents:read on that repo.`,
         );
       }
@@ -65,22 +65,22 @@ export function pinnedSource(sha: string): PinnedSource {
   };
 }
 
-export interface FairwaysCommit {
+export interface DatasetCommit {
   sha: string;
   message: string;
   date: string | null;
   htmlUrl: string;
 }
 
-/** The current HEAD commit of Fairways-web's default branch. */
-export async function latestFairwaysCommit(): Promise<FairwaysCommit> {
-  const ref = process.env.GITHUB_FAIRWAYS_REF ?? "main";
-  const res = await fetch(`${API}/repos/${FAIRWAYS_REPO}/commits/${ref}`, {
+/** The current HEAD commit of vestige-tool's default branch. */
+export async function latestDatasetCommit(): Promise<DatasetCommit> {
+  const ref = process.env.GITHUB_DATASET_REF ?? "main";
+  const res = await fetch(`${API}/repos/${DATASET_REPO}/commits/${ref}`, {
     headers: authHeaders("application/vnd.github+json"),
     cache: "no-store",
   });
   if (!res.ok) {
-    throw new Error(`Couldn't read ${FAIRWAYS_REPO}@${ref} (${res.status} ${res.statusText}).`);
+    throw new Error(`Couldn't read ${DATASET_REPO}@${ref} (${res.status} ${res.statusText}).`);
   }
   const json = (await res.json()) as {
     sha: string;
@@ -97,9 +97,9 @@ export async function latestFairwaysCommit(): Promise<FairwaysCommit> {
 
 /** How many commits HEAD is ahead of `baseSha` (null if the compare fails). */
 export async function commitsAhead(baseSha: string): Promise<number | null> {
-  const ref = process.env.GITHUB_FAIRWAYS_REF ?? "main";
+  const ref = process.env.GITHUB_DATASET_REF ?? "main";
   const res = await fetch(
-    `${API}/repos/${FAIRWAYS_REPO}/compare/${baseSha}...${ref}`,
+    `${API}/repos/${DATASET_REPO}/compare/${baseSha}...${ref}`,
     { headers: authHeaders("application/vnd.github+json"), cache: "no-store" },
   );
   if (!res.ok) return null;

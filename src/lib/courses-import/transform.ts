@@ -1,4 +1,4 @@
-// Fairways-web shape → iOS schema rows. Ported verbatim from
+// vestige-tool shape → iOS schema rows. Ported verbatim from
 // `Vestige-ios/scripts/import-courses/transform.ts` (pure functions - no I/O).
 //
 // Editorial defaults baked in for v1 (Jack overrides via the dashboard):

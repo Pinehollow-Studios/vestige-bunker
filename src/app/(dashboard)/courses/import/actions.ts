@@ -3,11 +3,11 @@
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createServiceClient } from "@/lib/supabase/admin";
 import {
-  fairwaysConfigured,
-  latestFairwaysCommit,
+  datasetSourceConfigured,
+  latestDatasetCommit,
   commitsAhead,
   pinnedSource,
-  type FairwaysCommit,
+  type DatasetCommit,
 } from "@/lib/courses-import/source";
 import { parseCounties, parseCourses } from "@/lib/courses-import/parse";
 import { buildPreview, type ImportPreview } from "@/lib/courses-import/preview";
@@ -26,7 +26,7 @@ export interface LastImport {
 
 export interface ImportStatus {
   configured: boolean;
-  latestCommit: FairwaysCommit | null;
+  latestCommit: DatasetCommit | null;
   lastImport: LastImport | null;
   commitsAhead: number | null;
   error?: string;
@@ -35,22 +35,22 @@ export interface ImportStatus {
 /** Status panel - readable by any admin (read-only, no writes). */
 export async function getImportStatus(): Promise<ImportStatus> {
   await requireAdmin();
-  if (!fairwaysConfigured()) {
+  if (!datasetSourceConfigured()) {
     return {
       configured: false,
       latestCommit: null,
       lastImport: null,
       commitsAhead: null,
       error:
-        "No GitHub token with access to Fairways-web. Set GITHUB_DISPATCH_TOKEN " +
-        "(or GITHUB_CONTENT_TOKEN) with Contents:read on Pinehollow-Studios/Fairways-web.",
+        "No GitHub token with access to vestige-tool. Set GITHUB_DISPATCH_TOKEN " +
+        "(or GITHUB_CONTENT_TOKEN) with Contents:read on Pinehollow-Studios/vestige-tool.",
     };
   }
 
   try {
     const supabase = await createServiceClient();
     const [latestCommit, lastImportRow] = await Promise.all([
-      latestFairwaysCommit(),
+      latestDatasetCommit(),
       supabase
         .from("dataset_imports")
         .select("source_commit_sha, started_at, finished_at, counties_upserted, courses_upserted, error_message")

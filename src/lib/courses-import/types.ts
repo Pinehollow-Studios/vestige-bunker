@@ -1,5 +1,5 @@
-// Shapes of the upstream Fairways-web dataset + the transformed iOS-schema
-// rows. Mirrors `Pinehollow-Studios/Fairways-web/src/{counties,courses}.js`
+// Shapes of the upstream vestige-tool dataset + the transformed iOS-schema
+// rows. Mirrors `Pinehollow-Studios/vestige-tool/src/{counties,courses}.js`
 // at a pinned commit; if Jack changes the shape, this file follows.
 //
 // Ported from `Vestige-ios/scripts/import-courses` so the dashboard can run

@@ -76,7 +76,7 @@ export function ImportConsole({ status }: { status: ImportStatus }) {
 
       <section className="space-y-4 rounded-xl glass-panel p-5">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">
-          Pull from Fairways-web
+          Pull from Vestige Tool
         </h2>
 
         <label className="block space-y-1.5">
@@ -186,7 +186,7 @@ function StatusPanel({ status }: { status: ImportStatus }) {
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-2">
-        <Row label="Latest in Fairways-web">
+        <Row label="Latest in Vestige Tool">
           {latestCommit ? (
             <span className="space-y-0.5">
               <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink-2">

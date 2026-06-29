@@ -59,14 +59,14 @@ not code. Long-form continues in the entry below.
 ## 2026-06-27 — Course dataset import in the dashboard
 
 Closes Jack's biggest dependency. Course boundary polygons are mapped in the
-separate `Pinehollow-Studios/Fairways-web` app (OSM → Overpass → its hidden
+separate `Pinehollow-Studios/vestige-tool` app (OSM → Overpass → its hidden
 AdminReview tool → committed `src/courses.js`), then ingested into live Supabase
 by `Vestige-ios/scripts/import-courses` — a terminal step with the service-role
 key that only a developer could run. So Jack's mapped courses couldn't reach the
 app without Tom. This ports that import into the dashboard as a click-through.
 
 - **`lib/courses-import/`** — ports the CLI's pure logic: `source.ts` fetches
-  `src/{counties,courses}.js` from a pinned Fairways-web commit via the GitHub
+  `src/{counties,courses}.js` from a pinned vestige-tool commit via the GitHub
   Contents API (raw); `parse.ts` evaluates the `export default` module
   server-side (no temp file — strips the export + `new Function`); `transform.ts`
   is copied verbatim (incl. the iOS `slugify`, so `onConflict` upserts match
@@ -83,7 +83,7 @@ app without Tom. This ports that import into the dashboard as a click-through.
   `recompute_vestige_index`. Upsert-only — nothing is deleted, so a bad import
   is undone by re-applying a good commit.
 - **Ops dependency**: the existing `GITHUB_DISPATCH_TOKEN` PAT must gain
-  **Contents:read on Fairways-web** (today it's scoped to the iOS repo). Until
+  **Contents:read on vestige-tool** (today it's scoped to the iOS repo). Until
   then the status panel shows a clear "not configured" notice instead of failing.
 
 No schema/migrations (the `courses`/`counties`/`clubs`/`dataset_imports` tables +
