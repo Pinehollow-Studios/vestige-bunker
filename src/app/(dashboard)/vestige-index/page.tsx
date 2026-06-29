@@ -4,6 +4,7 @@ import { SectionHeader } from "@/components/admin/SectionHeader";
 import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
 import { TablePagination } from "@/components/admin/table/TablePagination";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/admin/fetch-all";
 import { TIER_LABELS, type CourseTier } from "../courses/types";
 import { IndexMechanics } from "./IndexMechanics";
 import { IndexTable, type IndexRow } from "./IndexTable";
@@ -80,7 +81,16 @@ async function CountyLanding({
   initialQuery: string;
 }) {
   const [aggRes, countiesRes, mechanics] = await Promise.all([
-    supabase.from("courses").select("county_id, prestige, vestige_index"),
+    // Page past PostgREST's 1000-row cap so the per-county index aggregates
+    // cover every course, not just the first 1000.
+    fetchAllRows<{ county_id: string | null; prestige: number | null; vestige_index: number | null }>(
+      (from, to) =>
+        supabase
+          .from("courses")
+          .select("county_id, prestige, vestige_index")
+          .order("id", { ascending: true })
+          .range(from, to),
+    ),
     supabase.from("counties").select("id, name").order("name", { ascending: true }),
     loadMechanics(supabase),
   ]);

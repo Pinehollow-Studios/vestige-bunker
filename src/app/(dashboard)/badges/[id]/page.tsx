@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/admin/fetch-all";
 import { BadgeEditor } from "./BadgeEditor";
 import type {
   BadgeDefinitionRow,
@@ -32,7 +33,11 @@ export default async function BadgeEditorPage({
   const [{ data: countyRows }, { data: listRows }, { data: courseRows }] = await Promise.all([
     supabase.from("counties").select("id,name").order("name"),
     supabase.from("curated_lists").select("id,name").order("name"),
-    supabase.from("courses").select("id,name,county_id").order("name"),
+    // Page past the 1000-row cap so every course is pickable for a
+    // specific-course badge criterion (the dataset is already >1000).
+    fetchAllRows<{ id: string; name: string; county_id: string | null }>((from, to) =>
+      supabase.from("courses").select("id,name,county_id").order("name").order("id").range(from, to),
+    ),
   ]);
 
   const counties: CountyOption[] = (countyRows ?? []).map((c) => ({ id: c.id, name: c.name }));

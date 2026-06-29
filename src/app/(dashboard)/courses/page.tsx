@@ -6,6 +6,7 @@ import { TablePagination } from "@/components/admin/table/TablePagination";
 import type { SortDir } from "@/components/admin/table/DataTable";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/admin/fetch-all";
 import { LAYOUT_LABELS, TIER_LABELS, type CourseLayout, type CourseTier } from "./types";
 import { CoursesTable, type CourseTableRow } from "./CoursesTable";
 
@@ -94,7 +95,16 @@ async function CountyLanding({
   initialQuery: string;
 }) {
   const [aggRes, countiesRes, community] = await Promise.all([
-    supabase.from("courses").select("id, county_id, hero_photo_storage_key"),
+    // Page past PostgREST's 1000-row cap so the grand total + per-county
+    // totals count every course (the dataset is already >1000).
+    fetchAllRows<{ id: string; county_id: string | null; hero_photo_storage_key: string | null }>(
+      (from, to) =>
+        supabase
+          .from("courses")
+          .select("id, county_id, hero_photo_storage_key")
+          .order("id", { ascending: true })
+          .range(from, to),
+    ),
     supabase.from("counties").select("id, name").order("name", { ascending: true }),
     coursesWithCommunityPhotos(),
   ]);
