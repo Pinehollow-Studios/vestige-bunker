@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-07-02 — Badge "Sigil" renderer + six-axis authoring
+
+The badge preview and editor moved from the June **engraved-seal** look (tier
+rim only; theme/shape/effect ignored) to the shared **"Sigil"** system — a flat,
+graphic emblem driven by all six axes. One spec drives both this dashboard and
+the iOS app: `Vestige-Badge-Sigil-Export/badge-spec.json`, matched
+pixel-for-pixel with iOS `BadgeMedallion.swift`.
+
+- `components/badges/BadgeMedallion.tsx` — rewritten as the Sigil SVG: a duotone
+  `theme` fill, concentric `tier` rings (ring count = tier index + 1), a
+  tier-climbing `shape` (coin → seal → shield → hexagon → rosette), an `effect`
+  glow (guardrail-auto-corrected to tier; legendary is always holographic + a
+  spectral radial burst), and the glyph in the theme colour. Same component
+  props. The dashboard can't render SF Symbols, so the glyph is still previewed
+  via the lucide mapping — the real SF Symbol string ships in the record and iOS
+  renders it natively.
+- `app/(dashboard)/badges/types.ts` — un-deprecates `theme`/`shape`/`effect` and
+  adds the shared Sigil palette + guardrail: `SIGIL_THEME`, `SIGIL_FRAME`,
+  `SIGIL_HOLO`, `TIER_INDEX`, `TIER_DEFAULT_SHAPE`, the label maps, and
+  `resolveEffect(effect, tier)` (identical to iOS + `badge-spec.json`).
+- `app/(dashboard)/badges/[id]/BadgeEditor.tsx` — re-adds full authoring:
+  theme swatches, a live-preview shape picker (mini medallions), an effect picker
+  that shows the guardrail auto-correct, and the tier swatch now previews the
+  ring frame. `updateBadge` already persisted all three fields, so no action
+  change was needed; fresh drafts now default `shape` to `coin` (bronze).
+- No schema change. The DB already carried every axis (the June rework never
+  dropped the columns). A companion data-only migration in the iOS repo
+  (`20260702120000_badge_sigil_defaults.sql`) seeds category-signature themes +
+  tier-default shapes + tier-appropriate effects on existing badges.
+- TypeScript clean, ESLint clean, `next build` green.
+
 ## 2026-06-27 — Equal admin access + confirm-guards on the foot-guns
 
 The dashboard's two admins (Tom + Jack) are co-founders with identical access.

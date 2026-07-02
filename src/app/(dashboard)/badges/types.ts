@@ -6,29 +6,27 @@
  * (`20260605140000_editorial_badge_system.sql`) so what Jack designs here is
  * exactly what ships in the app.
  *
- * 2026-06-17 badge rework - the badge artwork became a uniform **engraved
- * seal** (a flat slate plate + a brushed-metal tier rim + a mint glyph),
- * replacing the old glossy medallion. Consequence: `tier`, `glyph` and the
- * optional `tint_hex` are the only fields the renderer reads. `shape`,
- * `effect` and `theme` are now **deprecated** - kept here (and on the DB row)
- * so existing rows and the insert path don't break, but they no longer affect
- * how a badge looks. The `THEME_*` / `SHAPE` / `EFFECT` exports survive only
- * as safe defaults for inserts and tolerance of legacy rows. The `TIER_RING`
- * gradients drive the live seal rim and match iOS `BadgeTier.ringColors`.
+ * 2026-07-02 "Sigil" badge rework - the badge artwork is now a flat, graphic,
+ * infinitely-scalable emblem driven by ALL SIX axes: a duotone `theme` fill,
+ * concentric `tier` rings (ring count = tier index + 1), a tier-climbing
+ * `shape` (coin → seal → shield → hexagon → rosette), an `effect` glow, and an
+ * SF Symbol `glyph`. Every axis is live again (the June seal rework had
+ * collapsed it to tier-only). The shared source of truth is
+ * `Vestige-Badge-Sigil-Export/badge-spec.json`, matched pixel-for-pixel with
+ * iOS `BadgeMedallion` and the web `BadgeMedallion` renderer here.
  */
 
 // ── Visual vocabulary ───────────────────────────────────────────────
 
-/** @deprecated The seal is uniform; theme no longer affects rendering. Kept
- *  for insert defaults + legacy-row tolerance only. */
+/** Colour family — drives the duotone fill + glyph colour on the Sigil. */
 export type BadgeTheme =
   | "mint" | "lime" | "amber" | "claret" | "sea"
   | "violet" | "gold" | "slate" | "rose";
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "legendary";
-/** @deprecated Every badge is a circular seal now. Default `coin`. */
+/** Silhouette — defaults from tier (coin → rosette), overridable. */
 export type BadgeShape = "rosette" | "shield" | "coin" | "hexagon" | "seal";
-/** @deprecated The flat seal carries no extra flair. Default `none`. */
+/** Extra flair — auto-corrected to the tier (see `resolveEffect`). */
 export type BadgeEffect = "none" | "glow" | "metallic" | "holographic";
 export type BadgeCategory =
   | "collection" | "counties" | "lists" | "social" | "rounds" | "milestones" | "special";
@@ -78,6 +76,72 @@ export const TIER_RING: Record<BadgeTier, string[]> = {
 export const TIER_RIM_WIDTH: Record<BadgeTier, number> = {
   bronze: 0.045, silver: 0.045, gold: 0.055, platinum: 0.055, legendary: 0.07,
 };
+
+// ── Sigil renderer palette (shared source of truth — badge-spec.json + iOS) ──
+
+/**
+ * The single duotone theme colour per family — the authoritative Sigil hexes,
+ * identical to `badge-spec.json → themes`, iOS `sigilThemeColor`, and the
+ * web `BadgeMedallion`. Drives the fill (@14%), the shape stroke, and the glyph.
+ */
+export const SIGIL_THEME: Record<BadgeTheme, string> = {
+  mint: "#5BE4C3", lime: "#8FE85B", sea: "#4FA8E8", violet: "#A78BFA",
+  amber: "#F4A85C", gold: "#E8C063", rose: "#F2789F", claret: "#E2664E", slate: "#8A95A2",
+};
+
+/**
+ * Concentric ring-stroke gradient per tier. Bronze→platinum use [hi, a, b];
+ * legendary uses the holographic spectrum. Mirrors `badge-spec.json → tiers.frame`.
+ */
+export const SIGIL_FRAME: Record<BadgeTier, string[]> = {
+  bronze:    ["#F3CB9C", "#E0A062", "#7F4E2C"],
+  silver:    ["#FFFFFF", "#E4EAF1", "#8B95A1"],
+  gold:      ["#FCEFC0", "#F4D277", "#AE7A1F"],
+  platinum:  ["#FFFFFF", "#EFF4FA", "#A6B4C5"],
+  legendary: ["#5BE4C3", "#4FA8E8", "#A78BFA", "#F2789F", "#F4A85C"],
+};
+
+/** Legendary spectral ring / burst. */
+export const SIGIL_HOLO = ["#5BE4C3", "#4FA8E8", "#A78BFA", "#F2789F", "#F4A85C"];
+
+/** Ring count = tier index + 1. */
+export const TIER_INDEX: Record<BadgeTier, number> = {
+  bronze: 0, silver: 1, gold: 2, platinum: 3, legendary: 4,
+};
+
+/** Silhouette a tier defaults to (climbs with rarity). Overridable per badge. */
+export const TIER_DEFAULT_SHAPE: Record<BadgeTier, BadgeShape> = {
+  bronze: "coin", silver: "seal", gold: "shield", platinum: "hexagon", legendary: "rosette",
+};
+
+export const THEME_LABELS: Record<BadgeTheme, string> = {
+  mint: "Mint", lime: "Lime", sea: "Sea", violet: "Violet", amber: "Amber",
+  gold: "Gold", rose: "Rose", claret: "Claret", slate: "Slate",
+};
+
+export const SHAPE_LABELS: Record<BadgeShape, string> = {
+  coin: "Coin", seal: "Seal", shield: "Shield", hexagon: "Hexagon", rosette: "Rosette",
+};
+
+export const EFFECT_LABELS: Record<BadgeEffect, string> = {
+  none: "None", glow: "Glow", metallic: "Metallic", holographic: "Holographic",
+};
+
+/**
+ * The light guardrail — effects auto-correct to the tier so any authored
+ * combination renders intentionally. Legendary is always holographic. Identical
+ * to iOS `BadgeMedallion.resolvedEffect` and `badge-spec.json → guardrails`.
+ */
+export function resolveEffect(effect: BadgeEffect, tier: BadgeTier): BadgeEffect {
+  if (tier === "legendary") return "holographic";
+  const ti = TIER_INDEX[tier];
+  switch (effect) {
+    case "holographic": return ti >= 2 ? "glow" : "none";
+    case "metallic":    return ti >= 3 ? "metallic" : ti >= 2 ? "glow" : "none";
+    case "glow":        return ti >= 2 ? "glow" : "none";
+    default:            return ti >= 3 ? "metallic" : "none";
+  }
+}
 
 export const THEMES: BadgeTheme[] = Object.keys(THEME_COLORS) as BadgeTheme[];
 export const TIERS: BadgeTier[] = ["bronze", "silver", "gold", "platinum", "legendary"];

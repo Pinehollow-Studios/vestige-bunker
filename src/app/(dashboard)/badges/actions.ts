@@ -31,7 +31,7 @@ export async function createBadge(name: string): Promise<ActionResult<string>> {
       glyph: "rosette",
       theme: "mint",
       tier: "bronze",
-      shape: "rosette",
+      shape: "coin",
       effect: "none",
       category: "collection",
       criteria: { type: "manual" },

@@ -20,11 +20,12 @@ import {
   type BadgePatch,
 } from "../actions";
 import {
-  ARCHIVED_METRICS, CATEGORIES, COURSE_TIERS, GLYPH_OPTIONS, METRIC_LABELS,
-  SCOPEABLE_METRICS, SELECTABLE_METRICS, statusFor, STATUS_LABELS,
-  TIER_RING, TIERS,
-  type BadgeCategory, type BadgeDefinitionRow, type BadgeTier,
-  type CountyOption, type CourseOption,
+  ARCHIVED_METRICS, CATEGORIES, COURSE_TIERS, EFFECT_LABELS, EFFECTS, GLYPH_OPTIONS,
+  METRIC_LABELS, resolveEffect, SCOPEABLE_METRICS, SELECTABLE_METRICS, SHAPE_LABELS,
+  SHAPES, SIGIL_FRAME, SIGIL_THEME, statusFor, STATUS_LABELS, THEME_LABELS, THEMES,
+  TIER_DEFAULT_SHAPE, TIERS,
+  type BadgeCategory, type BadgeDefinitionRow, type BadgeEffect, type BadgeShape,
+  type BadgeTheme, type BadgeTier, type CountyOption, type CourseOption,
   type Criteria, type CriteriaMetric, type CriteriaType, type CuratedListOption,
 } from "../types";
 
@@ -55,12 +56,11 @@ export function BadgeEditor({
   const [tintHex, setTintHex] = useState(row.tint_hex ?? "");
   const [tier, setTier] = useState<BadgeTier>(row.tier);
   const [category, setCategory] = useState<BadgeCategory>(row.category);
-  // Deprecated visual fields (2026-06-17 seal rework): the renderer ignores
-  // them, but we preserve whatever a legacy row carries and keep sending it so
-  // inserts/updates stay valid against the unchanged DB CHECK constraints.
-  const theme = row.theme;
-  const shape = row.shape;
-  const effect = row.effect;
+  // The Sigil renderer draws all six axes — theme (colour), shape (silhouette)
+  // and effect (flair) are authorable again (2026-07-02 rework).
+  const [theme, setTheme] = useState<BadgeTheme>(row.theme);
+  const [shape, setShape] = useState<BadgeShape>(row.shape);
+  const [effect, setEffect] = useState<BadgeEffect>(row.effect);
   const [seriesKey, setSeriesKey] = useState(row.series_key ?? "");
   const [seriesRank, setSeriesRank] = useState(row.series_rank?.toString() ?? "");
   const [displayPriority, setDisplayPriority] = useState(row.display_priority.toString());
@@ -116,22 +116,39 @@ export function BadgeEditor({
 
       {/* Form */}
       <div className="space-y-6">
-        <Card title="Artwork" hint="An engraved seal - a slate plate, a brushed-metal tier rim, and one mint glyph. Composed natively, crisp at any size.">
+        <Card title="Artwork" hint="A flat Sigil - a duotone theme fill, concentric tier rings, a tier-climbing shape, and one glyph. Composed natively, crisp at any size.">
           <GlyphPicker glyph={glyph} setGlyph={setGlyph} />
-          <Swatches label="Tier (metal rim)">
+          <Swatches label="Theme (colour)">
+            {THEMES.map((t) => (
+              <SwatchButton
+                key={t}
+                selected={theme === t}
+                onClick={() => setTheme(t)}
+                title={THEME_LABELS[t]}
+                style={{ background: SIGIL_THEME[t] }}
+                label={t}
+              />
+            ))}
+          </Swatches>
+          <Swatches label="Tier (rings + frame)">
             {TIERS.map((t) => (
               <SwatchButton
                 key={t}
                 selected={tier === t}
                 onClick={() => setTier(t)}
                 title={t}
-                style={{ background: `linear-gradient(135deg, ${TIER_RING[t].join(", ")})` }}
+                style={{ background: `linear-gradient(135deg, ${SIGIL_FRAME[t].join(", ")})` }}
                 label={t}
               />
             ))}
           </Swatches>
-          <Field label="Glyph colour override (optional)" hint="6-digit hex, e.g. 5BE4C3. Replaces the default mint glyph. Leave blank for mint.">
-            <Input value={tintHex} onChange={(e) => setTintHex(e.target.value)} placeholder="leave blank for mint" />
+          <ShapePicker
+            shape={shape} setShape={setShape} tier={tier}
+            glyph={glyph} theme={theme} effect={effect} tintHex={tintHex}
+          />
+          <EffectPicker effect={effect} setEffect={setEffect} tier={tier} />
+          <Field label="Glyph colour override (optional)" hint="6-digit hex, e.g. 5BE4C3. Replaces the theme colour of the glyph + fill. Leave blank to use the theme.">
+            <Input value={tintHex} onChange={(e) => setTintHex(e.target.value)} placeholder="leave blank for theme colour" />
           </Field>
         </Card>
 
@@ -258,8 +275,85 @@ function GlyphPicker({ glyph, setGlyph }: { glyph: string; setGlyph: (g: string)
 }
 
 function GlyphMini({ sf }: { sf: string }) {
-  // Render via the medallion's lucide map by drawing a tiny neutral seal.
-  return <BadgeMedallion spec={{ glyph: sf, tier: "silver" }} size={26} />;
+  // Render via the medallion's lucide map by drawing a tiny neutral sigil.
+  return <BadgeMedallion spec={{ glyph: sf, tier: "silver", theme: "slate" }} size={26} />;
+}
+
+// ── Shape + effect pickers ──────────────────────────────────────────
+
+function ShapePicker({
+  shape, setShape, tier, glyph, theme, effect, tintHex,
+}: {
+  shape: BadgeShape;
+  setShape: (s: BadgeShape) => void;
+  tier: BadgeTier;
+  glyph: string;
+  theme: BadgeTheme;
+  effect: BadgeEffect;
+  tintHex: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">
+        Shape
+        <span className="ml-1 font-normal text-ink-3">
+          · {SHAPE_LABELS[TIER_DEFAULT_SHAPE[tier]].toLowerCase()} suits {cap(tier)}
+        </span>
+      </Label>
+      <div className="flex flex-wrap gap-2">
+        {SHAPES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            title={SHAPE_LABELS[s]}
+            onClick={() => setShape(s)}
+            className={cn(
+              "flex flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors hover:border-brand/50",
+              shape === s ? "border-brand ring-1 ring-brand/40" : "border-rule/70",
+            )}
+          >
+            <BadgeMedallion spec={{ glyph, theme, tint_hex: tintHex || null, tier, shape: s, effect }} size={40} />
+            <span className="text-[9px] uppercase tracking-wide text-ink-2">{SHAPE_LABELS[s]}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EffectPicker({
+  effect, setEffect, tier,
+}: {
+  effect: BadgeEffect;
+  setEffect: (e: BadgeEffect) => void;
+  tier: BadgeTier;
+}) {
+  const resolved = resolveEffect(effect, tier);
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">Effect</Label>
+      <div className="flex flex-wrap gap-1.5">
+        {EFFECTS.map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => setEffect(e)}
+            className={cn(
+              "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors hover:border-brand/50",
+              effect === e ? "border-brand bg-brand/10 text-brand ring-1 ring-brand/40" : "border-rule/70 text-ink-2",
+            )}
+          >
+            {EFFECT_LABELS[e]}
+          </button>
+        ))}
+      </div>
+      {resolved !== effect && (
+        <p className="text-[11px] text-amber">
+          Renders as <b>{EFFECT_LABELS[resolved]}</b> at {cap(tier)} tier — flair climbs with rarity.
+        </p>
+      )}
+    </div>
+  );
 }
 
 // ── Criteria builder ────────────────────────────────────────────────
