@@ -53,9 +53,9 @@ export function VestigeAppIcon({ size = 40 }: { size?: number }) {
       aria-hidden
     >
       <svg width={size * 0.58} height={size * 0.58} viewBox="0 0 100 100" fill="none">
-        <rect x="45" y="16" width="5.5" height="68" rx="2.75" fill="#0E1822" />
-        <path d="M50.5 18 L83 30 L50.5 42 Z" fill="#0E1822" />
-        <ellipse cx="50" cy="87" rx="23" ry="5" fill="#0E1822" opacity="0.3" />
+        <rect x="45" y="16" width="5.5" height="68" rx="2.75" fill="#06231C" />
+        <path d="M50.5 18 L83 30 L50.5 42 Z" fill="#06231C" />
+        <ellipse cx="50" cy="87" rx="23" ry="5" fill="#06231C" opacity="0.3" />
       </svg>
     </div>
   );
@@ -123,17 +123,17 @@ export function VestigeInboxRow({
       style={{ ...SF, background: "rgba(20,34,53,0.92)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)" }}
     >
       <div
-        className="flex size-9 shrink-0 items-center justify-center rounded-xl text-[#0E1822]"
+        className="flex size-9 shrink-0 items-center justify-center rounded-xl text-[#06231C]"
         style={{ background: "linear-gradient(145deg,#5BE4C3,#8FE85B)" }}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p style={{ fontSize: 14, color: "#F3F0E5", lineHeight: 1.35 }}>{title.trim() ? boldSegments(title) : "Vestige"}</p>
+        <p style={{ fontSize: 14, color: "#F2EFE6", lineHeight: 1.35 }}>{title.trim() ? boldSegments(title) : "Vestige"}</p>
         {stripStars(body) && (
-          <p style={{ fontSize: 12.5, color: "rgba(243,240,229,0.55)", lineHeight: 1.35 }}>{stripStars(body)}</p>
+          <p style={{ fontSize: 12.5, color: "rgba(242,239,230,0.55)", lineHeight: 1.35 }}>{stripStars(body)}</p>
         )}
-        <p style={{ fontSize: 10, letterSpacing: 0.4, color: "rgba(243,240,229,0.35)" }} className="mt-0.5 uppercase">
+        <p style={{ fontSize: 10, letterSpacing: 0.4, color: "rgba(242,239,230,0.35)" }} className="mt-0.5 uppercase">
           now
         </p>
       </div>

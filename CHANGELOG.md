@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-07-06 — Design-system pass: fonts + palette + atmosphere to spec
+
+Full brand-alignment sweep bringing The Bunker up to the canonical Vestige
+design system (`Vestige Design System/DESIGN-SYSTEM.md`, extracted from the
+live iOS codebase 2026-07-06). The dashboard is fully token-driven, so the
+fix lands centrally in `globals.css` + `layout.tsx` and propagates to every
+page; a small sweep then corrects the hand-tuned iOS-preview mockups.
+
+- **Fonts → Manrope, everywhere.** Dropped Inter (UI) and DM Sans (headings)
+  — the spec forbids substituting a third typeface and mandates Manrope as
+  the single brand face for all web display *and* UI (§7). One `next/font`
+  Manrope instance now feeds `--font-display`; `globals.css` aliases
+  `--font-sans` / `--font-heading` / `--font-hero` to it, so every surface
+  (rows, headings, hero numerals, the wordmark) renders Manrope. JetBrains
+  Mono is retained only for tabular technical readouts (kbd chips, status
+  lines), not as a text face.
+- **Colour tokens → canonical values (§4).** Corrected the surface/ink/brand
+  set that had drifted: `Surface #070A10` (was `#0E1822`), `SurfaceRaised
+  #0C1220` (was `#131F2B`), `SurfaceSunken #0A1626`; ink `#F2EFE6` /
+  secondary `#9DA9B6` / tertiary `#66717E`; `OnAccent #06231C` (was
+  `#0A1A22`); `Border` hairline at 12%. Added the missing tokens the spec
+  calls for — `--brand-ink` (AccentInk), `--accent-soft`, `--on-bucket`, the
+  atmosphere trio, the sea/county-completion ramp, and the elevation-shadow
+  colours — and exposed the useful ones as Tailwind utilities. Swapped the
+  off-palette "sand" chart stop for ocean `Sea3`.
+- **Atmosphere → blue (§6).** Replaced the off-spec **mint** body glow — a
+  direct violation of "mint never appears in the atmosphere" — with the
+  design system's blue three-layer atmosphere (top glow + floor wash +
+  vignette), the blue soul of every Vestige canvas. Vignette dialled back
+  from the phone spec (0.55 → 0.42) for a wide, edge-to-edge data tool.
+  Calmed `.surface-aurora` from two competing accents (mint + saturated
+  info-blue) to a single mint hero moment over the blue atmosphere tone.
+- **Preview + BrandMark sweep.** Brought the hand-tuned hardcoded hex in the
+  iOS-preview mockups (announcements, badges, notifications) and the login
+  `BrandMark` up to spec surface/ink/OnAccent values so they mirror the real
+  app. Left correct brand gradient stops and badge duotone theme palettes
+  untouched.
+- No schema/data/deps change — presentation only. Verified `tsc` + `eslint`
+  + `next build` clean.
+
 ## 2026-07-02 — Badge "Sigil" renderer + six-axis authoring
 
 The badge preview and editor moved from the June **engraved-seal** look (tier

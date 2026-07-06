@@ -223,19 +223,19 @@ function PreviewCard({
       <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
         Live preview
       </h3>
-      <div className="flex flex-col items-center gap-3 rounded-xl bg-[#0E1822] p-6">
+      <div className="flex flex-col items-center gap-3 rounded-xl bg-[#070A10] p-6">
         <BadgeMedallion spec={spec} size={132} />
-        <p className="text-center font-heading text-sm font-semibold text-[#F3F0E5]">{name}</p>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0C2]">{tier}</span>
+        <p className="text-center font-heading text-sm font-semibold text-[#F2EFE6]">{name}</p>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9DA9B6]">{tier}</span>
       </div>
-      <div className="flex items-center justify-around rounded-xl bg-[#0E1822] p-4">
+      <div className="flex items-center justify-around rounded-xl bg-[#070A10] p-4">
         <div className="flex flex-col items-center gap-1.5">
           <BadgeMedallion spec={spec} size={64} earned={false} progress={0.62} isManual={isManual} />
-          <span className="text-[10px] text-[#9BB0C2]">{isManual ? "Locked" : "In progress"}</span>
+          <span className="text-[10px] text-[#9DA9B6]">{isManual ? "Locked" : "In progress"}</span>
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <BadgeMedallion spec={spec} size={48} />
-          <span className="text-[10px] text-[#9BB0C2]">Grid</span>
+          <span className="text-[10px] text-[#9DA9B6]">Grid</span>
         </div>
       </div>
     </section>

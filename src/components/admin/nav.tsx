@@ -217,7 +217,7 @@ export function BrandMark({ className }: { className?: string }) {
       )}
       style={{
         background:
-          "linear-gradient(135deg, #0E1822 0%, #1A2F3F 60%, color-mix(in oklab, var(--brand) 60%, #1A2F3F) 100%)",
+          "linear-gradient(135deg, #070A10 0%, #1B2D42 60%, color-mix(in oklab, var(--brand) 60%, #1B2D42) 100%)",
       }}
     >
       <svg

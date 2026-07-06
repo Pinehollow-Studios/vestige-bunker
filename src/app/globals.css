@@ -63,9 +63,17 @@
   /* Brand tokens, exposed as Tailwind colors so utilities like
      `bg-brand`, `text-brand-deep`, `bg-paper-sunken` work. */
   --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
   --color-brand-deep: var(--brand-deep);
   --color-brand-soft: var(--brand-soft);
   --color-brand-fg: var(--brand-fg);
+  --color-on-bucket: var(--on-bucket);
+  --color-sea-1: var(--sea-1);
+  --color-sea-2: var(--sea-2);
+  --color-sea-3: var(--sea-3);
+  --color-ramp-moss: var(--ramp-moss);
+  --color-ramp-pine: var(--ramp-pine);
+  --color-ramp-peak: var(--ramp-peak);
   --color-paper: var(--paper);
   --color-paper-raised: var(--paper-raised);
   --color-paper-sunken: var(--paper-sunken);
@@ -91,32 +99,70 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ---------- Default (dark): Atlas ocean ---------- */
+/* ---------- Default (dark): Vestige canvas ----------
+   Every value below is a canonical token from the iOS design system
+   (Vestige Design System/DESIGN-SYSTEM.md · vestige-colors.css). Dark is
+   the brand default; this dashboard is dark-only. */
 :root {
-  /* Surfaces - keyed to iOS Atlas Paper / PaperRaised / PaperSunken. */
-  --paper:        #0E1822;
-  --paper-raised: #131F2B;
-  --paper-sunken: #0A1118;
+  /* Fonts — Manrope is the single brand face (design system §7). One
+     next/font instance sets --font-display; alias the rest to it so every
+     surface (UI + headings + hero numerals) renders Manrope. Mono is kept
+     only for tabular technical readouts. */
+  --font-sans:    var(--font-display), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-hero:    var(--font-display), ui-sans-serif, system-ui, sans-serif;
 
-  /* Text - warm cream, mirroring Atlas Ink. */
-  --ink:          #F3F0E5;
-  --ink-2:        #A8B3C0;
-  --ink-3:        #6E7A89;
+  /* Surfaces — iOS Surface / SurfaceRaised / SurfaceSunken (spec §4.2).
+     Premium near-black with blue soul; cards are separated by hairline
+     rules + the atmosphere, not big luminance jumps. */
+  --paper:        #070A10; /* Surface */
+  --paper-raised: #0C1220; /* SurfaceRaised — solid card / sheet base */
+  --paper-sunken: #0A1626; /* SurfaceSunken — input rests, grooves, wells */
 
-  --rule:         rgba(255, 255, 255, 0.10);
+  /* Text — dark-mode primary is a warm cream, not white (spec §4.3). */
+  --ink:          #F2EFE6; /* TextPrimary */
+  --ink-2:        #9DA9B6; /* TextSecondary */
+  --ink-3:        #66717E; /* TextTertiary — AA-Large & fills only */
 
-  /* Brand = Atlas mint. Mirrors iOS Accent + marketing-site --accent. */
-  --brand:        #5BE4C3;
-  --brand-deep:   #2FB89A; /* mint, pressed/darker - used for nav active fg */
-  --brand-soft:   #8FE85B; /* lime gradient pair, never solo */
-  --brand-fg:     #0A1A22; /* near-black for text on mint fills */
+  /* Lines (spec §4.2). */
+  --rule:         rgba(255, 255, 255, 0.10); /* Separator */
+  --rule-strong:  rgba(255, 255, 255, 0.18); /* SeparatorStrong */
+  --hairline:     rgba(255, 255, 255, 0.12); /* Border on glass surfaces */
 
-  /* Secondary signals - amber for bucket-list/achievement, claret for alert. */
+  /* Brand — the one accent: mint (spec §4.4). Mint as *text/icon* is
+     --brand-ink; flat --brand is fill-only. In dark they coincide. */
+  --brand:        #5BE4C3; /* Accent — fill only */
+  --brand-ink:    #5BE4C3; /* AccentInk — mint text/icon (dark) */
+  --brand-deep:   #2FB89A; /* pressed/hover mint (in-family extension) */
+  --brand-soft:   #8FE85B; /* Lime — 2nd gradient stop, never solo */
+  --brand-fg:     #06231C; /* OnAccent — ink drawn on mint fills / gradient */
+  --accent-soft:  rgba(91, 228, 195, 0.14); /* AccentSoft — chip/badge wash */
+
+  /* Status (spec §4.5) — amber = Bucket/achievement, claret = Alert. */
   --amber:        #F4A85C;
+  --on-bucket:    #3D2308;
   --claret:       #E2664E;
   --info:         #5B9BE4;
   --alert:        var(--claret);
   --bucket:       var(--amber);
+
+  /* Atmosphere — the blue soul (spec §4.6 / §6). Mint never appears here. */
+  --atmosphere-glow:     rgba(62, 116, 176, 0.20);
+  --atmosphere-wash:     rgba(27, 45, 66, 0.22);
+  --atmosphere-vignette: rgba(0, 0, 0, 0.55);
+
+  /* Map & county-completion ramp (spec §4.7): ocean → moss → pine → peak → mint. */
+  --sea-1: #070A10;
+  --sea-2: #1B2D42;
+  --sea-3: #26405E;
+  --ramp-moss: #7BB47A;
+  --ramp-pine: #2D7A3F;
+  --ramp-peak: #1A4D2E;
+
+  /* Elevation shadow colours (spec §4.8). */
+  --shadow-resting:  rgba(0, 0, 0, 0.35);
+  --shadow-floating: rgba(0, 0, 0, 0.60);
+  --shadow-modal:    rgba(0, 0, 0, 0.70);
 
   /* shadcn aliases */
   --background:           var(--paper);
@@ -142,13 +188,13 @@
 
   --destructive:          var(--alert);
 
-  --border:               var(--rule);
+  --border:               var(--hairline);
   --input:                color-mix(in oklab, var(--rule) 75%, transparent);
   --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 
   /* Chart ramp keyed to the iOS county-completion ramp:
      sand → moss → pine → peak → mint. */
-  --chart-1: #E9D2A4; /* sand */
+  --chart-1: #26405E; /* sea3 - ocean base of the completion ramp */
   --chart-2: #7BB47A; /* moss */
   --chart-3: #2D7A3F; /* pine */
   --chart-4: #1A4D2E; /* peak */
@@ -172,26 +218,46 @@
    The light "almanac" theme + toggle were removed 2026-06-07. `.dark` is kept
    as an alias of :root only so any stray next-themes class is a no-op. */
 .dark {
-  --paper:        #0E1822;
-  --paper-raised: #131F2B;
-  --paper-sunken: #0A1118;
+  --paper:        #070A10;
+  --paper-raised: #0C1220;
+  --paper-sunken: #0A1626;
 
-  --ink:          #F3F0E5;
-  --ink-2:        #A8B3C0;
-  --ink-3:        #6E7A89;
+  --ink:          #F2EFE6;
+  --ink-2:        #9DA9B6;
+  --ink-3:        #66717E;
 
   --rule:         rgba(255, 255, 255, 0.10);
+  --rule-strong:  rgba(255, 255, 255, 0.18);
+  --hairline:     rgba(255, 255, 255, 0.12);
 
   --brand:        #5BE4C3;
+  --brand-ink:    #5BE4C3;
   --brand-deep:   #2FB89A;
   --brand-soft:   #8FE85B;
-  --brand-fg:     #0A1A22;
+  --brand-fg:     #06231C;
+  --accent-soft:  rgba(91, 228, 195, 0.14);
 
   --amber:        #F4A85C;
+  --on-bucket:    #3D2308;
   --claret:       #E2664E;
   --info:         #5B9BE4;
   --alert:        var(--claret);
   --bucket:       var(--amber);
+
+  --atmosphere-glow:     rgba(62, 116, 176, 0.20);
+  --atmosphere-wash:     rgba(27, 45, 66, 0.22);
+  --atmosphere-vignette: rgba(0, 0, 0, 0.55);
+
+  --sea-1: #070A10;
+  --sea-2: #1B2D42;
+  --sea-3: #26405E;
+  --ramp-moss: #7BB47A;
+  --ramp-pine: #2D7A3F;
+  --ramp-peak: #1A4D2E;
+
+  --shadow-resting:  rgba(0, 0, 0, 0.35);
+  --shadow-floating: rgba(0, 0, 0, 0.60);
+  --shadow-modal:    rgba(0, 0, 0, 0.70);
 
   --background:           var(--paper);
   --foreground:           var(--ink);
@@ -216,7 +282,7 @@
 
   --destructive:          var(--alert);
 
-  --border:               var(--rule);
+  --border:               var(--hairline);
   --input:                color-mix(in oklab, var(--rule) 75%, transparent);
   --ring:                 color-mix(in oklab, var(--brand) 60%, transparent);
 
@@ -243,10 +309,13 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Atlas atmosphere - one faint static mint glow + a touch of amber warmth,
-     pinned behind everything on a fixed layer so it never repaints on scroll
-     (the old `background-attachment: fixed` on <body> was a scroll-jank source).
-     A whisper, not a light show - calm enough to sit behind dense data all day. */
+  /* The atmosphere (design system §6) — the blue soul of every Vestige
+     canvas. Three stacked radials: a top glow (the dominant blue feeling),
+     a floor wash so the canvas never reads dead flat, and a vignette that
+     frames the content. Mint NEVER appears in the atmosphere — it is an
+     accent, not ambience. Pinned to a fixed layer behind everything so it
+     never repaints on scroll. The vignette is dialled back from the phone
+     spec (0.55 → 0.42) for a wide, edge-to-edge data tool. */
   body::before {
     content: "";
     position: fixed;
@@ -254,8 +323,9 @@
     z-index: -1;
     pointer-events: none;
     background-image:
-      radial-gradient(58% 44% at 50% -10%, color-mix(in oklab, var(--brand) 6%, transparent) 0%, transparent 70%),
-      radial-gradient(52% 44% at 106% 106%, color-mix(in oklab, var(--amber) 4%, transparent) 0%, transparent 70%);
+      radial-gradient(120% 65% at 50% 0%,   var(--atmosphere-glow), transparent 70%),
+      radial-gradient(120% 60% at 50% 100%, var(--atmosphere-wash), transparent 70%),
+      radial-gradient(90% 90% at 50% 50%,   transparent 55%, color-mix(in oklab, var(--atmosphere-vignette) 76%, transparent));
   }
   html {
     @apply font-sans;
@@ -347,8 +417,8 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(140% 90% at 90% 10%, color-mix(in oklab, var(--brand) 30%, transparent) 0%, transparent 55%),
-    radial-gradient(120% 80% at 0% 90%, color-mix(in oklab, var(--info) 22%, transparent) 0%, transparent 60%),
+    radial-gradient(140% 90% at 90% 10%, color-mix(in oklab, var(--brand) 24%, transparent) 0%, transparent 55%),
+    radial-gradient(120% 80% at 0% 90%, color-mix(in oklab, var(--atmosphere-glow) 90%, transparent) 0%, transparent 60%),
     linear-gradient(135deg, var(--paper-sunken) 0%, var(--paper-raised) 60%, var(--paper-raised) 100%);
   border: 1px solid color-mix(in oklab, white 8%, transparent);
 }

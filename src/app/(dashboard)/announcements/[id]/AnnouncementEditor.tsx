@@ -286,33 +286,33 @@ function PreviewCard({
         className="flex items-center justify-center rounded-xl p-4"
         style={{
           background:
-            "radial-gradient(circle at 50% 30%, #16242F 0%, #0A1218 80%)",
+            "radial-gradient(circle at 50% 30%, #0C1220 0%, #070A10 80%)",
         }}
       >
-        {/* The pop-up card - dark glass, mint eyebrow, serif title. */}
-        <div className="w-full max-w-[280px] overflow-hidden rounded-2xl border border-white/10 bg-[#101D27] shadow-2xl">
+        {/* The pop-up card - dark glass, mint eyebrow, Manrope title. */}
+        <div className="w-full max-w-[280px] overflow-hidden rounded-2xl border border-white/10 bg-[#0C1220] shadow-2xl">
           {heroURL && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={heroURL} alt="" className="h-28 w-full object-cover" />
           )}
-          <div className="space-y-3 p-5 text-[#F3F0E5]">
+          <div className="space-y-3 p-5 text-[#F2EFE6]">
             {eyebrow.trim() && (
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5BE4C3]">
                 {eyebrow}
               </p>
             )}
-            <p className="font-heading text-lg font-semibold leading-tight text-[#F3F0E5]">
+            <p className="font-heading text-lg font-semibold leading-tight text-[#F2EFE6]">
               {title || "Untitled announcement"}
             </p>
             {body.trim() && (
-              <p className="text-[13px] leading-relaxed text-[#C7D2D9]">{body}</p>
+              <p className="text-[13px] leading-relaxed text-[#9DA9B6]">{body}</p>
             )}
             {highlights.filter((h) => h.trim()).length > 0 && (
               <ul className="space-y-1.5">
                 {highlights
                   .filter((h) => h.trim())
                   .map((h, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#E4EBEE]">
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#F2EFE6]">
                       <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-[#5BE4C3]" />
                       <span>{h}</span>
                     </li>
@@ -323,7 +323,7 @@ function PreviewCard({
               <button
                 type="button"
                 disabled
-                className="w-full rounded-full py-2.5 text-center text-sm font-semibold text-[#0A1218]"
+                className="w-full rounded-full py-2.5 text-center text-sm font-semibold text-[#06231C]"
                 style={{ background: "linear-gradient(135deg, #5BE4C3, #8FE85B)" }}
               >
                 {primaryLabel}
@@ -332,7 +332,7 @@ function PreviewCard({
                 <button
                   type="button"
                   disabled
-                  className="w-full py-1 text-center text-[13px] font-medium text-[#8FA0AB]"
+                  className="w-full py-1 text-center text-[13px] font-medium text-[#9DA9B6]"
                 >
                   {dismissLabel || "Got it"}
                 </button>

@@ -537,3 +537,19 @@ canonical write-up lives on disk.
   *raised* (`cmpVersion`; the lock-out case), and the **Vestige Index rarity-swing
   Apply** confirms before recomputing every ranking (the harmless "Recompute now"
   stays one-click). Verified `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-07-06** — Design-system pass: fonts + palette + atmosphere brought up
+  to the canonical Vestige design system (`Vestige Design System/DESIGN-SYSTEM.md`,
+  extracted from the live iOS app). The dashboard is token-driven, so the fix is
+  central. **Fonts → Manrope everywhere** (dropped Inter + DM Sans; the spec bans
+  a third typeface — one Manrope `--font-display` instance, with `--font-sans`/
+  `-heading`/`-hero` aliased to it; JetBrains Mono kept only for tabular
+  readouts). **Colour tokens → canonical §4 values** (Surface `#070A10`,
+  SurfaceRaised `#0C1220`, SurfaceSunken `#0A1626`, ink `#F2EFE6`/`#9DA9B6`/
+  `#66717E`, OnAccent `#06231C`, 12% Border; added `--brand-ink`, `--accent-soft`,
+  `--on-bucket`, atmosphere/sea-ramp/shadow tokens; "sand" chart stop → ocean
+  Sea3). **Atmosphere → blue** (§6) — replaced the off-spec **mint** body glow
+  ("mint never appears in the atmosphere") with the three-layer blue atmosphere
+  (vignette eased 0.55→0.42 for a wide tool); calmed `.surface-aurora` to one mint
+  accent over blue. Swept stale hardcoded surface/ink hex in the iOS previews +
+  login `BrandMark` to spec. Presentation only, no schema/data/deps. Verified
+  `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
