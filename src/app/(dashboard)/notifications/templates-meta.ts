@@ -57,6 +57,17 @@ export const TEMPLATE_KINDS: TemplateKindMeta[] = [
     defaults: { pushTitle: "Your round", pushBody: "{name} commented on your round", inboxTitle: "*{name}* commented on your round", inboxBody: "{comment}" },
   },
   {
+    kind: "badge_commented",
+    label: "Comment on your badge",
+    category: "Social",
+    tokens: [
+      NAME,
+      { token: "comment", sample: "Well earned!", desc: "The comment text" },
+      { token: "badge", sample: "Centurion", desc: "The badge name" },
+    ],
+    defaults: { pushTitle: "Your badge", pushBody: "{name} commented on your badge", inboxTitle: "*{name}* commented on your badge", inboxBody: "{comment}" },
+  },
+  {
     kind: "partner_tagged",
     label: "Tagged in a round",
     category: "Social",
