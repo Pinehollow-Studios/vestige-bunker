@@ -1,5 +1,6 @@
 import { CalendarClock, Clock, Hash, ListChecks, MapPin } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
+import { ShelvedNotice } from "@/components/admin/ShelvedNotice";
 import { Badge } from "@/components/ui/badge";
 import { activeStorageBaseUrl, tryCreateServiceClient } from "@/lib/supabase/admin";
 import { avatarURL, listCoverURL } from "@/lib/storage";
@@ -183,6 +184,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <SectionHeader eyebrow="Operations · review" title="List verification" />
+      <ShelvedNotice feature="Community lists" />
       {children}
     </div>
   );

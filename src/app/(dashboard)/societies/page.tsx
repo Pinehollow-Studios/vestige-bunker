@@ -1,4 +1,5 @@
 import { SectionHeader } from "@/components/admin/SectionHeader";
+import { ShelvedNotice } from "@/components/admin/ShelvedNotice";
 import { createClient } from "@/lib/supabase/server";
 import { NewModeButton } from "./NewModeButton";
 import { ModeCard } from "./ModeCard";
@@ -19,6 +20,8 @@ export default async function SocietyModesPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <SectionHeader eyebrow="Editorial" title="Society modes" actions={<NewModeButton />} />
+
+      <ShelvedNotice feature="Societies" />
 
       {error ? (
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">

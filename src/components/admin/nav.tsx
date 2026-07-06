@@ -40,6 +40,14 @@ export type NavItem = {
   label: string;
   icon: LucideIcon;
   countKey?: string;
+  /**
+   * The feature is shelved from the live iOS build (behind an
+   * `AppConfig.*Enabled = false` flag — see the app's
+   * `docs/beta-1-scope-shelving.md`). The row stays clickable (the data +
+   * tooling are still live for inspection) but renders dimmed with a
+   * "Shelved" pill instead of a count, so it's obvious it isn't user-facing.
+   */
+  shelved?: boolean;
 };
 
 type NavGroup = { label?: string; items: NavItem[] };
@@ -56,7 +64,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/announcements", label: "Announcements", icon: Megaphone, countKey: "announcements" },
       { href: "/notifications", label: "Notifications", icon: Send },
       { href: "/emails", label: "Emails", icon: Mail },
-      { href: "/societies", label: "Societies", icon: Flag },
+      { href: "/societies", label: "Societies", icon: Flag, shelved: true },
     ],
   },
   {
@@ -69,7 +77,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
       { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
       { href: "/users", label: "Users", icon: Users, countKey: "users" },
-      { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification" },
+      { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification", shelved: true },
       { href: "/app-version", label: "App version", icon: Smartphone },
       { href: "/sync", label: "Sync", icon: RefreshCw },
     ],
@@ -135,13 +143,17 @@ function NavRow({
     <li>
       <Link
         href={item.href}
-        title={item.label}
+        title={item.shelved ? `${item.label} (shelved from the live build)` : item.label}
         onClick={onNavigate}
         className={cn(
           "nav-row group/nav relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
           active
             ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
             : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
+          // Shelved features are dimmed so they read as "not in the live build"
+          // without being hidden — an admin can still open them to inspect the
+          // dormant data. Hover lifts the dim back toward legible.
+          item.shelved && !active && "opacity-45 hover:opacity-75",
         )}
       >
         {active && (
@@ -151,9 +163,17 @@ function NavRow({
           className={cn("size-4 shrink-0", active ? "text-brand" : "text-ink-3 group-hover/nav:text-ink-2")}
         />
         <span className="nav-label min-w-0 flex-1 truncate">{item.label}</span>
-        <NavCount count={count} active={active} />
+        {item.shelved ? <NavShelvedBadge /> : <NavCount count={count} active={active} />}
       </Link>
     </li>
+  );
+}
+
+function NavShelvedBadge() {
+  return (
+    <span className="nav-count shrink-0 rounded-full border border-border px-1.5 py-px text-center text-[9px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+      Shelved
+    </span>
   );
 }
 
