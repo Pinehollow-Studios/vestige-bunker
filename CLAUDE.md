@@ -581,3 +581,20 @@ canonical write-up lives on disk.
   editor uses it now; migrating the broadcast editor onto it is a follow-up).
   Migrations reach prod via iOS `prod-deploy`; a real Resend send is Tom-to-verify
   once secrets land. Verified `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-07-11** — Pro-console polish pass (research-informed: Linear/Retool/Notion
+  internal-tool patterns) to make The Bunker feel like the terminal Jack runs all
+  his Vestige work from. **Phase 1 — keyboard-first shell**: new
+  `KeyboardShortcuts` (`g`-then-key go-to nav via `lib/nav-shortcuts.ts`, `?`
+  overlay, recent-page tracking) + `:focus-visible` mint ring + thin scrollbars;
+  `CommandPalette` gains Recent + Create (New email/notification) groups;
+  `PageContext` breadcrumb now nav-derived + linked + friendly detail label; new
+  `ui/kbd.tsx`, `admin/EmptyState.tsx`, dashboard `error.tsx`/`not-found.tsx`.
+  **Phase 2a — one container**: `components/admin/PageShell.tsx` (`pageShell()`
+  recipe) — width vocabulary (narrow/content/wide/full) + one `space-y-6` rhythm,
+  swept across ~26 pages (widths mapped from old values). **Phase 2b — unify**:
+  one tab visual (`components/admin/Tabs.tsx` — PageTabs + feedback + analytics);
+  eyebrow taxonomy normalised to the two nav groups (Editorial/Operations); four
+  local `EmptyState`s folded onto the shared one. Held (need Tom's eyes / behavior
+  risk): per-page density tuning, toolbar *mechanism* unification (visuals already
+  consistent). Presentation only, all shipped to prod via Vercel. Verified
+  `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
