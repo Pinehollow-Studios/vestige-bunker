@@ -5,13 +5,20 @@ import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
 import {
   ArrowRight,
+  Clock,
   CornerDownLeft,
   FlaskConical,
   LogOut,
+  Mail,
+  Plus,
   Search,
+  Send,
 } from "lucide-react";
 import { NAV_GROUPS } from "@/components/admin/nav";
+import { readRecent, type RecentPage } from "@/lib/nav-shortcuts";
 import { setEnv, signOut } from "@/app/(dashboard)/actions";
+import { createDraftEmail } from "@/app/(dashboard)/emails/campaigns/actions";
+import { createDraftBroadcast } from "@/app/(dashboard)/notifications/actions";
 import type { AdminEnvKey } from "@/lib/supabase/env";
 import type { SearchGroup } from "@/app/api/search/route";
 
@@ -39,6 +46,7 @@ export function CommandPalette({
   const [query, setQuery] = useState("");
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recent, setRecent] = useState<RecentPage[]>([]);
   const [, startTransition] = useTransition();
   const reqId = useRef(0);
   const openRef = useRef(false);
@@ -48,6 +56,13 @@ export function CommandPalette({
     setQuery("");
     setGroups([]);
     setLoading(false);
+  }, []);
+
+  // Open the palette and refresh the recent-pages list at the same moment
+  // (no open→effect→setState cascade).
+  const openPalette = useCallback(() => {
+    setRecent(readRecent());
+    setOpen(true);
   }, []);
 
   // Mirror `open` into a ref so the (deps-free) key handler reads it fresh.
@@ -61,19 +76,19 @@ export function CommandPalette({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         if (openRef.current) close();
-        else setOpen(true);
+        else openPalette();
       } else if (e.key === "Escape") {
         close();
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = () => openPalette();
     window.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_COMMAND_EVENT, onOpen);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(OPEN_COMMAND_EVENT, onOpen);
     };
-  }, [close]);
+  }, [close, openPalette]);
 
   // Debounced server search. Every state write happens inside the timer
   // callback (async) - never synchronously in the effect body.
@@ -118,6 +133,12 @@ export function CommandPalette({
     ? NAV.filter((n) => n.label.toLowerCase().includes(ql) || n.href.includes(ql))
     : NAV;
 
+  const CREATE = [
+    { key: "email", label: "New email", icon: Mail, run: createDraftEmail },
+    { key: "notification", label: "New notification", icon: Send, run: createDraftBroadcast },
+  ];
+  const createMatches = ql ? CREATE.filter((c) => c.label.toLowerCase().includes(ql)) : CREATE;
+
   return (
     <div
       className="fixed inset-0 z-50 bg-paper-sunken/70 backdrop-blur-sm"
@@ -146,6 +167,40 @@ export function CommandPalette({
             <Command.Empty className="px-3 py-8 text-center text-sm text-ink-3">
               {ql.length >= 2 && !loading ? "No matches." : "Type to search."}
             </Command.Empty>
+
+            {!ql && recent.length > 0 && (
+              <Group label="Recent">
+                {recent.map((r) => (
+                  <Item key={r.href} value={`recent:${r.href}`} onSelect={() => go(r.href)}>
+                    <Clock aria-hidden className="size-4 shrink-0 text-ink-3" />
+                    <span className="flex-1 truncate">{r.label}</span>
+                    <ArrowRight aria-hidden className="size-3.5 shrink-0 text-ink-3 opacity-0 group-data-[selected=true]/item:opacity-100" />
+                  </Item>
+                ))}
+              </Group>
+            )}
+
+            {createMatches.length > 0 && (
+              <Group label="Create">
+                {createMatches.map((c) => {
+                  const Icon = c.icon;
+                  return (
+                    <Item
+                      key={c.key}
+                      value={`create:${c.key}`}
+                      onSelect={() => {
+                        close();
+                        startTransition(() => void c.run());
+                      }}
+                    >
+                      <Icon aria-hidden className="size-4 shrink-0 text-brand" />
+                      <span className="flex-1">{c.label}</span>
+                      <Plus aria-hidden className="size-3.5 shrink-0 text-ink-3 opacity-0 group-data-[selected=true]/item:opacity-100" />
+                    </Item>
+                  );
+                })}
+              </Group>
+            )}
 
             {navMatches.length > 0 && (
               <Group label="Navigate">
@@ -213,9 +268,11 @@ export function CommandPalette({
               to navigate
             </span>
             <span className="flex items-center gap-1.5">
-              <CornerDownLeft aria-hidden className="size-3" /> to open
+              <CornerDownLeft aria-hidden className="size-3" /> open
               <span className="mx-1 text-ink-3/50">·</span>
-              <kbd className="kbd">esc</kbd> to close
+              <kbd className="kbd">esc</kbd> close
+              <span className="mx-1 text-ink-3/50">·</span>
+              <kbd className="kbd">?</kbd> shortcuts
             </span>
           </div>
         </Command>

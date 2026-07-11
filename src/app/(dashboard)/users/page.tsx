@@ -59,7 +59,7 @@ export default async function UsersPage({
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <SectionHeader
-          eyebrow="People &amp; safety · Users"
+          eyebrow="People & safety · Users"
           title="Users"
         />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
@@ -142,7 +142,7 @@ export default async function UsersPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
-        eyebrow="People &amp; safety · Users"
+        eyebrow="People & safety · Users"
         title="Users"
       />
 

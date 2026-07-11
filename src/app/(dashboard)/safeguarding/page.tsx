@@ -74,7 +74,7 @@ export default async function SafeguardingPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <SectionHeader
-        eyebrow="People &amp; safety · Safeguarding"
+        eyebrow="People & safety · Safeguarding"
         title="Safeguarding queue"
       />
 

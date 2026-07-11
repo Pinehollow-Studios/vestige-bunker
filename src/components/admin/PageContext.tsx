@@ -1,46 +1,38 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { detailLabel, sectionLabel } from "@/lib/nav-shortcuts";
 
-/** Section + sub-page label for the top bar, derived from the path. */
-const SECTION: Record<string, string> = {
-  "": "Overview",
-  curated: "Curated lists",
-  courses: "Courses",
-  badges: "Badges",
-  announcements: "Announcements",
-  changelog: "Changelog",
-  feedback: "Feedback",
-  photos: "Photos",
-  safeguarding: "Safeguarding",
-  crashes: "Crashes",
-  lists: "List verification",
-  users: "Users",
-  analytics: "Analytics",
-  "app-version": "App version",
-  sync: "Sync",
-};
-
+/**
+ * Top-bar breadcrumb. The section label is derived from the nav (single source
+ * of truth — never goes stale), and the section crumb links back to its list.
+ * On a detail route it appends a friendly sub-label (New / Import / Detail / …).
+ */
 export function PageContext() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const section = SECTION[segments[0] ?? ""] ?? "Dashboard";
-  const hasDetail = segments.length > 1;
+  const section = sectionLabel(pathname);
+  const sectionHref = segments.length ? `/${segments[0]}` : "/";
+  const detail = segments.length > 1 ? detailLabel(segments[segments.length - 1]) : null;
 
   return (
     <nav
       aria-label="Breadcrumb"
       className="flex min-w-0 max-w-[45vw] items-center gap-1.5 text-sm sm:max-w-none"
     >
-      <span className={cn("truncate", hasDetail ? "text-ink-3" : "font-medium text-ink")}>
-        {section}
-      </span>
-      {hasDetail && (
+      {detail ? (
+        <Link href={sectionHref} className="truncate text-ink-3 transition-colors hover:text-ink-2">
+          {section}
+        </Link>
+      ) : (
+        <span className="truncate font-medium text-ink">{section}</span>
+      )}
+      {detail && (
         <>
           <ChevronRight aria-hidden className="size-3.5 text-ink-3/60" />
-          <span className="truncate font-medium text-ink">Detail</span>
+          <span className="truncate font-medium text-ink">{detail}</span>
         </>
       )}
     </nav>

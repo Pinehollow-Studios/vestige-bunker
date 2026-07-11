@@ -354,6 +354,41 @@
     background: color-mix(in oklab, var(--brand) 30%, transparent);
     color: var(--ink);
   }
+
+  /* Crisp keyboard focus — a clear mint ring for keyboard users only, so
+     tabbing through the tool always shows where you are. Mouse clicks stay
+     ring-free. */
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--brand) 70%, transparent);
+    outline-offset: 2px;
+    border-radius: 5px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Thin, quiet scrollbars — the canvas is an instrument, not a document. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, white 14%, transparent) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, white 12%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, white 22%, transparent);
+    background-clip: content-box;
+  }
 }
 
 /* ---------- Decorative helpers ---------- */

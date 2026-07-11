@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-07-11 — Pro-console polish, phase 1: keyboard-first shell
+
+Research-informed pass (Linear / Retool / Notion internal-tool patterns) to make
+The Bunker feel like the terminal Jack runs all his Vestige work from. Focused on
+the shared frame + interaction model every page inherits, not per-page rewrites.
+
+- **Keyboard-first spine.** New `KeyboardShortcuts` (mounted once in the shell)
+  adds Linear-style **`g` then a key** go-to navigation (o/f/e/n/c/l/b/a/p/s/u,
+  documented in `lib/nav-shortcuts.ts`), a **`?` shortcuts overlay**, and records
+  visited sections for "Recent". Always-visible **`:focus-visible` mint ring** so
+  tabbing shows where you are.
+- **Command palette elevated** (`CommandPalette`): a **Recent** group (from
+  localStorage), a **Create** group (New email / New notification, straight into
+  the editor from anywhere), and a `?`-shortcuts hint in the footer.
+- **Breadcrumb fixed** (`PageContext`): section label now derives from the nav
+  (single source of truth — no more stale "Dashboard" for emails/notifications/
+  index/societies), links back to the section, and shows a friendly detail label
+  (New / Import / Detail) instead of a literal "Detail".
+- **Craft tokens** in `globals.css`: keyboard focus rings + thin, quiet
+  scrollbars (instrument, not a document).
+- **Shared primitives + robustness**: new `ui/kbd.tsx` (`Kbd`/`KbdChord`),
+  `admin/EmptyState.tsx` (canonical empty state), and dashboard-wide `error.tsx`
+  + `not-found.tsx` (no blank screens). Fixed a double-encoded `People &amp; safety`
+  eyebrow on Users/Safeguarding.
+
+Follow-ups (phase 2, tracked): adopt `EmptyState` + a shared page container
+across all routes, unify the three tab/toolbar patterns, per-page density passes.
+Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Hand-picked email recipients: roster picker with addresses
 
 The search-only individuals picker felt janky for email — you couldn't see who

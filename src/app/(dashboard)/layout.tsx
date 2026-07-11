@@ -4,6 +4,7 @@ import { FlaskConical } from "lucide-react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { TopBar } from "@/components/admin/TopBar";
 import { CommandPalette } from "@/components/admin/CommandPalette";
+import { KeyboardShortcuts } from "@/components/admin/KeyboardShortcuts";
 import { VaultGate } from "@/components/admin/VaultGate";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getDashboardCounts } from "@/lib/admin/counts";
@@ -37,8 +38,10 @@ export default async function DashboardLayout({
 
       {/* Everything the gate reveals — pulled into focus behind it as it clears. */}
       <div className="vault-reveal">
-        {/* ⌘K palette - mounted once, available on every surface. */}
+        {/* ⌘K palette + the global keyboard layer (g-nav, ? help) — mounted
+            once, available on every surface. */}
         <CommandPalette devSwitchEnabled={DEV_SWITCH_ENABLED} currentEnv={env} />
+        <KeyboardShortcuts />
 
         {/* Sidebar shell paints immediately (no count pips); counts stream in. */}
         <Suspense fallback={<Sidebar adminRole={admin.role} />}>
