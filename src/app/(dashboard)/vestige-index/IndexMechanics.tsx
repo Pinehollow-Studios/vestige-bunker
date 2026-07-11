@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCw, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { recomputeVestigeIndex, setVestigeIndexSwing } from "../courses/actions";
@@ -32,6 +32,9 @@ export function IndexMechanics({
   const [swing, setSwing] = useState(raritySwing);
   const [pending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Collapsed by default — we're stepping back from this calc for now (too few
+  // users for rarity to behave), so it sits quietly until someone wants to tune.
+  const [open, setOpen] = useState(false);
 
   const dirty = swing !== raritySwing;
   const pct = Math.round(swing * 100);
@@ -68,22 +71,36 @@ export function IndexMechanics({
   }
 
   return (
-    <section className="space-y-4 rounded-xl glass-panel p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <section className="rounded-xl glass-panel">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex min-w-0 items-center gap-2 text-left"
+        >
           <span className="grid size-7 place-items-center rounded-lg bg-brand/10 text-brand">
             <SlidersHorizontal aria-hidden className="size-3.5" />
           </span>
           <h2 className="text-sm font-semibold text-ink">Index mechanics</h2>
-        </div>
+          <span className="text-xs tabular-nums text-ink-3">
+            rarity swing ±{pct}%{dirty && <span className="text-amber"> · unsaved</span>}
+          </span>
+          <ChevronDown
+            aria-hidden
+            className={"size-4 text-ink-3 transition-transform " + (open ? "rotate-180" : "")}
+          />
+        </button>
         <Button size="sm" variant="outline" disabled={pending} onClick={recompute}>
           <RefreshCw aria-hidden className={pending ? "size-3.5 animate-spin" : "size-3.5"} />
           {pending ? "Working…" : "Recompute now"}
         </Button>
       </div>
 
-      {/* The formula, written out. */}
-      <div className="rounded-lg border border-rule/60 bg-paper-sunken/40 px-4 py-3">
+      {open && (
+        <div className="space-y-4 border-t border-rule/60 px-5 pb-5 pt-4">
+          {/* The formula, written out. */}
+          <div className="rounded-lg border border-rule/60 bg-paper-sunken/40 px-4 py-3">
         <p className="font-mono text-[13px] leading-relaxed text-ink-2">
           <span className="text-brand">index</span> = clamp( <span className="text-ink">prestige</span> ×
           (1 + <span className="text-ink">swing</span> × (<span className="text-ink">rarity</span> − 50) / 50), 0, 100 )
@@ -149,7 +166,9 @@ export function IndexMechanics({
           </p>
           <p className="mt-1 text-[11px] text-ink-3">at ±{pct}% swing</p>
         </div>
-      </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}

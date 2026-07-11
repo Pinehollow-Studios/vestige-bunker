@@ -5,6 +5,19 @@
 
 ---
 
+## 2026-07-11 — QuickCreate refresh + Index mechanics collapsed
+
+- **TopBar "New" up to date.** `QuickCreate` gained the newer create surfaces
+  and is now lightly grouped — **Messaging** (Email, Notification, Announcement)
+  + **Editorial** (Curated list, Badge, Version). Was missing Email/Notification
+  entirely.
+- **Index mechanics shrunk.** We're stepping back from the rarity-swing calc for
+  now (too few users for rarity to behave), so `IndexMechanics` is now a compact
+  one-row disclosure (collapsed by default: icon + "Index mechanics · rarity
+  swing ±X%" + Recompute), expanding to the full formula/slider/example only on
+  click — instead of a big control block at the top of `/vestige-index`.
+Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Pro-console polish, phase 2c: stat tiles, headers, density
 
 Finishing the safe structural consolidation.
