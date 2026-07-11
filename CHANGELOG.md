@@ -5,6 +5,29 @@
 
 ---
 
+## 2026-07-11 — Emails page rework: tabs + one-click compose
+
+Same-day follow-up after the first cut buried the compose action (the campaigns
+list sat above the transactional-template editor, its "+ New campaign" button
+tucked in a header row, and the whole section was hidden entirely if the
+overview RPC errored — so it read as "nowhere to write a new email").
+
+- **Two tabs** (`EmailsTabs`) split the page's two distinct jobs: **"Emails you
+  send"** (compose/queue/send) and **"Automatic emails"** (edit the wording of
+  the system emails that send themselves). Inactive content stays mounted
+  (`hidden`) so the template editor keeps in-progress edits across a tab switch.
+- **One-click compose** — `ComposeEmailButton` + a new `createDraftEmail()`
+  action create a draft named "Untitled email" and drop you straight into the
+  editor (renameable there). No up-front "internal name" gate. The button rides
+  in the tab bar on the send tab, so writing an email is always one obvious
+  click; the empty state carries its own "Write an email" CTA.
+- **Robust to load errors** — the send tab (and its compose button) now always
+  render; a failed overview load shows an inline error instead of hiding the
+  whole surface. The "Automatic emails" tab gained a one-line intro clarifying
+  those can't be sent by hand.
+
+Removed `NewCampaignButton`. Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Email campaigns: send + queue emails to users
 
 Jack can already compose/queue/send **push notifications** from

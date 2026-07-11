@@ -3,16 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { EmailsSection } from "./EmailsSection";
 import { EmailCampaignsSection } from "./EmailCampaignsSection";
+import { EmailsTabs } from "./EmailsTabs";
 import type { EmailTemplateRow } from "./actions";
 import type { EmailCampaignOverviewRow } from "./campaigns/types";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Emails — two surfaces in one home:
- *   1. "Campaigns you send" — one-off + scheduled emails to users (Resend).
- *   2. The transactional template editor (welcome + auth emails) below it.
- * Mirrors /notifications (broadcasts above the system-template editor).
+ * Emails — two jobs, two tabs:
+ *   1. "Emails you send"  — compose/queue/send one-off emails to users (Resend).
+ *   2. "Automatic emails" — edit the wording of the system emails (welcome,
+ *      password reset, …) that send themselves.
  */
 export default async function EmailsPage() {
   await requireAdmin();
@@ -27,26 +28,40 @@ export default async function EmailsPage() {
   const notConfigured = !!tplRes.error && isMissingRelation(tplRes.error.message);
 
   const campaigns = (campRes.data as EmailCampaignOverviewRow[] | null) ?? [];
-  const campaignsConfigured = !campRes.error;
+  const campaignsError =
+    campRes.error && isMissingRelation(campRes.error.message)
+      ? "The email campaigns tables aren’t on this database yet."
+      : campRes.error?.message ?? null;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <SectionHeader eyebrow="Editorial" title="Emails" />
 
-      {campaignsConfigured && <EmailCampaignsSection campaigns={campaigns} />}
-
-      {notConfigured ? (
-        <div className="rounded-xl border border-border bg-surface-1 p-6 text-sm text-ink-3">
-          The email templates table isn’t on this database yet. Apply the{" "}
-          <code>email_templates</code> migration, then reload.
-        </div>
-      ) : tplRes.error ? (
-        <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
-          Failed to load: {tplRes.error.message}
-        </div>
-      ) : (
-        <EmailsSection templates={templates} />
-      )}
+      <EmailsTabs
+        sendSlot={<EmailCampaignsSection campaigns={campaigns} error={campaignsError} />}
+        autoSlot={
+          <div className="space-y-4">
+            <p className="text-sm text-ink-2">
+              These emails send <strong className="font-medium text-ink">automatically</strong>{" "}
+              when something happens (a new member, a password reset). You can’t send these by
+              hand — edit their wording here. To send your own email, use{" "}
+              <strong className="font-medium text-ink">Emails you send</strong>.
+            </p>
+            {notConfigured ? (
+              <div className="rounded-xl border border-border bg-surface-1 p-6 text-sm text-ink-3">
+                The email templates table isn’t on this database yet. Apply the{" "}
+                <code>email_templates</code> migration, then reload.
+              </div>
+            ) : tplRes.error ? (
+              <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+                Failed to load: {tplRes.error.message}
+              </div>
+            ) : (
+              <EmailsSection templates={templates} />
+            )}
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -11,20 +11,19 @@ export type ActionResult<T = void> =
   | { ok: false; message: string };
 
 /**
- * Create a fresh draft campaign and redirect into its editor. Starts as an
- * everyone-audience draft so nothing sends until it's composed + sent/scheduled.
+ * One-click "New email": create a fresh draft and drop the user straight into
+ * the editor to write it. Named "Untitled email" (renameable in the editor) so
+ * writing is a single click — no up-front naming gate. Everyone-audience draft,
+ * so nothing sends until it's composed + sent/scheduled.
  */
-export async function createCampaign(name: string): Promise<ActionResult<string>> {
-  const trimmed = name.trim();
-  if (!trimmed) return { ok: false, message: "Name is required." };
-
+export async function createDraftEmail(): Promise<ActionResult<string>> {
   const admin = await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("email_campaigns")
     .insert({
-      name: trimmed,
+      name: "Untitled email",
       subject: "",
       html: "",
       audience_kind: "everyone",
