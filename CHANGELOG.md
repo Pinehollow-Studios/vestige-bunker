@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-07-11 — Pro-console polish, phase 2c: stat tiles, headers, density
+
+Finishing the safe structural consolidation.
+- **One stat tile.** New `components/admin/StatTile.tsx` (label + tabular
+  numeral, optional `href`/`active`/`tone`, thousands-formatted) replaces three
+  near-identical local `StatTile`s (users, safeguarding, photos). `StatsStrip`
+  stays as the animated count-up strip for the overview.
+- **More empty states + one header.** Folded the crashes `EmptyQueue` onto the
+  shared `EmptyState`; the Overview page's hand-rolled header now uses the shared
+  `SectionHeader` like every other screen.
+- **Table density.** `DataTable` body rows `py-2.5 → py-2` to match the header and
+  read denser (courses / announcements / badges).
+Deliberately NOT done (behavior risk / already-consistent / needs eyes-on):
+toolbar *mechanism* unification (visuals already share `glass-panel`), the
+inline error-note blocks (already identical, tag-swap risk), and aggressive
+row-height/spacing density tuning. Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Pro-console polish, phase 2b: tabs, eyebrows, empty states
 
 Three cross-cutting consistency fixes the audit flagged.
