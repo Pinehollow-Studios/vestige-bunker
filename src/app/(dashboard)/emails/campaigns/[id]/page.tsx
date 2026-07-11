@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { listPickerUsers } from "@/lib/users/roster";
 import { EmailCampaignEditor, type TemplateSeed } from "./EmailCampaignEditor";
-import type { CountyOption, EmailCampaignRow, UserPickRow } from "../types";
+import type { CountyOption, EmailCampaignRow } from "../types";
 
 export const dynamic = "force-dynamic";
 
@@ -34,21 +35,14 @@ export default async function EmailCampaignEditorPage({
   }
   if (!row) notFound();
 
-  const [targetRowsRes, countyRowsRes, templatesRes] = await Promise.all([
+  const [targetRowsRes, countyRowsRes, templatesRes, allUsers] = await Promise.all([
     supabase.from("email_campaign_targets").select("user_id").eq("campaign_id", id),
     supabase.from("counties").select("id,name").order("name"),
     supabase.rpc("admin_email_templates"),
+    listPickerUsers({ withEmail: true }),
   ]);
 
   const targetIds = (targetRowsRes.data ?? []).map((r) => r.user_id as string);
-  let targetUsers: UserPickRow[] = [];
-  if (targetIds.length > 0) {
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, username, display_name, avatar_photo_id")
-      .in("id", targetIds);
-    targetUsers = (users ?? []) as UserPickRow[];
-  }
 
   const counties: CountyOption[] = (countyRowsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
   const templates: TemplateSeed[] = ((templatesRes.data as TemplateSeed[] | null) ?? []).map((t) => ({
@@ -68,7 +62,8 @@ export default async function EmailCampaignEditorPage({
       </Link>
       <EmailCampaignEditor
         row={row as EmailCampaignRow}
-        initialTargetUsers={targetUsers}
+        allUsers={allUsers}
+        initialSelectedIds={targetIds}
         counties={counties}
         templates={templates}
         isSuperAdmin={admin.role === "super_admin"}

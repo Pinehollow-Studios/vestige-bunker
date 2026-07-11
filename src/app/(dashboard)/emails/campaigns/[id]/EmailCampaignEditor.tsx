@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { AudiencePicker } from "@/components/admin/AudiencePicker";
-import { searchUsers } from "@/app/(dashboard)/notifications/actions";
+import type { PickerUser } from "@/lib/users/roster";
 import {
   cancelCampaign,
   deleteCampaign,
@@ -27,7 +27,6 @@ import {
   type CampaignRecipientRow,
   type CountyOption,
   type EmailCampaignRow,
-  type UserPickRow,
 } from "../types";
 
 /** A starter template the composer can seed subject + HTML from. */
@@ -55,13 +54,15 @@ function render(template: string, tokens: Record<string, string>): string {
 
 export function EmailCampaignEditor({
   row,
-  initialTargetUsers,
+  allUsers,
+  initialSelectedIds,
   counties,
   templates,
   isSuperAdmin,
 }: {
   row: EmailCampaignRow;
-  initialTargetUsers: UserPickRow[];
+  allUsers: PickerUser[];
+  initialSelectedIds: string[];
   counties: CountyOption[];
   templates: TemplateSeed[];
   isSuperAdmin: boolean;
@@ -215,10 +216,10 @@ export function EmailCampaignEditor({
               maxVersion={maxVersion}
               setMaxVersion={setMaxVersion}
               counties={counties}
-              entityId={row.id}
-              initialTargetUsers={initialTargetUsers}
+              allUsers={allUsers}
+              initialSelectedIds={initialSelectedIds}
+              showEmail
               onPersistTargets={(ids) => setCampaignTargets(row.id, ids)}
-              onSearchUsers={searchUsers}
             />
           </Card>
         ) : (

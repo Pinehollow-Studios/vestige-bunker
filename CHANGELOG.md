@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-07-11 — Hand-picked email recipients: roster picker with addresses
+
+The search-only individuals picker felt janky for email — you couldn't see who
+you were sending to. Replaced it (in the shared `AudiencePicker`) with a proper
+roster browser: a scrollable list of the **whole user base**, live-filterable by
+name / username / email, with per-row selection feedback (brand-tinted row +
+check), avatars/initials, a live "N selected" count, a removable selected-chips
+summary that stays visible while filtering, and — for email — **each user's
+address shown inline** so it feels solid. New server-only `lib/users/roster.ts`
+`listPickerUsers({ withEmail })` loads `public.users` via the service role and
+merges each address from `auth.users` (GoTrue admin API); the email editor loads
+it once and passes it in. Small user base, so the full roster loads up front
+(pagination is a later concern). The notifications/announcements editors keep
+their existing pickers for now (push doesn't need addresses). Verified
+`tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Notifications page: same tabs + one-click treatment
 
 Applied the emails-page rework to `/notifications` and factored the tab surface

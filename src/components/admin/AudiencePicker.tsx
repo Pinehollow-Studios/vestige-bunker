@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Search } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Check, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import type { PickerUser } from "@/lib/users/roster";
 import {
   AUDIENCE_KINDS,
   AUDIENCE_LABELS,
@@ -14,16 +15,15 @@ import {
   type BroadcastAudienceKind,
   type BroadcastTarget,
   type CountyOption,
-  type UserPickRow,
 } from "@/app/(dashboard)/notifications/types";
 
 /**
  * The shared audience/targeting control — audience kind + filtered-cohort
  * filters + hand-picked individuals + optional app-version window. Extracted
  * from the push-broadcast editor so the email-campaign editor reuses exactly the
- * same targeting UX (the two audience models are identical server-side). The
- * individuals persistence + user search are injected so each surface points at
- * its own action.
+ * same targeting UX. The individuals picker browses the FULL roster (loaded by
+ * the caller) with a live filter, per-row selection feedback, and — for email —
+ * each user's address, so you can see exactly who you're sending to.
  */
 
 type Actionish<T = void> = { ok: true; data?: T } | { ok: false; message: string };
@@ -41,10 +41,10 @@ export function AudiencePicker({
   maxVersion,
   setMaxVersion,
   counties,
-  entityId,
-  initialTargetUsers,
+  allUsers,
+  initialSelectedIds,
+  showEmail = false,
   onPersistTargets,
-  onSearchUsers,
 }: {
   audienceKind: BroadcastAudienceKind;
   setAudienceKind: (k: BroadcastAudienceKind) => void;
@@ -55,10 +55,10 @@ export function AudiencePicker({
   maxVersion: string;
   setMaxVersion: (v: string) => void;
   counties: CountyOption[];
-  entityId: string;
-  initialTargetUsers: UserPickRow[];
+  allUsers: PickerUser[];
+  initialSelectedIds: string[];
+  showEmail?: boolean;
   onPersistTargets: (ids: string[]) => Promise<Actionish>;
-  onSearchUsers: (query: string) => Promise<Actionish<UserPickRow[]>>;
 }) {
   return (
     <div className="space-y-4">
@@ -79,10 +79,10 @@ export function AudiencePicker({
       )}
       {audienceKind === "individuals" && (
         <IndividualsPicker
-          entityId={entityId}
-          initialTargetUsers={initialTargetUsers}
+          allUsers={allUsers}
+          initialSelectedIds={initialSelectedIds}
+          showEmail={showEmail}
           onPersistTargets={onPersistTargets}
-          onSearchUsers={onSearchUsers}
         />
       )}
 
@@ -104,6 +104,205 @@ export function AudiencePicker({
       </div>
     </div>
   );
+}
+
+// ── Targeting: individuals (browse the full roster) ────────────────────
+
+function IndividualsPicker({
+  allUsers,
+  initialSelectedIds,
+  showEmail,
+  onPersistTargets,
+}: {
+  allUsers: PickerUser[];
+  initialSelectedIds: string[];
+  showEmail: boolean;
+  onPersistTargets: (ids: string[]) => Promise<Actionish>;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(initialSelectedIds));
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set(initialSelectedIds));
+  const [filter, setFilter] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
+  const [saving, startSave] = useTransition();
+
+  const byId = useMemo(() => {
+    const m = new Map<string, PickerUser>();
+    for (const u of allUsers) m.set(u.id, u);
+    return m;
+  }, [allUsers]);
+
+  const filtered = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return allUsers;
+    return allUsers.filter(
+      (u) =>
+        (u.display_name ?? "").toLowerCase().includes(q) ||
+        (u.username ?? "").toLowerCase().includes(q) ||
+        (u.email ?? "").toLowerCase().includes(q),
+    );
+  }, [allUsers, filter]);
+
+  const dirty = useMemo(() => !setsEqual(selected, savedIds), [selected, savedIds]);
+
+  function toggle(id: string) {
+    setJustSaved(false);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function save() {
+    startSave(async () => {
+      const r = await onPersistTargets([...selected]);
+      if (!r.ok) {
+        toast.error(r.message);
+        return;
+      }
+      setSavedIds(new Set(selected));
+      setJustSaved(true);
+      toast.success(`Saved ${selected.size} ${selected.size === 1 ? "recipient" : "recipients"}`);
+    });
+  }
+
+  const selectedUsers = [...selected].map((id) => byId.get(id)).filter(Boolean) as PickerUser[];
+
+  return (
+    <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Hand-picked recipients</p>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+            selected.size > 0
+              ? "border-brand/40 bg-brand/10 text-brand"
+              : "border-rule/70 bg-paper-sunken/60 text-ink-3",
+          )}
+        >
+          <Users className="size-3" />
+          {selected.size} selected
+        </span>
+      </div>
+
+      {/* Selected summary — always visible, even while filtering. */}
+      {selectedUsers.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedUsers.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              onClick={() => toggle(u.id)}
+              title="Remove"
+              className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert"
+            >
+              {userLabel(u)}
+              <span aria-hidden>×</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Filter. */}
+      <div className="flex items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 py-1.5">
+        <Search aria-hidden className="size-3.5 text-ink-3" />
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={showEmail ? "Filter by name, username or email…" : "Filter by name or username…"}
+          className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+        />
+        {filter && (
+          <button type="button" onClick={() => setFilter("")} className="text-ink-3 hover:text-ink-2" aria-label="Clear filter">
+            ×
+          </button>
+        )}
+      </div>
+
+      {/* Roster list. */}
+      <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-rule/50 bg-paper-raised/40 p-1">
+        {allUsers.length === 0 ? (
+          <p className="px-2 py-6 text-center text-sm text-ink-3">No users to pick from.</p>
+        ) : filtered.length === 0 ? (
+          <p className="px-2 py-6 text-center text-sm text-ink-3">No matches for “{filter}”.</p>
+        ) : (
+          filtered.map((u) => {
+            const isSelected = selected.has(u.id);
+            return (
+              <button
+                key={u.id}
+                type="button"
+                onClick={() => toggle(u.id)}
+                aria-pressed={isSelected}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md border px-2.5 py-2 text-left transition-colors",
+                  isSelected
+                    ? "border-brand/40 bg-brand/10"
+                    : "border-transparent hover:border-rule/60 hover:bg-paper-sunken/50",
+                )}
+              >
+                <Avatar user={u} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ink">{userLabel(u)}</p>
+                  <p className="truncate text-xs text-ink-3">
+                    {u.username ? `@${u.username}` : u.id.slice(0, 8)}
+                    {showEmail && u.email ? ` · ${u.email}` : ""}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                    isSelected ? "border-brand bg-brand text-brand-fg" : "border-rule/70 bg-transparent",
+                  )}
+                >
+                  {isSelected && <Check className="size-3.5" />}
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-ink-3">
+          {selected.size > 0
+            ? `${selected.size} of ${allUsers.length} selected`
+            : `Pick from ${allUsers.length} ${allUsers.length === 1 ? "user" : "users"}`}
+        </span>
+        <Button onClick={save} disabled={saving || !dirty} size="sm" variant={dirty ? "default" : "outline"}>
+          {saving ? "Saving…" : dirty ? "Save recipients" : justSaved ? (
+            <><Check className="size-4" /> Saved</>
+          ) : "Saved"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Avatar({ user }: { user: PickerUser }) {
+  if (user.avatar_url) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={user.avatar_url} alt="" className="size-8 shrink-0 rounded-full object-cover" />;
+  }
+  const label = user.display_name ?? user.username ?? "?";
+  const initials = label.trim().slice(0, 1).toUpperCase() || "?";
+  return (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-semibold text-brand">
+      {initials}
+    </span>
+  );
+}
+
+function userLabel(u: PickerUser): string {
+  return u.display_name ?? (u.username ? `@${u.username}` : u.id.slice(0, 8));
+}
+
+function setsEqual(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const x of a) if (!b.has(x)) return false;
+  return true;
 }
 
 // ── Targeting: filtered cohort ─────────────────────────────────────────
@@ -243,124 +442,6 @@ function TristateRow({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-// ── Targeting: individuals ─────────────────────────────────────────────
-
-function IndividualsPicker({
-  entityId,
-  initialTargetUsers,
-  onPersistTargets,
-  onSearchUsers,
-}: {
-  entityId: string;
-  initialTargetUsers: UserPickRow[];
-  onPersistTargets: (ids: string[]) => Promise<Actionish>;
-  onSearchUsers: (query: string) => Promise<Actionish<UserPickRow[]>>;
-}) {
-  void entityId;
-  const [picked, setPicked] = useState<UserPickRow[]>(initialTargetUsers);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<UserPickRow[]>([]);
-  const [searching, startSearch] = useTransition();
-  const [saving, startSave] = useTransition();
-
-  function runSearch() {
-    const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
-    startSearch(async () => {
-      const r = await onSearchUsers(q);
-      if (!r.ok) { toast.error(r.message); return; }
-      setResults(r.data ?? []);
-    });
-  }
-
-  function add(user: UserPickRow) {
-    if (picked.some((p) => p.id === user.id)) return;
-    setPicked([...picked, user]);
-  }
-  function remove(id: string) {
-    setPicked(picked.filter((p) => p.id !== id));
-  }
-  function persist() {
-    startSave(async () => {
-      const r = await onPersistTargets(picked.map((p) => p.id));
-      if (!r.ok) toast.error(r.message);
-      else toast.success(`Saved ${picked.length} ${picked.length === 1 ? "person" : "people"}`);
-    });
-  }
-  function userLabel(u: UserPickRow): string {
-    return u.display_name ?? (u.username ? `@${u.username}` : u.id.slice(0, 8));
-  }
-
-  return (
-    <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/30 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Hand-picked recipients</p>
-
-      {picked.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {picked.map((u) => (
-            <button
-              key={u.id}
-              type="button"
-              onClick={() => remove(u.id)}
-              className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs text-brand transition-colors hover:border-alert/40 hover:bg-alert/10 hover:text-alert"
-            >
-              {userLabel(u)}
-              <span aria-hidden>×</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 py-1.5">
-        <Search aria-hidden className="size-3.5 text-ink-3" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } }}
-          placeholder="Search username or display name…"
-          className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={runSearch}
-          disabled={searching || query.trim().length < 2}
-          className="rounded-md bg-brand px-2.5 py-1 text-[11px] font-semibold text-brand-fg disabled:opacity-60"
-        >
-          Search
-        </button>
-      </div>
-
-      {results.length > 0 && (
-        <div className="space-y-1">
-          {results.map((u) => {
-            const already = picked.some((p) => p.id === u.id);
-            return (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => add(u)}
-                disabled={already}
-                className="flex w-full items-center justify-between rounded-md border border-rule/60 bg-paper-sunken/40 px-2.5 py-1.5 text-left text-sm transition-colors hover:border-brand/30 disabled:opacity-50"
-              >
-                <span className="text-ink">{userLabel(u)}</span>
-                <span className="text-xs text-ink-3">{already ? "Added" : "+ Add"}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <Button onClick={persist} disabled={saving} variant="outline" size="sm" className="w-full">
-        {saving ? "Saving…" : `Save ${picked.length} ${picked.length === 1 ? "recipient" : "recipients"}`}
-      </Button>
     </div>
   );
 }
