@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { SectionHeader } from "@/components/admin/SectionHeader";
 import { Suspense } from "react";
 import Link from "next/link";
 import {
@@ -61,16 +62,13 @@ export default async function OverviewPage() {
 // ── Header + quick actions ─────────────────────────────────────────────
 function Header() {
   return (
-    <header className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Dashboard</p>
-      <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-[1.75rem]">
-        Overview
-      </h1>
+    <div className="space-y-2">
+      <SectionHeader eyebrow="Dashboard" title="Overview" />
       <p className="max-w-2xl text-sm italic leading-relaxed text-ink-3">
         &ldquo;If you don&rsquo;t open one of our apps for a month, that is a successful outcome - for
         both of us.&rdquo;
       </p>
-    </header>
+    </div>
   );
 }
 
