@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -189,7 +190,7 @@ export default async function FeedbackThreadPage({
 
   if (error) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className={pageShell("content")}>
         <BackLink />
         <SectionHeader
           eyebrow="Queues · review"
@@ -226,7 +227,7 @@ export default async function FeedbackThreadPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={pageShell("content")}>
       <BackLink />
 
       <ReportHeader

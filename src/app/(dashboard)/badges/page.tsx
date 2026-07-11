@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -79,7 +80,7 @@ export default async function BadgesPage(props: { searchParams: SearchParams }) 
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className={pageShell("wide")}>
         <SectionHeader eyebrow="Editorial" title="Badges" actions={<NewBadgeButton />} />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load badges: {error.message}
@@ -125,7 +126,7 @@ function GroupLanding({
   const groups = CATEGORIES.filter((c) => (byCategory.get(c)?.length ?? 0) > 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Editorial" title="Badges" actions={<NewBadgeButton />} />
 
       <StatusPills buckets={buckets} show={defs.length > 0} />
@@ -276,7 +277,7 @@ async function TableView({
   const groupLabel = categoryFilter !== "all" ? CATEGORY_META[categoryFilter as BadgeCategory]?.label : null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <Link href="/badges" className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink">
         <ArrowLeft aria-hidden className="size-4" /> All groups
       </Link>

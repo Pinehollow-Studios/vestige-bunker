@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -74,7 +75,7 @@ export default async function CrashDetailPage({
   const sentryURL = getSentryIssueURL(crash.sentry_issue_id);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className={pageShell("content")}>
       <BackLink />
       <CrashHeader crash={crash} sentryURL={sentryURL} />
       <CrashMetaGrid crash={crash} />

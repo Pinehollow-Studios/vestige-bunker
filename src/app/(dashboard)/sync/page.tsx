@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { ShieldAlert } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
@@ -22,7 +23,7 @@ export default async function SyncPage() {
 
   if (admin.role !== "super_admin") {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className={pageShell("narrow")}>
         <SectionHeader eyebrow="Promotion" title="Deploy to prod" />
         <div className="flex items-start gap-3 rounded-2xl border border-alert/40 bg-alert/10 px-4 py-3 text-sm text-alert">
           <ShieldAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
@@ -38,7 +39,7 @@ export default async function SyncPage() {
   const githubReady = githubConfigured();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className={pageShell("content")}>
       <SectionHeader
         eyebrow="Promotion"
         title="Deploy to prod"

@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, DatabaseZap, ImageOff, MapPin } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -127,7 +128,7 @@ async function CountyLanding({
   const totalCourses = Array.from(stats.values()).reduce((n, s) => n + s.total, 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <SectionHeader
         eyebrow="Editorial"
         title="Courses"
@@ -312,7 +313,7 @@ async function TableView({
   }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <Link href="/courses" className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink">
         <ArrowLeft aria-hidden className="size-4" /> All counties
       </Link>

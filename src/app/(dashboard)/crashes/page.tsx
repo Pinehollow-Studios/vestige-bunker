@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Smartphone } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -107,7 +108,7 @@ export default async function CrashesQueuePage({
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={pageShell("content")}>
       <SectionHeader
         eyebrow="Queues · review"
         title="Crashes"

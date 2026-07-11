@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search, Users as UsersIcon } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -57,7 +58,7 @@ export default async function UsersPage({
     supabase = await createServiceClient();
   } catch (e) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className={pageShell("content")}>
         <SectionHeader
           eyebrow="People & safety · Users"
           title="Users"
@@ -140,7 +141,7 @@ export default async function UsersPage({
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={pageShell("content")}>
       <SectionHeader
         eyebrow="People & safety · Users"
         title="Users"

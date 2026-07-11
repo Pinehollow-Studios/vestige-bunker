@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-07-11 — Pro-console polish, phase 2a: one page container + rhythm
+
+Killed the per-page layout drift the audit surfaced — five different max-widths
+(`max-w-2xl…6xl`) and five different vertical rhythms (`space-y-4…8`) hand-rolled
+across ~30 screens. New `components/admin/PageShell.tsx` is the single container:
+a small width vocabulary (**narrow** 3xl · **content** 5xl · **wide** 6xl ·
+**full**) and **one rhythm** (`space-y-6`) for every screen. Exposed both as a
+`<PageShell>` component and a `pageShell(width)` className recipe. Swept every
+top-level sidebar page + the detail/editor pages onto it (widths mapped from
+their old values so nothing jumps: 6xl→wide, 5xl/4xl→content, 3xl/2xl→narrow),
+so the whole tool now shares one column width per screen-type and one gap.
+(Analytics keeps its own `Shell`, and feedback its bespoke full-height two-pane,
+for now.) Presentation only. Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Pro-console polish, phase 1: keyboard-first shell
 
 Research-informed pass (Linear / Retool / Notion internal-tool patterns) to make

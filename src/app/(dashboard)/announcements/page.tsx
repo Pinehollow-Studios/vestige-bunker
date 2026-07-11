@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { Megaphone } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
@@ -82,7 +83,7 @@ export default async function AnnouncementsPage(props: { searchParams: SearchPar
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className={pageShell("content")}>
       <SectionHeader eyebrow="Editorial" title="Announcements" actions={<NewAnnouncementButton />} />
 
       {notConfigured ? (

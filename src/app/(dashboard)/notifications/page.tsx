@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { PageTabs } from "@/components/admin/PageTabs";
 import { createClient } from "@/lib/supabase/server";
@@ -35,7 +36,7 @@ export default async function NotificationsPage() {
   for (const r of (tRes.data as NotificationTemplateRow[] | null) ?? []) overrides[r.kind] = r;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className={pageShell("content")}>
       <SectionHeader eyebrow="Editorial" title="Notifications" />
 
       <PageTabs

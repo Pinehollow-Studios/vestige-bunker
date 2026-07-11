@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
 import type { SortDir } from "@/components/admin/table/DataTable";
@@ -82,7 +83,7 @@ export default async function CuratedListsPage(props: { searchParams: SearchPara
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Editorial" title="Curated lists" actions={<NewCuratedListButton />} />
 
       {all.length > 0 && (

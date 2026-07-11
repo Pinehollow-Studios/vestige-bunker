@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -15,7 +16,7 @@ export default async function CourseImportPage() {
   const status = await getImportStatus();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className={pageShell("narrow")}>
       <Link
         href="/courses"
         className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"

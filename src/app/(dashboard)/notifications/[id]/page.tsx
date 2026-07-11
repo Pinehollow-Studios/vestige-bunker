@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -52,7 +53,7 @@ export default async function BroadcastEditorPage({
   const counties: CountyOption[] = (countyRowsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className={pageShell("wide")}>
       <Link
         href="/notifications"
         className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"

@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { ArrowRight, Hammer, Pencil, Rocket } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -84,7 +85,7 @@ export default async function ChangelogPage() {
   const activeDraft = versions.find((v) => v.status === "draft") ?? null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className={pageShell("content")}>
       <SectionHeader
         eyebrow="Editorial"
         title="Changelog"

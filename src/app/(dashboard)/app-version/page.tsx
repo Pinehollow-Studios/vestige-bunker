@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { AppVersionForm } from "./AppVersionForm";
@@ -18,7 +19,7 @@ export default async function AppVersionPage() {
 
   if (!supabase) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className={pageShell("narrow")}>
         <SectionHeader eyebrow="Advanced · App version" title="App version gate" />
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-ink-2">
           Needs the service-role key for the active environment to read/write the gate config.
@@ -34,7 +35,7 @@ export default async function AppVersionPage() {
     .maybeSingle();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className={pageShell("narrow")}>
       <SectionHeader eyebrow="Advanced · App version" title="App version gate" />
 
       <AppVersionForm

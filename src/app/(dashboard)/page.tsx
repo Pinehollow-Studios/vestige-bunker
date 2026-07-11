@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { Suspense } from "react";
 import Link from "next/link";
 import {
@@ -32,7 +33,7 @@ const isoMsAgo = (ms: number) => new Date(Date.now() - ms).toISOString();
 export default async function OverviewPage() {
   await requireAdmin();
   return (
-    <div className="mx-auto max-w-6xl space-y-7">
+    <div className={pageShell("wide")}>
       <Header />
       <QuickActions />
 

@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight, Flag, MessageSquareWarning } from "lucide-react";
@@ -286,7 +287,7 @@ export default async function UserHubPage({ params }: { params: Promise<{ id: st
 // ── chrome ─────────────────────────────────────────────────────────────
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className={pageShell("content")}>
       <Link href="/users" className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink">
         <ArrowLeft aria-hidden className="size-4" /> All users
       </Link>

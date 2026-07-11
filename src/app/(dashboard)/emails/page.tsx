@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { PageTabs } from "@/components/admin/PageTabs";
 import { createClient } from "@/lib/supabase/server";
@@ -35,7 +36,7 @@ export default async function EmailsPage() {
       : campRes.error?.message ?? null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Editorial" title="Emails" />
 
       <PageTabs

@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, Gauge, MapPin } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -122,7 +123,7 @@ async function CountyLanding({
   const totalUnranked = Array.from(stats.values()).reduce((n, s) => n + s.unranked, 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Editorial" title="Vestige Index" />
 
       <IndexMechanics
@@ -281,7 +282,7 @@ async function TableView({
   }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className={pageShell("wide")}>
       <Link
         href="/vestige-index"
         className="inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink"

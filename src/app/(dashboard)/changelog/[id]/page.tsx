@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -34,7 +35,7 @@ export default async function VersionDetailPage({
 
   if (versionError) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className={pageShell("content")}>
         <BackLink />
         <div className="rounded-2xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
           Failed to load this version: {versionError.message}
@@ -69,7 +70,7 @@ export default async function VersionDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className={pageShell("content")}>
       <div className="flex items-center justify-between gap-3">
         <BackLink />
         <ModeToggle id={id} mode={mode} />

@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { Shield, ShieldAlert } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -72,7 +73,7 @@ export default async function SafeguardingPage({
   const rows: Row[] = (queueRes.data as Row[] | null) ?? [];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={pageShell("content")}>
       <SectionHeader
         eyebrow="People & safety · Safeguarding"
         title="Safeguarding queue"

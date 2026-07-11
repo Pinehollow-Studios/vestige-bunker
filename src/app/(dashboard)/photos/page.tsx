@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { activeStorageBaseUrl, tryCreateServiceClient } from "@/lib/supabase/admin";
@@ -65,7 +66,7 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
   const supabase = await tryCreateServiceClient();
   if (!supabase) {
     return (
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className={pageShell("wide")}>
         <SectionHeader eyebrow="Queues · moderation" title="Photos" />
         <ConfigNotice />
       </div>
@@ -131,7 +132,7 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Queues · moderation" title="Photos" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

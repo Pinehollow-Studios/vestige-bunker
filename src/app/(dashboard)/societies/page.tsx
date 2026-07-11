@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { ShelvedNotice } from "@/components/admin/ShelvedNotice";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ export default async function SocietyModesPage() {
   const enabledCount = modes.filter((m) => m.enabled).length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className={pageShell("content")}>
       <SectionHeader eyebrow="Editorial" title="Society modes" actions={<NewModeButton />} />
 
       <ShelvedNotice feature="Societies" />

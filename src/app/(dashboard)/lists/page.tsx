@@ -1,3 +1,4 @@
+import { pageShell } from "@/components/admin/PageShell";
 import { CalendarClock, Clock, Hash, ListChecks, MapPin } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { ShelvedNotice } from "@/components/admin/ShelvedNotice";
@@ -182,7 +183,7 @@ function unwrap<T>(value: unknown): T | null {
 // ── UI ─────────────────────────────────────────────────────────────────
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className={pageShell("content")}>
       <SectionHeader eyebrow="Operations · review" title="List verification" />
       <ShelvedNotice feature="Community lists" />
       {children}
