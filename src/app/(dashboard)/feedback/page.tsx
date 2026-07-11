@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { SectionHeader } from "@/components/admin/SectionHeader";
+import { TAB_LIST_CLASS, TabLink } from "@/components/admin/Tabs";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listAdminOwners } from "@/lib/feedback/owners";
@@ -63,7 +63,7 @@ export default async function FeedbackQueuePage({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 lg:h-[calc(100dvh-8rem)] lg:overflow-hidden">
-      <SectionHeader eyebrow="Queues · review" title="Feedback" />
+      <SectionHeader eyebrow="Operations" title="Feedback" />
 
       <ViewTabs view={filters.view} params={params} />
       <QueueFilters initialSearch={filters.query} owners={owners} />
@@ -104,17 +104,11 @@ function ViewTabs({
     { key: "all", label: "All" },
   ];
   return (
-    <div className="inline-flex items-center gap-1 rounded-xl glass-panel p-1 text-xs">
+    <div className={TAB_LIST_CLASS}>
       {tabs.map((tab) => (
-        <Link
-          key={tab.key}
-          href={viewURL(params, tab.key)}
-          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${
-            tab.key === view ? "bg-brand/15 text-brand" : "text-ink-3 hover:text-ink-2"
-          }`}
-        >
+        <TabLink key={tab.key} href={viewURL(params, tab.key)} active={tab.key === view}>
           {tab.label}
-        </Link>
+        </TabLink>
       ))}
     </div>
   );

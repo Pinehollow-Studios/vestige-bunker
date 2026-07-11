@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { EmptyState } from "@/components/admin/EmptyState";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search, Users as UsersIcon } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -60,7 +61,7 @@ export default async function UsersPage({
     return (
       <div className={pageShell("content")}>
         <SectionHeader
-          eyebrow="People & safety · Users"
+          eyebrow="Operations"
           title="Users"
         />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
@@ -143,7 +144,7 @@ export default async function UsersPage({
   return (
     <div className={pageShell("content")}>
       <SectionHeader
-        eyebrow="People & safety · Users"
+        eyebrow="Operations"
         title="Users"
       />
 
@@ -209,11 +210,10 @@ export default async function UsersPage({
 
         {rows.length === 0 ? (
           <EmptyState
+            icon={UsersIcon}
             title={filtering ? "No matches" : "No users yet"}
-            subtitle={
-              filtering
-                ? "No users match that filter."
-                : "No users have registered yet."
+            description={
+              filtering ? "No users match that filter." : "No users have registered yet."
             }
           />
         ) : (
@@ -369,17 +369,6 @@ function StatusChip({ status }: { status: AccountStatus }) {
   );
 }
 
-function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl glass-panel px-4 py-12 text-center">
-      <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-        <UsersIcon className="size-5" aria-hidden />
-      </span>
-      <p className="display-serif text-lg text-ink">{title}</p>
-      <p className="text-sm text-ink-2">{subtitle}</p>
-    </div>
-  );
-}
 
 function prettyPrivacy(p: Privacy): string {
   switch (p) {

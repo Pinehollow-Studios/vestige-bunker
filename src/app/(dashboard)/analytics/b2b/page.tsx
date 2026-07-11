@@ -234,7 +234,7 @@ export default async function B2BPreviewPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <SectionHeader eyebrow="Insights · Analytics" title="B2B preview" />
+      <SectionHeader eyebrow="Operations" title="B2B preview" />
       <AnalyticsNav active="/analytics/b2b" />
       {children}
     </div>

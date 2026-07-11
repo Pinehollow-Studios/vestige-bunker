@@ -1,27 +1,17 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { TAB_LIST_CLASS, TabLink } from "@/components/admin/Tabs";
 import { ANALYTICS_TABS } from "@/lib/analytics/config";
 
 /** Sub-route tab bar for the analytics surface. Server-rendered; each page
- *  passes its own `active` href (the repo's URL-driven tab idiom). */
+ *  passes its own `active` href (the repo's URL-driven tab idiom). Shares the
+ *  one canonical tab visual with PageTabs + the feedback queue. */
 export function AnalyticsNav({ active }: { active: string }) {
   return (
-    <nav className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl glass-panel p-1 text-xs">
-      {ANALYTICS_TABS.map((t) => {
-        const isActive = t.href === active;
-        return (
-          <Link
-            key={t.href}
-            href={t.href}
-            className={cn(
-              "rounded-lg px-3 py-1.5 font-semibold transition-colors",
-              isActive ? "bg-brand/15 text-brand" : "text-ink-3 hover:text-ink-2",
-            )}
-          >
-            {t.label}
-          </Link>
-        );
-      })}
+    <nav className={TAB_LIST_CLASS}>
+      {ANALYTICS_TABS.map((t) => (
+        <TabLink key={t.href} href={t.href} active={t.href === active}>
+          {t.label}
+        </TabLink>
+      ))}
     </nav>
   );
 }

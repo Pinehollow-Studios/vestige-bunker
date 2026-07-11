@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { EmptyState } from "@/components/admin/EmptyState";
 import Link from "next/link";
 import { Shield, ShieldAlert } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -75,7 +76,7 @@ export default async function SafeguardingPage({
   return (
     <div className={pageShell("content")}>
       <SectionHeader
-        eyebrow="People & safety · Safeguarding"
+        eyebrow="Operations"
         title="Safeguarding queue"
       />
 
@@ -123,10 +124,7 @@ export default async function SafeguardingPage({
         </div>
 
         {rows.length === 0 ? (
-          <EmptyState
-            title="Queue is clear"
-            subtitle="No flags in this bucket."
-          />
+          <EmptyState icon={Shield} title="Queue is clear" description="No flags in this bucket." />
         ) : (
           <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {rows.map((row) => (
@@ -264,17 +262,6 @@ function AccountStatusBadge({ status }: { status: "active" | "restricted" | "sus
   );
 }
 
-function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl glass-panel px-4 py-12 text-center">
-      <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-        <Shield className="size-5" aria-hidden />
-      </span>
-      <p className="display-serif text-lg text-ink">{title}</p>
-      <p className="text-sm text-ink-2">{subtitle}</p>
-    </div>
-  );
-}
 
 function prettyState(state: FlagState): string {
   switch (state) {

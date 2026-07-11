@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { EmptyState } from "@/components/admin/EmptyState";
 import { Megaphone } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { TableToolbar, TableSelect } from "@/components/admin/table/TableToolbar";
@@ -143,7 +144,11 @@ export default async function AnnouncementsPage(props: { searchParams: SearchPar
           </TableToolbar>
 
           {all.length === 0 ? (
-            <EmptyState />
+            <EmptyState
+              icon={Megaphone}
+              title="No announcements yet"
+              description="Author your first — a what’s-new card, a spotlight, a note to the beta."
+            />
           ) : rows.length === 0 ? (
             <p className="rounded-xl glass-panel p-6 text-center text-sm text-ink-3">No announcements match.</p>
           ) : (
@@ -155,20 +160,6 @@ export default async function AnnouncementsPage(props: { searchParams: SearchPar
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-xl glass-panel p-12 text-center">
-      <div className="flex flex-col items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-          <Megaphone className="size-5" />
-        </span>
-        <p className="font-display text-base font-semibold text-ink">No announcements yet</p>
-        <p className="text-sm text-ink-2">Author your first - a what&apos;s-new card, a spotlight, a note to the beta.</p>
-      </div>
     </div>
   );
 }

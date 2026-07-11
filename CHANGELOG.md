@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-07-11 — Pro-console polish, phase 2b: tabs, eyebrows, empty states
+
+Three cross-cutting consistency fixes the audit flagged.
+- **One tab visual.** New `components/admin/Tabs.tsx` (`TAB_LIST_CLASS` +
+  `tabItemClass` + `TabLink`) is the single underline-tab look; `PageTabs`
+  (state), the feedback queue `ViewTabs` (links), and the analytics `AnalyticsNav`
+  (links) all render it now — no more pill-vs-underline split across surfaces.
+- **One eyebrow taxonomy.** Every page's `SectionHeader` eyebrow was its own
+  phrase ("Queues · review", "People & safety · Users", "Advanced", "Promotion",
+  "Insights · Analytics"). Normalised to the two nav groups — **Editorial** /
+  **Operations** — matching the sidebar (contextual `· suffix` on scoped detail
+  views kept). Also moved Changelog's eyebrow Editorial→Operations to match its
+  group.
+- **One empty state.** Folded four near-identical local `EmptyState` components
+  (changelog, announcements, users, safeguarding) onto the shared
+  `admin/EmptyState`.
+Presentation only. Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Pro-console polish, phase 2a: one page container + rhythm
 
 Killed the per-page layout drift the audit surfaced — five different max-widths

@@ -165,7 +165,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <SectionHeader eyebrow="Insights · Analytics" title="Events" />
+      <SectionHeader eyebrow="Operations" title="Events" />
       <AnalyticsNav active="/analytics/events" />
       {children}
     </div>

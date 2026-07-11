@@ -184,7 +184,7 @@ function unwrap<T>(value: unknown): T | null {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className={pageShell("content")}>
-      <SectionHeader eyebrow="Operations · review" title="List verification" />
+      <SectionHeader eyebrow="Operations" title="List verification" />
       <ShelvedNotice feature="Community lists" />
       {children}
     </div>

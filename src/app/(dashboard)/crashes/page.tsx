@@ -110,7 +110,7 @@ export default async function CrashesQueuePage({
   return (
     <div className={pageShell("content")}>
       <SectionHeader
-        eyebrow="Queues · review"
+        eyebrow="Operations"
         title="Crashes"
       />
 

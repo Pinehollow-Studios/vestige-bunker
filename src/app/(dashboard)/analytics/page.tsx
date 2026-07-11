@@ -250,7 +250,7 @@ function MiniSeries({
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <SectionHeader eyebrow="Insights · Analytics" title="Analytics" />
+      <SectionHeader eyebrow="Operations" title="Analytics" />
       <AnalyticsNav active="/analytics" />
       {children}
     </div>

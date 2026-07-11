@@ -193,7 +193,7 @@ export default async function FeedbackThreadPage({
       <div className={pageShell("content")}>
         <BackLink />
         <SectionHeader
-          eyebrow="Queues · review"
+          eyebrow="Operations"
           title="Feedback report"
         />
         <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">

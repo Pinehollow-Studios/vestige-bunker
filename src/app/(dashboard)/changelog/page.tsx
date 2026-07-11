@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { EmptyState } from "@/components/admin/EmptyState";
 import Link from "next/link";
 import { ArrowRight, Hammer, Pencil, Rocket } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -87,7 +88,7 @@ export default async function ChangelogPage() {
   return (
     <div className={pageShell("content")}>
       <SectionHeader
-        eyebrow="Editorial"
+        eyebrow="Operations"
         title="Changelog"
         actions={<NewVersionButton />}
       />
@@ -105,7 +106,13 @@ export default async function ChangelogPage() {
         {!notConfigured && activeDraft && <ActiveDraftBanner version={activeDraft} />}
       </div>
 
-      {!versionsRes.error && versions.length === 0 && <EmptyState />}
+      {!versionsRes.error && versions.length === 0 && (
+        <EmptyState
+          icon={Rocket}
+          title="No versions yet"
+          description="Add your first version to start tracking what ships in each release."
+        />
+      )}
 
       {!notConfigured && versions.length > 0 && (
         <ol className="relative space-y-5 before:absolute before:bottom-3 before:left-[7px] before:top-3 before:w-px before:bg-rule/45">
@@ -260,22 +267,6 @@ function VersionNode({
         <ChangeLinesView changes={changes} linkedFeedback={linkedFeedback} />
       </section>
     </li>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-xl glass-panel p-12 text-center">
-      <div className="flex flex-col items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-          <Rocket className="size-5" />
-        </span>
-        <p className="font-display text-base font-semibold text-ink">No versions yet</p>
-        <p className="text-sm text-ink-2">
-          Add your first version to start tracking what ships in each release.
-        </p>
-      </div>
-    </div>
   );
 }
 

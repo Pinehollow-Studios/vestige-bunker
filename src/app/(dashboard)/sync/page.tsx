@@ -24,7 +24,7 @@ export default async function SyncPage() {
   if (admin.role !== "super_admin") {
     return (
       <div className={pageShell("narrow")}>
-        <SectionHeader eyebrow="Promotion" title="Deploy to prod" />
+        <SectionHeader eyebrow="Operations" title="Deploy to prod" />
         <div className="flex items-start gap-3 rounded-2xl border border-alert/40 bg-alert/10 px-4 py-3 text-sm text-alert">
           <ShieldAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
           <p>This surface is restricted to super_admins.</p>
@@ -41,7 +41,7 @@ export default async function SyncPage() {
   return (
     <div className={pageShell("content")}>
       <SectionHeader
-        eyebrow="Promotion"
+        eyebrow="Operations"
         title="Deploy to prod"
       />
 

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { tabItemClass } from "@/components/admin/Tabs";
 
 export type TabDef = {
   key: string;
@@ -32,12 +33,7 @@ export function PageTabs({ tabs, initialKey }: { tabs: TabDef[]; initialKey?: st
               role="tab"
               aria-selected={active === t.key}
               onClick={() => setActive(t.key)}
-              className={cn(
-                "-mb-px border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
-                active === t.key
-                  ? "border-brand text-ink"
-                  : "border-transparent text-ink-3 hover:text-ink-2",
-              )}
+              className={tabItemClass(active === t.key)}
             >
               {t.label}
             </button>

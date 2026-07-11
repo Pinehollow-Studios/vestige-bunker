@@ -67,7 +67,7 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
   if (!supabase) {
     return (
       <div className={pageShell("wide")}>
-        <SectionHeader eyebrow="Queues · moderation" title="Photos" />
+        <SectionHeader eyebrow="Operations" title="Photos" />
         <ConfigNotice />
       </div>
     );
@@ -133,7 +133,7 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
 
   return (
     <div className={pageShell("wide")}>
-      <SectionHeader eyebrow="Queues · moderation" title="Photos" />
+      <SectionHeader eyebrow="Operations" title="Photos" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {MODERATION_BUCKETS.map((state) => (

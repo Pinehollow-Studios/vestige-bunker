@@ -20,7 +20,7 @@ export default async function AppVersionPage() {
   if (!supabase) {
     return (
       <div className={pageShell("narrow")}>
-        <SectionHeader eyebrow="Advanced · App version" title="App version gate" />
+        <SectionHeader eyebrow="Operations" title="App version gate" />
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-ink-2">
           Needs the service-role key for the active environment to read/write the gate config.
         </div>
@@ -36,7 +36,7 @@ export default async function AppVersionPage() {
 
   return (
     <div className={pageShell("narrow")}>
-      <SectionHeader eyebrow="Advanced · App version" title="App version gate" />
+      <SectionHeader eyebrow="Operations" title="App version gate" />
 
       <AppVersionForm
         initial={{
