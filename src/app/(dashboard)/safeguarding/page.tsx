@@ -1,5 +1,6 @@
 import { pageShell } from "@/components/admin/PageShell";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { StatTile } from "@/components/admin/StatTile";
 import Link from "next/link";
 import { Shield, ShieldAlert } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -81,35 +82,16 @@ export default async function SafeguardingPage({
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {STATES.map((state) => {
-          const active = state === stateFilter;
-          const count = stateCounts[state];
-          const numClass =
-            state === "pending" && count > 0
-              ? "text-brand"
-              : state === "reviewed_actioned" && count > 0
-                ? "text-amber"
-                : "text-ink";
-          return (
-            <a
-              key={state}
-              href={`/safeguarding?state=${state}`}
-              className={
-                "rounded-xl border bg-paper-raised/50 p-4 transition-colors " +
-                (active
-                  ? "border-brand text-ink"
-                  : "border-rule/70 hover:bg-paper-raised/40")
-              }
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-                {prettyState(state)}
-              </p>
-              <p className={"mt-2 font-hero text-3xl leading-none tabular-nums " + numClass}>
-                {count}
-              </p>
-            </a>
-          );
-        })}
+        {STATES.map((state) => (
+          <StatTile
+            key={state}
+            label={prettyState(state)}
+            value={stateCounts[state]}
+            href={`/safeguarding?state=${state}`}
+            active={state === stateFilter}
+            tone={state === "pending" ? "brand" : state === "reviewed_actioned" ? "amber" : "default"}
+          />
+        ))}
       </div>
 
       <section className="space-y-3">

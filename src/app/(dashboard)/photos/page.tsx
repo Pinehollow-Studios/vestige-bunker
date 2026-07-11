@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { StatTile } from "@/components/admin/StatTile";
 import Link from "next/link";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { activeStorageBaseUrl, tryCreateServiceClient } from "@/lib/supabase/admin";
@@ -139,11 +140,11 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
         {MODERATION_BUCKETS.map((state) => (
           <StatTile
             key={state}
-            state={state}
             label={prettyMod(state)}
             value={modCounts[state]}
+            href={`/photos?state=${state}${kind === "all" ? "" : `&kind=${kind}`}`}
             active={state === active}
-            kind={kind}
+            tone={state === "pending" ? "brand" : state === "rejected" || state === "flagged" ? "alert" : "default"}
           />
         ))}
       </div>
@@ -169,41 +170,6 @@ export default async function PhotosPage(props: { searchParams: SearchParams }) 
 
       <PhotoModerationGrid photos={photos} activeState={active} />
     </div>
-  );
-}
-
-function StatTile({
-  state,
-  label,
-  value,
-  active,
-  kind,
-}: {
-  state: PhotoModerationState;
-  label: string;
-  value: number;
-  active: boolean;
-  kind: KindFilter;
-}) {
-  const numClass =
-    state === "pending" && value > 0
-      ? "text-brand"
-      : (state === "rejected" || state === "flagged") && value > 0
-        ? "text-alert"
-        : "text-ink";
-  return (
-    <Link
-      href={`/photos?state=${state}${kind === "all" ? "" : `&kind=${kind}`}`}
-      className={cn(
-        "rounded-xl glass-panel p-4 transition-colors hover:border-brand/40",
-        active && "border-brand/50 ring-1 ring-brand/30",
-      )}
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{label}</p>
-      <p className={"mt-2 font-display text-3xl font-semibold leading-none tabular-nums " + numClass}>
-        {value.toLocaleString()}
-      </p>
-    </Link>
   );
 }
 

@@ -1,4 +1,5 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { EmptyState } from "@/components/admin/EmptyState";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Smartphone } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -214,19 +215,11 @@ function ActiveFiltersStrip({
 
 function EmptyQueue() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl glass-panel p-12 text-center">
-      <span
-        aria-hidden
-        className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand"
-      >
-        <AlertTriangle className="size-5" />
-      </span>
-      <p className="font-display text-lg text-ink">No crashes recorded</p>
-      <p className="max-w-md text-sm text-ink-2">
-        Sentry events land here via the sentry-webhook Edge Function. If you
-        expected something, check the Function logs in Supabase.
-      </p>
-    </div>
+    <EmptyState
+      icon={AlertTriangle}
+      title="No crashes recorded"
+      description="Sentry events land here via the sentry-webhook Edge Function. If you expected something, check the Function logs in Supabase."
+    />
   );
 }
 

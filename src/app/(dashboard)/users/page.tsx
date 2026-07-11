@@ -1,5 +1,6 @@
 import { pageShell } from "@/components/admin/PageShell";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { StatTile } from "@/components/admin/StatTile";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search, Users as UsersIcon } from "lucide-react";
 import { SectionHeader } from "@/components/admin/SectionHeader";
@@ -321,34 +322,6 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-function StatTile({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone?: "brand" | "amber" | "alert";
-}) {
-  const numClass =
-    tone === "brand" && value > 0
-      ? "text-brand"
-      : tone === "amber" && value > 0
-        ? "text-amber"
-        : tone === "alert" && value > 0
-          ? "text-alert"
-          : "text-ink";
-  return (
-    <div className="rounded-xl glass-panel p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-        {label}
-      </p>
-      <p className={"mt-2 font-hero text-2xl leading-none tabular-nums sm:text-3xl " + numClass}>
-        {value.toLocaleString()}
-      </p>
-    </div>
-  );
-}
 
 function StatusChip({ status }: { status: AccountStatus }) {
   const cls =
