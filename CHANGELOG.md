@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-07-11 — Notifications page: same tabs + one-click treatment
+
+Applied the emails-page rework to `/notifications` and factored the tab surface
+into a shared `components/admin/PageTabs.tsx` (used by both pages, so they can't
+drift). Two tabs split the page's two jobs: **"Notifications you send"**
+(compose/queue/send pushes) and **"Automatic notifications"** (the
+`SystemNotificationsSection` template editor for the notifications that fire
+themselves). New `ComposeBroadcastButton` + `createDraftBroadcast()` give the
+one-click "New notification" → straight-into-editor flow (no title prompt); the
+broadcast list moved into a `BroadcastsSection` (list / empty-state CTA / inline
+error, always rendering the compose button). Removed `NewBroadcastButton`;
+refactored the emails page onto `PageTabs` too (deleted the emails-only
+`EmailsTabs`). Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-11 — Emails page rework: tabs + one-click compose
 
 Same-day follow-up after the first cut buried the compose action (the campaigns

@@ -12,21 +12,19 @@ export type ActionResult<T = void> =
   | { ok: false; message: string };
 
 /**
- * Create a fresh draft broadcast and redirect into its editor. Starts as an
- * everyone-audience draft so nothing fires until the admin composes it and hits
- * Send (or schedules it).
+ * One-click "New notification": create a fresh draft and drop the admin straight
+ * into the editor. Titled "Untitled notification" (renameable there) so composing
+ * is a single click — no up-front title gate. Everyone-audience draft, so nothing
+ * fires until it's composed and Sent (or scheduled).
  */
-export async function createBroadcast(title: string): Promise<ActionResult<string>> {
-  const trimmed = title.trim();
-  if (!trimmed) return { ok: false, message: "Title is required." };
-
+export async function createDraftBroadcast(): Promise<ActionResult<string>> {
   const admin = await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("admin_broadcasts")
     .insert({
-      title: trimmed,
+      title: "Untitled notification",
       body: "",
       audience_kind: "everyone",
       target: {},

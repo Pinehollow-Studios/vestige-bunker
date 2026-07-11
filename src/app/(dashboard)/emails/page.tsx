@@ -1,9 +1,10 @@
 import { SectionHeader } from "@/components/admin/SectionHeader";
+import { PageTabs } from "@/components/admin/PageTabs";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { EmailsSection } from "./EmailsSection";
 import { EmailCampaignsSection } from "./EmailCampaignsSection";
-import { EmailsTabs } from "./EmailsTabs";
+import { ComposeEmailButton } from "./campaigns/ComposeEmailButton";
 import type { EmailTemplateRow } from "./actions";
 import type { EmailCampaignOverviewRow } from "./campaigns/types";
 
@@ -37,30 +38,41 @@ export default async function EmailsPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       <SectionHeader eyebrow="Editorial" title="Emails" />
 
-      <EmailsTabs
-        sendSlot={<EmailCampaignsSection campaigns={campaigns} error={campaignsError} />}
-        autoSlot={
-          <div className="space-y-4">
-            <p className="text-sm text-ink-2">
-              These emails send <strong className="font-medium text-ink">automatically</strong>{" "}
-              when something happens (a new member, a password reset). You can’t send these by
-              hand — edit their wording here. To send your own email, use{" "}
-              <strong className="font-medium text-ink">Emails you send</strong>.
-            </p>
-            {notConfigured ? (
-              <div className="rounded-xl border border-border bg-surface-1 p-6 text-sm text-ink-3">
-                The email templates table isn’t on this database yet. Apply the{" "}
-                <code>email_templates</code> migration, then reload.
+      <PageTabs
+        tabs={[
+          {
+            key: "send",
+            label: "Emails you send",
+            action: <ComposeEmailButton />,
+            content: <EmailCampaignsSection campaigns={campaigns} error={campaignsError} />,
+          },
+          {
+            key: "auto",
+            label: "Automatic emails",
+            content: (
+              <div className="space-y-4">
+                <p className="text-sm text-ink-2">
+                  These emails send <strong className="font-medium text-ink">automatically</strong>{" "}
+                  when something happens (a new member, a password reset). You can’t send these by
+                  hand — edit their wording here. To send your own email, use{" "}
+                  <strong className="font-medium text-ink">Emails you send</strong>.
+                </p>
+                {notConfigured ? (
+                  <div className="rounded-xl border border-border bg-surface-1 p-6 text-sm text-ink-3">
+                    The email templates table isn’t on this database yet. Apply the{" "}
+                    <code>email_templates</code> migration, then reload.
+                  </div>
+                ) : tplRes.error ? (
+                  <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
+                    Failed to load: {tplRes.error.message}
+                  </div>
+                ) : (
+                  <EmailsSection templates={templates} />
+                )}
               </div>
-            ) : tplRes.error ? (
-              <div className="rounded-xl border border-alert/40 bg-alert/10 p-4 text-sm text-alert">
-                Failed to load: {tplRes.error.message}
-              </div>
-            ) : (
-              <EmailsSection templates={templates} />
-            )}
-          </div>
-        }
+            ),
+          },
+        ]}
       />
     </div>
   );
