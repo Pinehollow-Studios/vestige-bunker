@@ -553,3 +553,31 @@ canonical write-up lives on disk.
   accent over blue. Swept stale hardcoded surface/ink hex in the iOS previews +
   login `BrandMark` to spec. Presentation only, no schema/data/deps. Verified
   `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-07-11** — Email campaigns (`/emails` → "Campaigns you send"): compose +
+  queue + send a one-off email to a targeted audience — the email sibling of the
+  `/notifications` push-broadcast system, one layer down (Resend, not APNs).
+  Decisions locked with Tom: full marketing build (consent + working
+  unsubscribe, not transactional-only) + per-recipient log. Two iOS migrations —
+  `20260711100000_email_marketing_consent.sql` (`users.email_marketing_opt_out`
+  opt-out + `get/set` RPCs + signed-token `unsubscribe_email`) and
+  `20260711110000_email_campaigns.sql` (near-verbatim clone of `admin_broadcasts`
+  — `email_campaigns` + `preheader` + `bypass_marketing_consent` [email analogue
+  of `is_critical`], `email_campaign_targets`, per-recipient
+  `email_campaign_recipients`; resolver = broadcast resolver + consent gate; full
+  admin RPC set + per-minute pg_cron). Delivery differs from push because email
+  needs batching/rate-limits/bounces: a send materialises 'pending' recipient
+  rows (address from `auth.users`) then one pg_net POST (`_email_campaign_fanout`,
+  clone of `_push_fanout`) hands off to a new **`send-email-campaign`** Edge
+  Function (Resend `/emails/batch`, 100/call, per-email `List-Unsubscribe`,
+  writes each row's outcome, flips to 'sent'; idempotent on 'pending'). New
+  public **`unsubscribe`** Edge Function (HMAC GET + RFC 8058 one-click POST);
+  both `verify_jwt = false`. Graceful no-op until the vault rows + `RESEND_API_KEY`
+  / `EMAIL_UNSUBSCRIBE_SECRET` / `CAMPAIGN_FROM` secrets land (Tom-action, in the
+  migration header). Dashboard: `EmailCampaignsSection` + card + `NewCampaignButton`
+  above the template editor, a `/emails/campaigns/[id]` editor (compose w/ live
+  preview + "start from a template" + Service-message toggle + send/schedule/cancel
+  + lazy per-recipient log), `campaigns/actions.ts`, and the targeting UI lifted
+  from `BroadcastEditor` into a shared `components/admin/AudiencePicker.tsx` (email
+  editor uses it now; migrating the broadcast editor onto it is a follow-up).
+  Migrations reach prod via iOS `prod-deploy`; a real Resend send is Tom-to-verify
+  once secrets land. Verified `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.

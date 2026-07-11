@@ -5,6 +5,73 @@
 
 ---
 
+## 2026-07-11 — Email campaigns: send + queue emails to users
+
+Jack can already compose/queue/send **push notifications** from
+`/notifications`; `/emails` only let him edit the seven transactional
+templates. This slice adds the missing half — composing a one-off **email**
+and sending it to a targeted audience — as the email sibling of the
+push-broadcast system, one layer down (Resend instead of APNs). Decisions
+locked with Tom before building: full marketing build (proper consent +
+working unsubscribe, not transactional-only) and a per-recipient delivery
+log (bounce/dedupe/resend visibility).
+
+**Schema + delivery (`Vestige-ios`, two migrations + two Edge Functions).**
+
+- `20260711100000_email_marketing_consent.sql` — `users.email_marketing_opt_out`
+  (opt-out model, mirrors `analytics_opt_out`), `get/set_email_marketing_opt_out`
+  RPCs for a future iOS Settings toggle, and `unsubscribe_email(uuid)`
+  (service_role only). Unsubscribe is a **signed link** — no per-user token
+  column — verified by HMAC over the user id with a shared secret.
+- `20260711110000_email_campaigns.sql` — a near-verbatim clone of the
+  `admin_broadcasts` system: `email_campaigns` (+ `preheader`,
+  `bypass_marketing_consent` — the email analogue of `is_critical`, for
+  service mail), `email_campaign_targets` (individuals), and the
+  **per-recipient log** `email_campaign_recipients` (email, status, resend_id,
+  error). Targeting resolver `email_campaign_targets_user` is the broadcast
+  resolver plus the marketing-consent gate; a send materialises one 'pending'
+  recipient row per targeted+consenting user (address captured from
+  `auth.users` at send time), then fires ONE pg_net POST to the Edge Function
+  (`_email_campaign_fanout`, a clone of `_push_fanout`). Full RPC set
+  (`admin_send/schedule/cancel/overview/recipients`, `set_..._targets`) +
+  a per-minute pg_cron scheduler, all cloned from broadcasts.
+- **Why delivery differs from push:** push fans out entirely in Postgres;
+  email can't (Resend rate limits + batch API + bounce semantics). So a
+  single fan-out hands the campaign to a new `send-email-campaign` Edge
+  Function that service-role-loads the pending rows, renders per recipient
+  (`{{first_name}}`, a signed `{{unsubscribe_url}}`), batches to
+  `api.resend.com/emails/batch` (100/call, paced under the rate limit, each
+  email carrying `List-Unsubscribe` headers), writes each row's outcome, rolls
+  `sent_count`/`failed_count`, and flips the campaign to 'sent'. Idempotent on
+  'pending', so a re-trigger after a no-op resumes rather than double-sends.
+  A public `unsubscribe` Edge Function (HMAC-verified GET + RFC 8058 one-click
+  POST) flips the opt-out and renders a branded confirmation. Both registered
+  `verify_jwt = false` in `config.toml` (shared-secret / HMAC auth, no user JWT).
+- **Graceful degradation:** until the vault rows + `RESEND_API_KEY` /
+  `EMAIL_UNSUBSCRIBE_SECRET` / `CAMPAIGN_FROM` secrets land (Tom-action,
+  documented in the migration header), a send queues recipient rows but the
+  fan-out no-ops — nothing leaves — exactly the push posture. Migrations reach
+  prod via the iOS `prod-deploy` action; a real Resend send + unsubscribe
+  round-trip is a Tom-action once the secrets are set.
+
+**Dashboard (`vestige-bunker`).** A "Campaigns you send" section on `/emails`
+above the transactional template editor (mirroring `/notifications`), a
+campaign card + "New campaign" button + empty state, and a
+`/emails/campaigns/[id]` editor: compose (internal name, subject, preheader,
+HTML with the same live-preview iframe the template editor uses, plus an
+optional "start from a template"), a **Service message — bypasses unsubscribe**
+toggle, send-now / schedule / cancel, and a lazy-loaded per-recipient delivery
+log. New server actions in `campaigns/actions.ts` mirror the broadcast ones.
+The audience/targeting UI was **extracted from `BroadcastEditor` into a shared
+`components/admin/AudiencePicker.tsx`** (parameterised so each surface injects
+its own persist + search actions) — the email editor uses it now; migrating the
+broadcast editor onto it is a noted follow-up to close the duplication. No
+sidebar change (Emails already routes here); no `/sync` entity (campaigns are
+prod operational data). Verified `tsc` / `eslint` / `build` clean; the gated
+compose→send UI walk-through is Tom-to-eyeball.
+
+---
+
 ## 2026-07-06 — Design-system pass: fonts + palette + atmosphere to spec
 
 Full brand-alignment sweep bringing The Bunker up to the canonical Vestige
