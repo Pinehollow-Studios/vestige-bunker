@@ -155,6 +155,19 @@ export async function getOnboardingFunnel(supabase: SupabaseClient): Promise<Fun
     .map((step) => ({ step, label: labelFor(step), users: byStep.get(step) ?? 0 }));
 }
 
+/** The core-loop activation funnel from domain tables (Phase 1.5) — signed up →
+ *  created profile → marked → logged → (added friend / came back). The first
+ *  four are a nested funnel; `friended` + `returned` are separate milestones. */
+export type ActivationRow = { step: string; label: string; users: number; sort: number };
+export async function getActivationFunnel(supabase: SupabaseClient): Promise<ActivationRow[]> {
+  const { data, error } = await supabase.rpc("admin_activation_funnel");
+  if (error) {
+    console.error("analytics.getActivationFunnel", error.message);
+    return [];
+  }
+  return ((data as ActivationRow[] | null) ?? []).slice().sort((a, b) => a.sort - b.sort);
+}
+
 /** Discovery-source attribution, descending by plays. Source is labelled by
  *  the caller via `DISCOVERY_SOURCE_LABEL`. */
 export async function getDiscovery(supabase: SupabaseClient): Promise<DiscoveryRow[]> {

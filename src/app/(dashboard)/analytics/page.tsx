@@ -17,7 +17,7 @@ import { eventLabel, DISCOVERY_SOURCE_LABEL } from "@/lib/analytics/config";
 import {
   getOverview,
   getDailyActivity,
-  getOnboardingFunnel,
+  getActivationFunnel,
   getDiscovery,
   getEventVolume,
 } from "@/lib/analytics/queries";
@@ -47,7 +47,7 @@ export default async function AnalyticsOverviewPage() {
   const [overview, daily, funnel, discovery, eventVolume] = await Promise.all([
     getOverview(supabase),
     getDailyActivity(supabase),
-    getOnboardingFunnel(supabase),
+    getActivationFunnel(supabase),
     getDiscovery(supabase),
     getEventVolume(supabase),
   ]);
@@ -77,10 +77,12 @@ export default async function AnalyticsOverviewPage() {
   const signupsSeries = last30.map((d) => ({ day: d.day, count: d.signups }));
   const hasDaily = last30.some((d) => d.active_users > 0 || d.rounds > 0);
 
-  // ── Funnel (already ordered + labelled) ──
-  const started = funnel.find((s) => s.step === "started")?.users ?? funnel[0]?.users ?? 0;
-  const completed = funnel.find((s) => s.step === "completed")?.users ?? funnel[funnel.length - 1]?.users ?? 0;
-  const activationPct = started > 0 ? Math.round((completed / started) * 100) : 0;
+  // ── Activation funnel (nested core loop) + engagement milestones ──
+  const funnelStages = funnel.filter((s) => s.sort <= 4);
+  const milestones = funnel.filter((s) => s.sort >= 5);
+  const onboarded = funnel.find((s) => s.step === "onboarded")?.users ?? 0;
+  const loggedUsers = funnel.find((s) => s.step === "logged")?.users ?? 0;
+  const activationPct = onboarded > 0 ? Math.round((loggedUsers / onboarded) * 100) : 0;
 
   // ── Discovery + feature adoption ──
   const discoveryItems = discovery.map((d) => ({
@@ -178,13 +180,27 @@ export default async function AnalyticsOverviewPage() {
             <div className="flex items-center justify-between">
               <SectionLabel>Activation funnel</SectionLabel>
               <span className="rounded-md bg-brand/15 px-2 py-0.5 text-[11px] font-semibold text-brand">
-                {activationPct}% complete
+                {activationPct}% log a round
               </span>
             </div>
-            {funnel.length > 0 ? (
-              <FunnelBars stages={funnel.map((s) => ({ key: s.step, label: s.label, count: s.users }))} />
+            {funnelStages.length > 0 ? (
+              <>
+                <FunnelBars stages={funnelStages.map((s) => ({ key: s.step, label: s.label, count: s.users }))} />
+                {milestones.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {milestones.map((m) => (
+                      <div key={m.step} className="rounded-lg border border-rule/60 bg-paper-sunken/30 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{m.label}</p>
+                        <p className="mt-0.5 font-display text-lg font-semibold tabular-nums text-ink">
+                          {m.users.toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
-              <EmptyHint>No onboarding events yet.</EmptyHint>
+              <EmptyHint>No activation data yet.</EmptyHint>
             )}
           </section>
         </Reveal>
