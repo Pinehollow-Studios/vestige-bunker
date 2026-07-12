@@ -22,7 +22,10 @@ import {
   type UpsertFlagInput,
 } from "./actions";
 import {
+  CATEGORY_BLURB,
   defaultValueFor,
+  flagCategory,
+  FLAG_CATEGORIES,
   humanizeKey,
   isFeature,
   kindLabel,
@@ -50,8 +53,9 @@ export function FlagsBoard({
   allUsers: PickerUser[];
   targetsByFlag: Record<string, string[]>;
 }) {
-  const on = flags.filter((f) => f.enabled && !f.archived);
-  const off = flags.filter((f) => !f.enabled && !f.archived);
+  const live = flags.filter((f) => !f.archived);
+  const on = live.filter((f) => f.enabled);
+  const off = live.filter((f) => !f.enabled);
   const archived = flags.filter((f) => f.archived);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -96,21 +100,24 @@ export function FlagsBoard({
 
       <NewFlagPanel existingKeys={new Set(flags.map((f) => f.key))} />
 
-      {on.length > 0 && (
-        <Group title="On" count={on.length}>
-          {on.map(card)}
-        </Group>
+      {live.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
+          Nothing here yet. Add a feature or setting above.
+        </div>
+      ) : (
+        FLAG_CATEGORIES.map((category) => {
+          // Within a category, show what's on first.
+          const items = live
+            .filter((f) => flagCategory(f.value_type) === category)
+            .sort((a, b) => Number(b.enabled) - Number(a.enabled));
+          if (items.length === 0) return null;
+          return (
+            <Group key={category} title={category} blurb={CATEGORY_BLURB[category]} count={items.length}>
+              {items.map(card)}
+            </Group>
+          );
+        })
       )}
-
-      <Group title="Off" count={off.length}>
-        {off.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
-            {flags.length === 0 ? "No features or settings yet. Add one above." : "Everything is on."}
-          </div>
-        ) : (
-          off.map(card)
-        )}
-      </Group>
 
       {archived.length > 0 && (
         <div className="space-y-3">
@@ -129,15 +136,28 @@ export function FlagsBoard({
   );
 }
 
-function Group({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+function Group({
+  title,
+  count,
+  blurb,
+  children,
+}: {
+  title: string;
+  count: number;
+  blurb?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="space-y-3">
-      <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
-        {title}
-        <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">
-          {count}
-        </span>
-      </h2>
+      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+          {title}
+          <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">
+            {count}
+          </span>
+        </h2>
+        {blurb && <span className="text-xs text-ink-3">{blurb}</span>}
+      </div>
       <div className="space-y-3">{children}</div>
     </section>
   );

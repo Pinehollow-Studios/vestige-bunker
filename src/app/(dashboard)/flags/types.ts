@@ -55,6 +55,23 @@ export function isFeature(type: FlagValueType): boolean {
   return type === "boolean";
 }
 
+/** The three plain-language buckets the panel groups by. */
+export type FlagCategory = "Features" | "Copy" | "Settings";
+
+export const FLAG_CATEGORIES: FlagCategory[] = ["Features", "Copy", "Settings"];
+
+export function flagCategory(type: FlagValueType): FlagCategory {
+  if (type === "boolean") return "Features";
+  if (type === "string") return "Copy";
+  return "Settings";
+}
+
+export const CATEGORY_BLURB: Record<FlagCategory, string> = {
+  Features: "Turn capabilities on or off.",
+  Copy: "Edit user-facing text — live.",
+  Settings: "Tune numbers without a release.",
+};
+
 /** "Feature" / "Setting" chip label. */
 export function kindLabel(type: FlagValueType): string {
   return isFeature(type) ? "Feature" : "Setting";
