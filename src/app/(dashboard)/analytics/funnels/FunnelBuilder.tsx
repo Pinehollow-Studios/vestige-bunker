@@ -13,15 +13,62 @@ const SELECT =
   "h-9 w-full rounded-lg border border-input bg-paper-sunken/40 px-2.5 text-sm transition-colors focus-visible:border-brand/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30";
 
 /**
+ * The canonical Vestige funnels — one click fills the steps and runs. Event
+ * names must exist in `app_events` (see the AnalyticsEventName vocabulary);
+ * windows reflect how fast each journey actually happens (onboarding is
+ * minutes, activation can take days).
+ */
+const PRESETS: { key: string; label: string; steps: string[]; windowHours: number; rangeDays: number }[] = [
+  {
+    key: "onboarding",
+    label: "Onboarding",
+    steps: ["onboarding_started", "onboarding_profile_created", "onboarding_completed"],
+    windowHours: 24,
+    rangeDays: 30,
+  },
+  {
+    key: "activation",
+    label: "Sign up → first course",
+    steps: ["auth_completed", "course_marked_played"],
+    windowHours: 168,
+    rangeDays: 90,
+  },
+  {
+    key: "core-loop",
+    label: "Discover → collect",
+    steps: ["course_viewed", "course_marked_played"],
+    windowHours: 24,
+    rangeDays: 30,
+  },
+  {
+    key: "logging",
+    label: "Open → log a round",
+    steps: ["session_started", "round_logged"],
+    windowHours: 24,
+    rangeDays: 30,
+  },
+  {
+    key: "lists",
+    label: "Browse → save to a list",
+    steps: ["course_viewed", "course_added_to_list"],
+    windowHours: 24,
+    rangeDays: 30,
+  },
+];
+
+/**
  * Self-serve funnel builder — pick 2–6 events in order, a date range, and a
  * conversion window (anchored at each user's step 1). Shows step-by-step users,
  * % of the top, % of the previous step, and the median time between steps.
+ * Lands pre-loaded: the canonical presets run with one click, and the
+ * onboarding funnel runs automatically on first open.
  */
 export function FunnelBuilder() {
   const [names, setNames] = useState<EventNameRow[]>([]);
-  const [steps, setSteps] = useState<string[]>(["", ""]);
-  const [rangeDays, setRangeDays] = useState(30);
-  const [windowHours, setWindowHours] = useState(168);
+  const [steps, setSteps] = useState<string[]>(PRESETS[0].steps);
+  const [rangeDays, setRangeDays] = useState(PRESETS[0].rangeDays);
+  const [windowHours, setWindowHours] = useState(PRESETS[0].windowHours);
+  const [activePreset, setActivePreset] = useState<string | null>(PRESETS[0].key);
   const [result, setResult] = useState<FunnelStepRow[] | null>(null);
   const [running, startRun] = useTransition();
 
@@ -30,20 +77,18 @@ export function FunnelBuilder() {
       if (r.ok) setNames(r.data);
       else toast.error(r.message);
     });
+    // Land with a result, not an empty builder.
+    execute(PRESETS[0].steps, PRESETS[0].rangeDays, PRESETS[0].windowHours);
   }, []);
 
   const chosen = steps.filter((s) => s !== "");
   const canRun = chosen.length >= 2 && chosen.length === steps.length;
 
-  function run() {
-    if (!canRun) {
-      toast.error("Pick an event for every step (at least two).");
-      return;
-    }
+  function execute(runSteps: string[], runRange: number, runWindow: number) {
     const to = new Date();
-    const from = new Date(Date.now() - rangeDays * 86400_000);
+    const from = new Date(Date.now() - runRange * 86400_000);
     startRun(async () => {
-      const r = await runFunnel(steps, from.toISOString(), to.toISOString(), windowHours);
+      const r = await runFunnel(runSteps, from.toISOString(), to.toISOString(), runWindow);
       if (!r.ok) {
         toast.error(r.message);
         return;
@@ -52,13 +97,48 @@ export function FunnelBuilder() {
     });
   }
 
+  function applyPreset(p: (typeof PRESETS)[number]) {
+    setSteps(p.steps);
+    setRangeDays(p.rangeDays);
+    setWindowHours(p.windowHours);
+    setActivePreset(p.key);
+    execute(p.steps, p.rangeDays, p.windowHours);
+  }
+
+  function run() {
+    if (!canRun) {
+      toast.error("Pick an event for every step (at least two).");
+      return;
+    }
+    execute(steps, rangeDays, windowHours);
+  }
+
   return (
     <div className="space-y-6">
       <section className="space-y-4 rounded-2xl glass-panel p-5">
         <SectionLabel>Build a funnel</SectionLabel>
+
+        {/* One-click canonical funnels — the questions worth asking every week. */}
+        <div className="flex flex-wrap gap-1.5">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => applyPreset(p)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                activePreset === p.key
+                  ? "border-brand/50 bg-brand/10 text-brand"
+                  : "border-border bg-surface-2 text-ink-2 hover:text-ink",
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         <p className="text-xs text-ink-3">
           Users count at each step only if they did the steps <strong className="font-medium text-ink-2">in order</strong>,
-          all within the conversion window of their first step.
+          all within the conversion window of their first step. Pick a preset above, or build your own below.
         </p>
 
         <div className="space-y-2">
@@ -67,7 +147,14 @@ export function FunnelBuilder() {
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-xs font-semibold text-brand">
                 {i + 1}
               </span>
-              <select className={SELECT} value={s} onChange={(e) => setSteps(steps.map((x, xi) => (xi === i ? e.target.value : x)))}>
+              <select
+                className={SELECT}
+                value={s}
+                onChange={(e) => {
+                  setActivePreset(null);
+                  setSteps(steps.map((x, xi) => (xi === i ? e.target.value : x)));
+                }}
+              >
                 <option value="">Choose an event…</option>
                 {names.map((n) => (
                   <option key={n.event_name} value={n.event_name}>
@@ -77,7 +164,10 @@ export function FunnelBuilder() {
               </select>
               {steps.length > 2 && (
                 <button
-                  onClick={() => setSteps(steps.filter((_, xi) => xi !== i))}
+                  onClick={() => {
+                    setActivePreset(null);
+                    setSteps(steps.filter((_, xi) => xi !== i));
+                  }}
                   className="shrink-0 text-ink-3 hover:text-alert"
                   aria-label={`Remove step ${i + 1}`}
                 >
@@ -91,7 +181,10 @@ export function FunnelBuilder() {
         <div className="flex flex-wrap items-center gap-2">
           {steps.length < 6 && (
             <button
-              onClick={() => setSteps([...steps, ""])}
+              onClick={() => {
+                setActivePreset(null);
+                setSteps([...steps, ""]);
+              }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-ink-2 transition-colors hover:text-ink"
             >
               <Plus className="size-3" /> Step

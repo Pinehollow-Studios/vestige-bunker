@@ -36,7 +36,8 @@ export function EventExplorer() {
   const [event, setEvent] = useState<string>("");
   const [rangeDays, setRangeDays] = useState(30);
   const [bucket, setBucket] = useState<"day" | "week">("day");
-  const [breakdown, setBreakdown] = useState("");
+  // Land useful: version adoption is the breakdown you want most often.
+  const [breakdown, setBreakdown] = useState("app_version");
   const [series, setSeries] = useState<SeriesRow[]>([]);
   const [byDim, setByDim] = useState<BreakdownRow[]>([]);
   const [loading, startLoad] = useTransition();

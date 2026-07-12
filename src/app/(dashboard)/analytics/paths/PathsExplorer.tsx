@@ -36,7 +36,16 @@ export function PathsExplorer() {
   const [loading, startLoad] = useTransition();
 
   useEffect(() => {
-    loadEventNames().then((r) => (r.ok ? setNames(r.data) : toast.error(r.message)));
+    loadEventNames().then((r) => {
+      if (!r.ok) {
+        toast.error(r.message);
+        return;
+      }
+      setNames(r.data);
+      // Land useful: default the "what happens after…" panel to the session
+      // opener (the highest-signal question) instead of an empty picker.
+      setAfterEvent((cur) => cur || (r.data.some((n) => n.event_name === "session_started") ? "session_started" : cur));
+    });
   }, []);
 
   useEffect(() => {
