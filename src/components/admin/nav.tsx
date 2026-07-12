@@ -23,6 +23,7 @@ import {
   Shield,
   Smartphone,
   Sparkles,
+  Target,
   ToggleRight,
   Users,
 } from "lucide-react";
@@ -76,6 +77,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
       { href: "/feedback", label: "Feedback", icon: MessageSquareWarning, countKey: "feedback" },
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
+      { href: "/segments", label: "Segments", icon: Target },
       { href: "/photos", label: "Photos", icon: Images, countKey: "photos" },
       { href: "/safeguarding", label: "Safeguarding", icon: Shield, countKey: "safeguarding" },
       { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },

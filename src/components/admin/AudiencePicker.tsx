@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { Check, Search, Users } from "lucide-react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { Check, Search, Target, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { PickerUser } from "@/lib/users/roster";
+import { listSegmentsForPicker, segmentMemberIds } from "@/app/(dashboard)/segments/actions";
 import {
   AUDIENCE_KINDS,
   AUDIENCE_LABELS,
@@ -125,6 +126,34 @@ function IndividualsPicker({
   const [justSaved, setJustSaved] = useState(false);
   const [saving, startSave] = useTransition();
 
+  // Saved segments — an audience defined once, reusable here.
+  const [segments, setSegments] = useState<{ id: string; name: string; member_count: number | null }[]>([]);
+  const [applying, startApply] = useTransition();
+  useEffect(() => {
+    let ok = true;
+    listSegmentsForPicker().then((r) => {
+      if (ok && r.ok) setSegments(r.data ?? []);
+    });
+    return () => {
+      ok = false;
+    };
+  }, []);
+
+  function applySegment(id: string) {
+    if (!id) return;
+    startApply(async () => {
+      const r = await segmentMemberIds(id);
+      if (!r.ok) {
+        toast.error(r.message);
+        return;
+      }
+      const ids = r.data ?? [];
+      setJustSaved(false);
+      setSelected((prev) => new Set([...prev, ...ids]));
+      toast.success(`Added ${ids.length} from segment — review, then save`);
+    });
+  }
+
   const byId = useMemo(() => {
     const m = new Map<string, PickerUser>();
     for (const u of allUsers) m.set(u.id, u);
@@ -185,6 +214,31 @@ function IndividualsPicker({
           {selected.size} selected
         </span>
       </div>
+
+      {/* Apply a saved segment — fills the selection, then you save as usual. */}
+      {segments.length > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-brand/25 bg-brand/[0.03] px-2.5 py-2">
+          <Target aria-hidden className="size-3.5 shrink-0 text-brand" />
+          <select
+            className={cn(SELECT_CLS, "h-8 flex-1")}
+            value=""
+            disabled={applying}
+            onChange={(e) => {
+              if (e.target.value) {
+                applySegment(e.target.value);
+                e.currentTarget.value = "";
+              }
+            }}
+          >
+            <option value="">{applying ? "Loading segment…" : "Apply a saved segment…"}</option>
+            {segments.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}{s.member_count !== null ? ` (${s.member_count})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Selected summary — always visible, even while filtering. */}
       {selectedUsers.length > 0 && (
