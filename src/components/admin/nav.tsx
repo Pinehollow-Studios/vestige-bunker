@@ -22,6 +22,7 @@ import {
   Shield,
   Smartphone,
   Sparkles,
+  ToggleRight,
   Users,
 } from "lucide-react";
 import { SidebarCollapseToggle } from "@/components/admin/SidebarCollapseToggle";
@@ -78,6 +79,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/crashes", label: "Crashes", icon: AlertTriangle, countKey: "crashes" },
       { href: "/users", label: "Users", icon: Users, countKey: "users" },
       { href: "/lists", label: "List verification", icon: ListChecks, countKey: "verification", shelved: true },
+      { href: "/flags", label: "Feature flags", icon: ToggleRight },
       { href: "/app-version", label: "App version", icon: Smartphone },
       { href: "/sync", label: "Sync", icon: RefreshCw },
     ],
