@@ -6,8 +6,15 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { EmailsSection } from "./EmailsSection";
 import { EmailCampaignsSection } from "./EmailCampaignsSection";
 import { ComposeEmailButton } from "./campaigns/ComposeEmailButton";
+import { WaitlistSection } from "./waitlist/WaitlistSection";
+import { WaitlistComposeButton } from "./waitlist/WaitlistComposeButton";
 import type { EmailTemplateRow } from "./actions";
 import type { EmailCampaignOverviewRow } from "./campaigns/types";
+import type {
+  WaitlistOverview,
+  WaitlistSubscriberRow,
+  WaitlistCampaignOverviewRow,
+} from "./waitlist/types";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +28,12 @@ export default async function EmailsPage() {
   await requireAdmin();
   const supabase = await createClient();
 
-  const [tplRes, campRes] = await Promise.all([
+  const [tplRes, campRes, wlOverviewRes, wlSubsRes, wlCampRes] = await Promise.all([
     supabase.rpc("admin_email_templates"),
     supabase.rpc("admin_email_campaigns_overview"),
+    supabase.rpc("admin_waitlist_overview"),
+    supabase.rpc("admin_waitlist_subscribers", { p_limit: 50, p_offset: 0, p_search: null }),
+    supabase.rpc("admin_waitlist_campaigns_overview"),
   ]);
 
   const templates = (tplRes.data as EmailTemplateRow[] | null) ?? [];
@@ -34,6 +44,14 @@ export default async function EmailsPage() {
     campRes.error && isMissingRelation(campRes.error.message)
       ? "The email campaigns tables aren’t on this database yet."
       : campRes.error?.message ?? null;
+
+  const waitlistOverview = (wlOverviewRes.data?.[0] as WaitlistOverview | null) ?? null;
+  const waitlistSubscribers = (wlSubsRes.data as WaitlistSubscriberRow[] | null) ?? [];
+  const waitlistCampaigns = (wlCampRes.data as WaitlistCampaignOverviewRow[] | null) ?? [];
+  const waitlistError =
+    wlOverviewRes.error && isMissingRelation(wlOverviewRes.error.message)
+      ? "The waitlist tables aren’t on this database yet."
+      : wlOverviewRes.error?.message ?? null;
 
   return (
     <div className={pageShell("wide")}>
@@ -46,6 +64,19 @@ export default async function EmailsPage() {
             label: "Emails you send",
             action: <ComposeEmailButton />,
             content: <EmailCampaignsSection campaigns={campaigns} error={campaignsError} />,
+          },
+          {
+            key: "waitlist",
+            label: "Waitlist",
+            action: <WaitlistComposeButton />,
+            content: (
+              <WaitlistSection
+                overview={waitlistOverview}
+                subscribers={waitlistSubscribers}
+                campaigns={waitlistCampaigns}
+                error={waitlistError}
+              />
+            ),
           },
           {
             key: "auto",
