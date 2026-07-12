@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, FlaskConical, Plus, Radio, Trash2, Users } from "lucide-react";
+import { ChevronDown, Plus, SlidersHorizontal, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,15 @@ import {
   type UpsertFlagInput,
 } from "./actions";
 import {
-  audienceSummary,
   defaultValueFor,
+  humanizeKey,
+  isFeature,
+  kindLabel,
+  relativeTime,
   valueSummary,
   VALUE_TYPE_LABELS,
   VALUE_TYPES,
+  whoSummary,
   type BroadcastAudienceKind,
   type BroadcastTarget,
   type FlagRow,
@@ -46,37 +50,67 @@ export function FlagsBoard({
   allUsers: PickerUser[];
   targetsByFlag: Record<string, string[]>;
 }) {
-  const active = flags.filter((f) => !f.archived);
+  const on = flags.filter((f) => f.enabled && !f.archived);
+  const off = flags.filter((f) => !f.enabled && !f.archived);
   const archived = flags.filter((f) => f.archived);
   const [showArchived, setShowArchived] = useState(false);
 
+  const card = (flag: FlagRow) => (
+    <FlagCard
+      key={flag.key}
+      flag={flag}
+      counties={counties}
+      allUsers={allUsers}
+      initialTargetIds={targetsByFlag[flag.key] ?? []}
+    />
+  );
+
   return (
-    <div className="space-y-5">
-      <p className="max-w-3xl text-sm text-ink-2">
-        Flip a feature, roll it out gradually, target a cohort, or tune a value — no app release. A
-        flag off (or a user outside its rollout / audience) delivers nothing, so the app falls back to
-        its built-in default. Changes apply on the next app launch.
+    <div className="space-y-6">
+      <p className="max-w-2xl text-sm text-ink-2">
+        Switch features on or off and change settings — live, without shipping an app update.
       </p>
+
+      {/* What's on right now. */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl glass-panel px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">On now</span>
+        {on.length === 0 ? (
+          <span className="text-sm text-ink-3">Nothing is switched on.</span>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {on.map((f) => (
+              <span
+                key={f.key}
+                className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-brand"
+              >
+                <span className="size-1.5 rounded-full bg-brand" />
+                {humanizeKey(f.key)}
+              </span>
+            ))}
+          </div>
+        )}
+        <span className="ml-auto text-xs tabular-nums text-ink-3">
+          {on.length} on · {off.length} off
+        </span>
+      </div>
 
       <NewFlagPanel existingKeys={new Set(flags.map((f) => f.key))} />
 
-      {active.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-8 text-center text-sm text-ink-3">
-          No active flags yet. Create one above.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {active.map((flag) => (
-            <FlagCard
-              key={flag.key}
-              flag={flag}
-              counties={counties}
-              allUsers={allUsers}
-              initialTargetIds={targetsByFlag[flag.key] ?? []}
-            />
-          ))}
-        </div>
+      {on.length > 0 && (
+        <Group title="On" count={on.length}>
+          {on.map(card)}
+        </Group>
       )}
+
+      <Group title="Off" count={off.length}>
+        {off.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
+            {flags.length === 0 ? "No features or settings yet. Add one above." : "Everything is on."}
+          </div>
+        ) : (
+          off.map(card)
+        )}
+      </Group>
 
       {archived.length > 0 && (
         <div className="space-y-3">
@@ -88,19 +122,24 @@ export function FlagsBoard({
             <ChevronDown className={cn("size-3.5 transition-transform", showArchived && "rotate-180")} />
             Archived ({archived.length})
           </button>
-          {showArchived &&
-            archived.map((flag) => (
-              <FlagCard
-                key={flag.key}
-                flag={flag}
-                counties={counties}
-                allUsers={allUsers}
-                initialTargetIds={targetsByFlag[flag.key] ?? []}
-              />
-            ))}
+          {showArchived && <div className="space-y-3">{archived.map(card)}</div>}
         </div>
       )}
     </div>
+  );
+}
+
+function Group({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+        {title}
+        <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">
+          {count}
+        </span>
+      </h2>
+      <div className="space-y-3">{children}</div>
+    </section>
   );
 }
 
@@ -124,11 +163,11 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
   function create() {
     const trimmed = key.trim();
     if (!/^[a-z][a-z0-9_]*$/.test(trimmed)) {
-      toast.error("Key must be lower_snake_case, e.g. new_home_hero");
+      toast.error("The ID needs lowercase letters, numbers and underscores, e.g. new_home_hero");
       return;
     }
     if (existingKeys.has(trimmed)) {
-      toast.error("A flag with that key already exists");
+      toast.error("Something with that ID already exists");
       return;
     }
     start(async () => {
@@ -148,7 +187,7 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
         toast.error(r.message);
         return;
       }
-      toast.success("Flag created — off by default. Configure it below.");
+      toast.success("Added — it starts off. Turn it on when you're ready.");
       reset();
       router.refresh();
     });
@@ -157,36 +196,34 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <Plus className="size-4" /> New flag
+        <Plus className="size-4" /> Add a feature or setting
       </Button>
     );
   }
 
   return (
     <div className="space-y-3 rounded-xl glass-panel p-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <FieldLabel label="Key" hint="Lower snake_case. This is what the app reads.">
-          <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="new_home_hero" />
-        </FieldLabel>
-        <FieldLabel label="Type">
-          <select
-            className={SELECT_CLS}
-            value={valueType}
-            onChange={(e) => setValueType(e.target.value as FlagValueType)}
-          >
-            {VALUE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {VALUE_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </FieldLabel>
-      </div>
-      <FieldLabel label="Description" hint="What this controls — for the team.">
+      <FieldLabel label="Type">
+        <select
+          className={SELECT_CLS}
+          value={valueType}
+          onChange={(e) => setValueType(e.target.value as FlagValueType)}
+        >
+          {VALUE_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {VALUE_TYPE_LABELS[t]}
+            </option>
+          ))}
+        </select>
+      </FieldLabel>
+      <FieldLabel label="ID" hint="What the app looks up. Lowercase, underscores — matches the app code.">
+        <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="new_home_hero" />
+      </FieldLabel>
+      <FieldLabel label="What it controls" hint="A plain note for the team.">
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Show the redesigned Home hero"
+          placeholder="The redesigned Home hero"
         />
       </FieldLabel>
       <div className="flex justify-end gap-2">
@@ -194,7 +231,7 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
           Cancel
         </Button>
         <Button onClick={create} disabled={pending || !key.trim()}>
-          {pending ? "Creating…" : "Create flag"}
+          {pending ? "Adding…" : "Add"}
         </Button>
       </div>
     </div>
@@ -219,6 +256,8 @@ function FlagCard({
   const [enabled, setEnabled] = useState(flag.enabled);
   const [toggling, startToggle] = useTransition();
 
+  const feature = isFeature(flag.value_type);
+
   function toggle() {
     const next = !enabled;
     setEnabled(next); // optimistic
@@ -229,34 +268,54 @@ function FlagCard({
         toast.error(r.message);
         return;
       }
-      toast.success(next ? "Flag turned on" : "Flag turned off");
+      toast.success(next ? "Turned on" : "Turned off");
       router.refresh();
     });
   }
 
   return (
-    <div className={cn("rounded-xl glass-panel p-4", flag.archived && "opacity-70")}>
-      <div className="flex items-start gap-3">
+    <div
+      className={cn(
+        "rounded-xl border p-4 transition-colors",
+        flag.archived
+          ? "border-border bg-paper-raised/40 opacity-70"
+          : enabled
+            ? "border-brand/30 bg-brand/[0.04]"
+            : "border-border bg-paper-raised/50",
+      )}
+    >
+      <div className="flex items-start gap-3.5">
         <Toggle on={enabled} busy={toggling} onClick={toggle} disabled={flag.archived} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded bg-paper-sunken/70 px-1.5 py-0.5 font-mono text-[13px] text-ink">
-              {flag.key}
-            </code>
-            <StatusPill enabled={enabled} archived={flag.archived} />
-          </div>
-          {flag.description && <p className="mt-1 text-sm text-ink-2">{flag.description}</p>}
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
-            <span>
-              delivers <span className="font-mono text-ink-2">{valueSummary(flag)}</span>
+            <span className="font-medium text-ink">{humanizeKey(flag.key)}</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide",
+                feature ? "bg-info/10 text-info" : "bg-amber/10 text-amber",
+              )}
+            >
+              {kindLabel(flag.value_type)}
             </span>
+          </div>
+          {flag.description && <p className="mt-0.5 text-sm text-ink-2">{flag.description}</p>}
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-3">
+            {!feature && (
+              <>
+                <span>
+                  Set to <span className="font-medium text-ink-2">{valueSummary(flag)}</span>
+                </span>
+                <span aria-hidden>·</span>
+              </>
+            )}
+            <span>{whoSummary(flag)}</span>
             <span aria-hidden>·</span>
-            <span>{audienceSummary(flag)}</span>
+            <code className="font-mono text-[11px] text-ink-3">{flag.key}</code>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setExpanded((e) => !e)}>
           <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} />
-          {expanded ? "Close" : "Configure"}
+          {expanded ? "Close" : "Edit"}
         </Button>
       </div>
 
@@ -288,6 +347,7 @@ function FlagEditor({
   initialTargetIds: string[];
   onSaved: () => void;
 }) {
+  const feature = isFeature(flag.value_type);
   const [description, setDescription] = useState(flag.description);
   const [value, setValue] = useState<unknown>(flag.value);
   const [jsonText, setJsonText] = useState(
@@ -299,37 +359,41 @@ function FlagEditor({
   const [target, setTarget] = useState<BroadcastTarget>(flag.target ?? {});
   const [minVersion, setMinVersion] = useState(flag.min_app_version ?? "");
   const [maxVersion, setMaxVersion] = useState(flag.max_app_version ?? "");
+  const [showAdvanced, setShowAdvanced] = useState(
+    flag.rollout_percentage < 100 || flag.audience_kind !== "everyone",
+  );
 
   const [saving, startSave] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reach, setReach] = useState<number | null>(null);
   const [reaching, startReach] = useTransition();
 
-  function commitValue(): unknown | undefined {
+  function committedValue(): { ok: true; value: unknown } | { ok: false } {
+    if (feature) return { ok: true, value: true };
     if (flag.value_type === "json") {
       try {
         const parsed = JSON.parse(jsonText);
         setJsonError(null);
-        return parsed;
+        return { ok: true, value: parsed };
       } catch {
-        setJsonError("Not valid JSON");
-        return undefined;
+        setJsonError("This isn't valid JSON yet");
+        return { ok: false };
       }
     }
-    return value;
+    return { ok: true, value };
   }
 
   function save() {
-    const committed = commitValue();
-    if (committed === undefined && flag.value_type === "json") {
-      toast.error("Fix the JSON value first");
+    const committed = committedValue();
+    if (!committed.ok) {
+      toast.error("Fix the value first");
       return;
     }
     const input: UpsertFlagInput = {
       key: flag.key,
       description: description.trim(),
       value_type: flag.value_type,
-      value: committed,
+      value: committed.value,
       enabled: flag.enabled,
       rollout_percentage: rollout,
       audience_kind: audienceKind,
@@ -343,7 +407,7 @@ function FlagEditor({
         toast.error(r.message);
         return;
       }
-      toast.success("Saved — applies on next app launch");
+      toast.success("Saved");
       onSaved();
     });
   }
@@ -366,7 +430,7 @@ function FlagEditor({
         toast.error(r.message);
         return;
       }
-      toast.success(flag.archived ? "Unarchived" : "Archived");
+      toast.success(flag.archived ? "Restored" : "Archived");
       onSaved();
     });
   }
@@ -379,108 +443,132 @@ function FlagEditor({
         toast.error(r.message);
         return;
       }
-      toast.success("Flag deleted");
+      toast.success("Deleted");
       onSaved();
     });
   }
 
   return (
     <div className="mt-4 space-y-4 border-t border-rule/60 pt-4">
-      <FieldLabel label="Description">
+      <FieldLabel label="What it controls">
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </FieldLabel>
 
-      {/* Delivered value. */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">
-          Value delivered to in-scope users{" "}
-          <span className="font-normal text-ink-3">({VALUE_TYPE_LABELS[flag.value_type]})</span>
-        </Label>
-        <ValueEditor
-          valueType={flag.value_type}
-          value={value}
-          setValue={setValue}
-          jsonText={jsonText}
-          setJsonText={(t) => {
-            setJsonText(t);
-            setJsonError(null);
-          }}
-          jsonError={jsonError}
-        />
-      </div>
-
-      {/* Rollout. */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Rollout</Label>
-          <span className="font-mono text-sm tabular-nums text-ink">{rollout}%</span>
+      {/* Value — settings only (a feature is simply on/off). */}
+      {!feature && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Value people get when this is on</Label>
+          <ValueEditor
+            valueType={flag.value_type}
+            value={value}
+            setValue={setValue}
+            jsonText={jsonText}
+            setJsonText={(t) => {
+              setJsonText(t);
+              setJsonError(null);
+            }}
+            jsonError={jsonError}
+          />
         </div>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={rollout}
-          onChange={(e) => setRollout(Number(e.target.value))}
-          className="w-full accent-brand"
-        />
-        <p className="text-xs text-ink-3">
-          Share of the audience that receives the value. Stable per user — the same people stay in as
-          you raise it.
-        </p>
-      </div>
+      )}
 
-      {/* Targeting (shared with broadcasts/campaigns). */}
-      <AudiencePicker
-        audienceKind={audienceKind}
-        setAudienceKind={setAudienceKind}
-        target={target}
-        setTarget={setTarget}
-        minVersion={minVersion}
-        setMinVersion={setMinVersion}
-        maxVersion={maxVersion}
-        setMaxVersion={setMaxVersion}
-        counties={counties}
-        allUsers={allUsers}
-        initialSelectedIds={initialTargetIds}
-        onPersistTargets={(ids) => setFlagTargets(flag.key, ids)}
-      />
+      {/* Advanced: gradual rollout + who. Collapsed by default. */}
+      <div className="rounded-lg border border-rule/60 bg-paper-sunken/20">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((s) => !s)}
+          className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ink-2 hover:text-ink"
+        >
+          <SlidersHorizontal className="size-3.5 text-ink-3" />
+          <span className="font-medium">Roll out gradually or limit who sees it</span>
+          <span className="ml-auto text-xs text-ink-3">{whoSummary({ audience_kind: audienceKind, target_user_count: initialTargetIds.length, rollout_percentage: rollout })}</span>
+          <ChevronDown className={cn("size-4 text-ink-3 transition-transform", showAdvanced && "rotate-180")} />
+        </button>
+
+        {showAdvanced && (
+          <div className="space-y-4 border-t border-rule/50 p-3">
+            {/* Percentage. */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Show to a percentage of people</Label>
+                <span className="font-mono text-sm tabular-nums text-ink">{rollout}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={rollout}
+                onChange={(e) => setRollout(Number(e.target.value))}
+                className="w-full accent-brand"
+              />
+              <div className="flex gap-1.5">
+                {[10, 25, 50, 100].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setRollout(p)}
+                    className={cn(
+                      "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition",
+                      rollout === p
+                        ? "border-brand/40 bg-brand/10 text-brand"
+                        : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
+                    )}
+                  >
+                    {p === 100 ? "Everyone" : `${p}%`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-ink-3">
+                The same people stay in as you raise it — nobody flickers in and out.
+              </p>
+            </div>
+
+            {/* Who (shared control). */}
+            <AudiencePicker
+              audienceKind={audienceKind}
+              setAudienceKind={setAudienceKind}
+              target={target}
+              setTarget={setTarget}
+              minVersion={minVersion}
+              setMinVersion={setMinVersion}
+              maxVersion={maxVersion}
+              setMaxVersion={setMaxVersion}
+              counties={counties}
+              allUsers={allUsers}
+              initialSelectedIds={initialTargetIds}
+              onPersistTargets={(ids) => setFlagTargets(flag.key, ids)}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Actions. */}
       <div className="flex flex-wrap items-center gap-2 border-t border-rule/60 pt-3">
         <Button onClick={save} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? "Saving…" : "Save"}
         </Button>
         <Button variant="outline" size="sm" onClick={checkReach} disabled={reaching}>
-          <Radio className="size-4" />
-          {reaching ? "Checking…" : reach !== null ? `Reaches ${reach}` : "Check reach"}
+          <Users className="size-4" />
+          {reaching ? "Checking…" : reach !== null ? `${reach} affected` : "How many people?"}
         </Button>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={toggleArchive} disabled={saving}>
-            {flag.archived ? "Unarchive" : "Archive"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setConfirmDelete(true)}
-            disabled={saving}
-            className="text-alert hover:text-alert"
-          >
-            <Trash2 className="size-4" /> Delete
-          </Button>
-        </div>
+        <span className="ml-auto text-xs text-ink-3">Changed {relativeTime(flag.updated_at)}</span>
+        <Button variant="ghost" size="sm" onClick={toggleArchive} disabled={saving}>
+          {flag.archived ? "Restore" : "Archive"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setConfirmDelete(true)}
+          disabled={saving}
+          className="text-alert hover:text-alert"
+        >
+          <Trash2 className="size-4" /> Delete
+        </Button>
       </div>
-
-      {reach !== null && (
-        <p className="flex items-center gap-1.5 text-xs text-ink-3">
-          <Users className="size-3.5" />
-          {reach} {reach === 1 ? "user" : "users"} currently match this flag (enabled + audience +
-          rollout, against each user&apos;s last-seen version).
-        </p>
-      )}
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete this flag?"
+        title={`Delete “${humanizeKey(flag.key)}”?`}
         confirmLabel="Delete"
         tone="danger"
         busy={saving}
@@ -490,9 +578,8 @@ function FlagEditor({
         }}
       >
         <p>
-          Deleting <code className="font-mono text-ink">{flag.key}</code> removes it entirely. The app
-          falls back to its built-in default for this key. Prefer <strong>Archive</strong> to keep the
-          history.
+          This removes it completely and the app goes back to its built-in default. Prefer{" "}
+          <strong className="text-ink">Archive</strong> if you might want it back.
         </p>
       </ConfirmDialog>
     </div>
@@ -516,27 +603,6 @@ function ValueEditor({
   setJsonText: (t: string) => void;
   jsonError: string | null;
 }) {
-  if (valueType === "boolean") {
-    return (
-      <div className="flex gap-1.5">
-        {[true, false].map((v) => (
-          <button
-            key={String(v)}
-            type="button"
-            onClick={() => setValue(v)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-sm font-semibold transition",
-              value === v
-                ? "border-brand/40 bg-brand/10 text-brand ring-1 ring-brand/40"
-                : "border-rule/70 bg-paper-sunken/60 text-ink-2 hover:border-brand/30",
-            )}
-          >
-            {v ? "true" : "false"}
-          </button>
-        ))}
-      </div>
-    );
-  }
   if (valueType === "number") {
     return (
       <Input
@@ -551,7 +617,7 @@ function ValueEditor({
       <Input
         value={typeof value === "string" ? value : ""}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Delivered text"
+        placeholder="The text the app shows"
       />
     );
   }
@@ -591,7 +657,7 @@ function Toggle({
       onClick={onClick}
       disabled={busy || disabled}
       aria-pressed={on}
-      title={disabled ? "Unarchive to toggle" : on ? "Turn off" : "Turn on"}
+      title={disabled ? "Restore to switch it" : on ? "Turn off" : "Turn on"}
       className={cn(
         "relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
         on ? "border-brand/50 bg-brand/80" : "border-rule/70 bg-paper-sunken",
@@ -604,25 +670,6 @@ function Toggle({
         )}
       />
     </button>
-  );
-}
-
-function StatusPill({ enabled, archived }: { enabled: boolean; archived: boolean }) {
-  if (archived) {
-    return (
-      <span className="rounded-full border border-ink-3/30 bg-ink-3/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-3">
-        Archived
-      </span>
-    );
-  }
-  return enabled ? (
-    <span className="inline-flex items-center gap-1 rounded-full border border-brand/40 bg-brand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-fg">
-      <FlaskConical className="size-2.5" /> Live
-    </span>
-  ) : (
-    <span className="rounded-full border border-rule/70 bg-paper-sunken/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-3">
-      Off
-    </span>
   );
 }
 
