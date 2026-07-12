@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { MessageFunnel } from "@/components/admin/MessageFunnel";
-import { WaitlistCampaignEditor } from "./WaitlistCampaignEditor";
+import { EmailComposer } from "../../EmailComposer";
 import type { WaitlistCampaignRow, WaitlistFunnel, WaitlistOverview } from "../types";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +47,7 @@ export default async function WaitlistCampaignEditorPage({
   const subscribedCount = overview?.subscribed ?? 0;
   const initialTargets = (targetsRes.data ?? []).map((t) => t.email as string);
   const f = (funnelRes.data?.[0] ?? null) as WaitlistFunnel | null;
+  const r = row as WaitlistCampaignRow;
 
   return (
     <div className={pageShell("wide")}>
@@ -76,11 +77,25 @@ export default async function WaitlistCampaignEditorPage({
         />
       )}
 
-      <WaitlistCampaignEditor
-        row={row as WaitlistCampaignRow}
-        subscribedCount={subscribedCount}
-        initialTargets={initialTargets}
+      <EmailComposer
+        id={r.id}
+        name={r.name}
+        subject={r.subject}
+        preheader={r.preheader}
+        html={r.html}
+        status={r.status}
+        scheduledAt={r.scheduled_at}
+        sentAt={r.sent_at}
+        sentCount={r.sent_count}
+        failedCount={r.failed_count}
+        recipientCount={r.recipient_count}
         isSuperAdmin={admin.role === "super_admin"}
+        audience={{
+          kind: "waitlist",
+          audienceKind: r.audience_kind,
+          subscribedCount,
+          initialTargets,
+        }}
       />
     </div>
   );

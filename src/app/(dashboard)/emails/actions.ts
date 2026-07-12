@@ -20,6 +20,29 @@ export type EmailTemplateRow = {
   updated_by: string | null;
 };
 
+/**
+ * Send the email you're composing to your OWN inbox as a test. Admin-only, and
+ * the function can only ever send to the caller's own email (read from the JWT) —
+ * so you can safely preview exactly how it lands before sending it for real.
+ */
+export async function sendTestEmail(
+  subject: string,
+  html: string,
+  preheader?: string | null,
+): Promise<ActionResult<{ to: string }>> {
+  await requireAdmin();
+  if (!subject.trim() || !html.trim()) return { ok: false, message: "Add a subject and content first." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.functions.invoke("send-test-email", {
+    body: { subject, html, preheader: preheader ?? null },
+  });
+  if (error) return { ok: false, message: error.message };
+  const body = data as { skipped?: string; ok?: boolean; to?: string; error?: string } | null;
+  if (body?.skipped === "resend_not_configured") return { ok: false, message: "Email isn’t configured on this environment yet." };
+  if (body?.error) return { ok: false, message: body.error };
+  return { ok: true, data: { to: body?.to ?? "your inbox" } };
+}
+
 /** Every app email, in display order (welcome first, then the auth emails). */
 export async function loadEmailTemplates(): Promise<ActionResult<EmailTemplateRow[]>> {
   await requireAdmin();

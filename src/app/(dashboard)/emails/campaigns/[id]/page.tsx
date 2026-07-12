@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPickerUsers } from "@/lib/users/roster";
 import { MessageFunnel } from "@/components/admin/MessageFunnel";
-import { EmailCampaignEditor, type TemplateSeed } from "./EmailCampaignEditor";
+import { EmailComposer } from "../../EmailComposer";
 import type { CountyOption, EmailCampaignRow } from "../types";
 
 type EmailFunnel = {
@@ -47,10 +47,9 @@ export default async function EmailCampaignEditorPage({
   }
   if (!row) notFound();
 
-  const [targetRowsRes, countyRowsRes, templatesRes, allUsers] = await Promise.all([
+  const [targetRowsRes, countyRowsRes, allUsers] = await Promise.all([
     supabase.from("email_campaign_targets").select("user_id").eq("campaign_id", id),
     supabase.from("counties").select("id,name").order("name"),
-    supabase.rpc("admin_email_templates"),
     listPickerUsers({ withEmail: true }),
   ]);
 
@@ -62,12 +61,7 @@ export default async function EmailCampaignEditorPage({
   const f = (funnelRes?.data?.[0] ?? null) as EmailFunnel | null;
 
   const counties: CountyOption[] = (countyRowsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
-  const templates: TemplateSeed[] = ((templatesRes.data as TemplateSeed[] | null) ?? []).map((t) => ({
-    key: t.key,
-    name: t.name,
-    subject: t.subject,
-    html: t.html,
-  }));
+  const r = row as EmailCampaignRow;
 
   return (
     <div className={pageShell("wide")}>
@@ -97,13 +91,30 @@ export default async function EmailCampaignEditorPage({
         />
       )}
 
-      <EmailCampaignEditor
-        row={row as EmailCampaignRow}
-        allUsers={allUsers}
-        initialSelectedIds={targetIds}
-        counties={counties}
-        templates={templates}
+      <EmailComposer
+        id={r.id}
+        name={r.name}
+        subject={r.subject}
+        preheader={r.preheader}
+        html={r.html}
+        status={r.status}
+        scheduledAt={r.scheduled_at}
+        sentAt={r.sent_at}
+        sentCount={r.sent_count}
+        failedCount={r.failed_count}
+        recipientCount={r.recipient_count}
         isSuperAdmin={admin.role === "super_admin"}
+        audience={{
+          kind: "app",
+          audienceKind: r.audience_kind,
+          target: r.target,
+          minVersion: r.min_app_version,
+          maxVersion: r.max_app_version,
+          bypass: r.bypass_marketing_consent,
+          allUsers,
+          initialSelectedIds: targetIds,
+          counties,
+        }}
       />
     </div>
   );
