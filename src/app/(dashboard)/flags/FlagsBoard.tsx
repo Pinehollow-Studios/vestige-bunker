@@ -664,7 +664,7 @@ function FlagEditor({
       enabled: feature ? true : flag.enabled,
       rollout_percentage: rollout,
       audience_kind: audienceKind,
-      target: audienceKind === "filtered" ? target : {},
+      target: audienceKind === "filtered" || audienceKind === "segment" ? target : {},
       min_app_version: minVersion || null,
       max_app_version: maxVersion || null,
     };

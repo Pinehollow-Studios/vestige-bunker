@@ -175,6 +175,9 @@ export function whoSummary(
       who =
         row.target_user_count === 1 ? "1 chosen person" : `${row.target_user_count} chosen people`;
       break;
+    case "segment":
+      who = "A saved segment";
+      break;
   }
   if (row.rollout_percentage < 100) {
     who = who === "Everyone" ? `${row.rollout_percentage}% of people` : `${who} · ${row.rollout_percentage}%`;

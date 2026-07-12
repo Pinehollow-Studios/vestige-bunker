@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { PickerUser } from "@/lib/users/roster";
 import { listSegmentsForPicker, segmentMemberIds } from "@/app/(dashboard)/segments/actions";
+import { SegmentAudiencePicker } from "@/components/admin/SegmentAudiencePicker";
 import {
   AUDIENCE_KINDS,
   AUDIENCE_LABELS,
@@ -75,6 +76,7 @@ export function AudiencePicker({
         </select>
       </Field>
 
+      {audienceKind === "segment" && <SegmentAudiencePicker target={target} setTarget={setTarget} />}
       {audienceKind === "filtered" && (
         <FilteredCohort target={target} setTarget={setTarget} counties={counties} />
       )}

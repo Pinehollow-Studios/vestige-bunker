@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { SegmentAudiencePicker } from "@/components/admin/SegmentAudiencePicker";
 import {
   deleteAnnouncement,
   loadRecipients,
@@ -113,7 +114,7 @@ export function AnnouncementEditor({
     audience_kind: audienceKind,
     min_app_version: minVersion || null,
     max_app_version: maxVersion || null,
-    target: audienceKind === "filtered" ? target : {},
+    target: audienceKind === "filtered" || audienceKind === "segment" ? target : {},
   };
 
   function save() {
@@ -422,6 +423,8 @@ function TargetingBuilder({
           ))}
         </select>
       </Field>
+
+      {audienceKind === "segment" && <SegmentAudiencePicker target={target} setTarget={setTarget} />}
 
       {audienceKind === "filtered" && (
         <FilteredCohort target={target} setTarget={setTarget} counties={counties} />

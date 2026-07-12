@@ -23,7 +23,7 @@ export type AnnouncementActionKind = "dismiss" | "external_url" | "deep_link";
 
 export type AnnouncementStyle = "modal_card" | "full_screen";
 
-export type AnnouncementAudienceKind = "everyone" | "filtered" | "individuals";
+export type AnnouncementAudienceKind = "everyone" | "filtered" | "individuals" | "segment";
 
 export const ANNOUNCEMENT_KINDS: AnnouncementKind[] = [
   "update",
@@ -62,12 +62,14 @@ export const STYLE_LABELS: Record<AnnouncementStyle, string> = {
 
 export const AUDIENCE_KINDS: AnnouncementAudienceKind[] = [
   "everyone",
+  "segment",
   "filtered",
   "individuals",
 ];
 
 export const AUDIENCE_LABELS: Record<AnnouncementAudienceKind, string> = {
   everyone: "Everyone",
+  segment: "A saved segment",
   filtered: "Filtered cohort",
   individuals: "Hand-picked people",
 };
@@ -100,6 +102,7 @@ export type AnnouncementTarget = {
   joined_before?: string; // date string (YYYY-MM-DD)
   privacy_in?: string[]; // 'onlyMe' | 'friendsOnly' | 'everyone'
   has_logged_round?: boolean;
+  segment_id?: string; // audience_kind = "segment"
 };
 
 // ── DB row ──────────────────────────────────────────────────────────
@@ -284,6 +287,9 @@ export function audienceSummary(
         targetCount !== undefined
           ? `${targetCount} ${targetCount === 1 ? "person" : "people"}`
           : "Hand-picked people";
+      break;
+    case "segment":
+      base = targetCount !== undefined ? `Segment · ${targetCount.toLocaleString()}` : "A saved segment";
       break;
   }
   const bounds = versionBoundsLabel(row.min_app_version, row.max_app_version);

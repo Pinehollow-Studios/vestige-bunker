@@ -141,7 +141,7 @@ export function EmailComposer(props: EmailComposerProps) {
         audience_kind: audienceKind,
         min_app_version: minVersion || null,
         max_app_version: maxVersion || null,
-        target: audienceKind === "filtered" ? target : {},
+        target: audienceKind === "filtered" || audienceKind === "segment" ? target : {},
       });
     }
     return updateWaitlistCampaign(id, {

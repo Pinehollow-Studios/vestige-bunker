@@ -11,12 +11,13 @@
 
 // ── Targeting (shared shape with announcements) ─────────────────────────
 
-export type BroadcastAudienceKind = "everyone" | "filtered" | "individuals";
+export type BroadcastAudienceKind = "everyone" | "filtered" | "individuals" | "segment";
 
-export const AUDIENCE_KINDS: BroadcastAudienceKind[] = ["everyone", "filtered", "individuals"];
+export const AUDIENCE_KINDS: BroadcastAudienceKind[] = ["everyone", "segment", "filtered", "individuals"];
 
 export const AUDIENCE_LABELS: Record<BroadcastAudienceKind, string> = {
   everyone: "Everyone",
+  segment: "A saved segment",
   filtered: "Filtered cohort",
   individuals: "Hand-picked people",
 };
@@ -38,6 +39,7 @@ export type BroadcastTarget = {
   joined_before?: string; // YYYY-MM-DD
   privacy_in?: string[];
   has_logged_round?: boolean;
+  segment_id?: string; // audience_kind = "segment"
 };
 
 // ── Status ──────────────────────────────────────────────────────────────
@@ -134,6 +136,9 @@ export function audienceSummary(
         targetCount !== undefined
           ? `${targetCount} ${targetCount === 1 ? "person" : "people"}`
           : "Hand-picked people";
+      break;
+    case "segment":
+      base = targetCount !== undefined ? `Segment · ${targetCount.toLocaleString()}` : "A saved segment";
       break;
   }
   const bounds = versionBoundsLabel(row.min_app_version, row.max_app_version);

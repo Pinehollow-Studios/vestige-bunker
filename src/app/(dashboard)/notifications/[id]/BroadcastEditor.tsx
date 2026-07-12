@@ -31,6 +31,7 @@ import {
   type UserPickRow,
 } from "../types";
 import { IOSNotification, VestigeInboxRow } from "../_components/previews";
+import { SegmentAudiencePicker } from "@/components/admin/SegmentAudiencePicker";
 
 const SELECT_CLS =
   "flex h-9 w-full rounded-lg border border-input bg-paper-sunken/40 px-3 py-1 text-sm transition-colors focus-visible:border-brand/60 focus-visible:bg-paper-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30";
@@ -71,7 +72,7 @@ export function BroadcastEditor({
     audience_kind: audienceKind,
     min_app_version: minVersion || null,
     max_app_version: maxVersion || null,
-    target: audienceKind === "filtered" ? target : {},
+    target: audienceKind === "filtered" || audienceKind === "segment" ? target : {},
   };
 
   function saveDraft() {
@@ -190,6 +191,7 @@ export function BroadcastEditor({
               </select>
             </Field>
 
+            {audienceKind === "segment" && <SegmentAudiencePicker target={target} setTarget={setTarget} />}
             {audienceKind === "filtered" && (
               <FilteredCohort target={target} setTarget={setTarget} counties={counties} />
             )}
