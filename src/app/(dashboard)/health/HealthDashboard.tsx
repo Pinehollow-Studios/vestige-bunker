@@ -157,14 +157,12 @@ export function HealthDashboard({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <HttpChart series={httpSeries} total24h={metrics?.http_24h ?? 0} failed24h={metrics?.http_failed_24h ?? 0} />
-        </div>
-        <ChecksPanel checks={checks} />
-      </div>
+      <TrafficStrip series={httpSeries} total24h={metrics?.http_24h ?? 0} failed24h={metrics?.http_failed_24h ?? 0} />
 
-      <JobsPanel jobs={jobs} now={now} />
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ChecksPanel checks={checks} />
+        <JobsPanel jobs={jobs} now={now} />
+      </div>
 
       <p className="text-xs text-ink-3">
         Infrastructure only — product metrics live on the <span className="text-ink-2">Overview</span> and{" "}
@@ -295,75 +293,54 @@ function Kpi({
   );
 }
 
-// ── Outbound-traffic chart (24h hourly) ────────────────────────────────
+// ── Outbound-traffic strip (compact 24h hourly bars) ───────────────────
 
-function HttpChart({ series, total24h, failed24h }: { series: HttpPoint[]; total24h: number; failed24h: number }) {
-  const pts = series;
-  const max = Math.max(1, ...pts.map((p) => p.total));
-  const quiet = total24h === 0;
-  const W = 100;
-  const H = 42;
-  const n = Math.max(pts.length - 1, 1);
-  const x = (i: number) => (i / n) * W;
-  const y = (v: number) => H - (v / max) * (H - 4) - 2;
-  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(2)},${y(p.total).toFixed(2)}`).join(" ");
-  const area = pts.length ? `M0,${H} ${pts.map((p, i) => `L${x(i).toFixed(2)},${y(p.total).toFixed(2)}`).join(" ")} L${W},${H} Z` : "";
-
+function TrafficStrip({ series, total24h, failed24h }: { series: HttpPoint[]; total24h: number; failed24h: number }) {
+  const max = Math.max(1, ...series.map((p) => p.total));
+  const peak = Math.max(0, ...series.map((p) => p.total));
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border bg-paper-raised/50 p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Outbound requests · 24h</p>
-          <p className="mt-0.5 text-sm text-ink-2">
-            <span className="font-semibold text-ink">{total24h}</span> total
-            {failed24h > 0 ? (
-              <span className="text-alert"> · {failed24h} failed</span>
-            ) : (
-              <span className="text-ink-3"> · none failed</span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-3 text-[11px]">
-          <Legend color="var(--brand)" label="Requests" />
-          {pts.some((p) => p.failed > 0) && <Legend color="#e2483d" label="Failed" />}
-        </div>
+    <div className="rounded-2xl border border-border bg-paper-raised/50 px-5 py-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Outbound traffic · 24h</p>
+        <p className="text-xs text-ink-2">
+          <span className="font-semibold text-ink">{total24h}</span> request{total24h === 1 ? "" : "s"}
+          {failed24h > 0 ? (
+            <span className="text-alert"> · {failed24h} failed</span>
+          ) : (
+            <span className="text-ink-3"> · none failed</span>
+          )}
+          {peak > 0 && <span className="text-ink-3"> · peak {peak}/hr</span>}
+        </p>
       </div>
 
-      <div className="relative mt-4 flex-1">
-        {quiet ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-rule/50 text-sm text-ink-3">
-            Quiet — no outbound traffic in the last 24h
-          </div>
-        ) : (
-          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-32 w-full">
-            <defs>
-              <linearGradient id="req" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.30" />
-                <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <line x1="0" y1={H - 2} x2={W} y2={H - 2} stroke="currentColor" strokeWidth="0.3" className="text-ink-3/25" />
-            <path d={area} fill="url(#req)" />
-            <path d={line} fill="none" stroke="var(--brand)" strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-            {pts.map((p, i) =>
-              p.failed > 0 ? (
-                <circle key={i} cx={x(i)} cy={y(p.total)} r="1.1" fill="#e2483d" vectorEffect="non-scaling-stroke" />
-              ) : null,
-            )}
-          </svg>
-        )}
+      <div className="mt-3 flex h-10 items-end gap-[2px]">
+        {series.map((p, i) => {
+          const filled = p.total > 0;
+          const h = filled ? Math.max(4, Math.round((p.total / max) * 34) + 3) : 3;
+          return (
+            <div
+              key={i}
+              title={`${hourLabel(p.hour)} · ${p.total} request${p.total === 1 ? "" : "s"}${p.failed ? ` (${p.failed} failed)` : ""}`}
+              className={cn(
+                "flex-1 rounded-t transition-[height] duration-500",
+                p.failed > 0 ? "bg-alert" : filled ? "bg-brand" : "bg-ink-3/15",
+              )}
+              style={{ height: h }}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[10px] uppercase tracking-wider text-ink-3">
+        <span>24h ago</span>
+        <span>now</span>
       </div>
     </div>
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 text-ink-3">
-      <span className="size-2 rounded-full" style={{ background: color }} />
-      {label}
-    </span>
-  );
+function hourLabel(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getHours().toString().padStart(2, "0")}:00`;
 }
 
 // ── Checks panel ───────────────────────────────────────────────────────
