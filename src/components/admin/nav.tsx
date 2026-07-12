@@ -16,6 +16,7 @@ import {
   Map as MapIcon,
   Megaphone,
   MessageSquareWarning,
+  Activity,
   RefreshCw,
   Rocket,
   Send,
@@ -71,6 +72,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
+      { href: "/health", label: "Health", icon: Activity },
       { href: "/changelog", label: "Changelog", icon: Rocket, countKey: "changelog" },
       { href: "/feedback", label: "Feedback", icon: MessageSquareWarning, countKey: "feedback" },
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
