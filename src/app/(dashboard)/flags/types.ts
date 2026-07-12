@@ -55,6 +55,17 @@ export function isFeature(type: FlagValueType): boolean {
   return type === "boolean";
 }
 
+/**
+ * Is this flag "on"?
+ *   • Feature (boolean): on when it's active AND delivering `true`. So a kill
+ *     switch on a default-on feature turns it off by actively delivering `false`
+ *     (not by going inactive, which would fall back to the on default).
+ *   • Copy / Setting: on when the override is active (its value is being used).
+ */
+export function isOn(row: Pick<FlagRow, "value_type" | "enabled" | "value">): boolean {
+  return isFeature(row.value_type) ? row.enabled && row.value === true : row.enabled;
+}
+
 /** The three plain-language buckets the panel groups by. */
 export type FlagCategory = "Features" | "Copy" | "Settings";
 

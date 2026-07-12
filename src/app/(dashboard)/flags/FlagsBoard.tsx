@@ -28,6 +28,7 @@ import {
   FLAG_CATEGORIES,
   humanizeKey,
   isFeature,
+  isOn,
   kindLabel,
   relativeTime,
   valueSummary,
@@ -54,8 +55,8 @@ export function FlagsBoard({
   targetsByFlag: Record<string, string[]>;
 }) {
   const live = flags.filter((f) => !f.archived);
-  const on = live.filter((f) => f.enabled);
-  const off = live.filter((f) => !f.enabled);
+  const on = live.filter(isOn);
+  const off = live.filter((f) => !isOn(f));
   const archived = flags.filter((f) => f.archived);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -109,7 +110,7 @@ export function FlagsBoard({
           // Within a category, show what's on first.
           const items = live
             .filter((f) => flagCategory(f.value_type) === category)
-            .sort((a, b) => Number(b.enabled) - Number(a.enabled));
+            .sort((a, b) => Number(isOn(b)) - Number(isOn(a)));
           if (items.length === 0) return null;
           return (
             <Group key={category} title={category} blurb={CATEGORY_BLURB[category]} count={items.length}>
@@ -273,18 +274,34 @@ function FlagCard({
 }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
-  const [enabled, setEnabled] = useState(flag.enabled);
+  const [on, setOn] = useState(isOn(flag));
   const [toggling, startToggle] = useTransition();
 
   const feature = isFeature(flag.value_type);
 
   function toggle() {
-    const next = !enabled;
-    setEnabled(next); // optimistic
+    const next = !on;
+    setOn(next); // optimistic
     startToggle(async () => {
-      const r = await setFlagEnabled(flag.key, next);
+      // A feature's on/off IS its delivered value (so a kill switch on a
+      // default-on feature actively delivers false). A copy/setting override is
+      // just switched active/inactive.
+      const r = feature
+        ? await upsertFlag({
+            key: flag.key,
+            description: flag.description,
+            value_type: flag.value_type,
+            value: next,
+            enabled: true,
+            rollout_percentage: flag.rollout_percentage,
+            audience_kind: flag.audience_kind,
+            target: flag.target ?? {},
+            min_app_version: flag.min_app_version,
+            max_app_version: flag.max_app_version,
+          })
+        : await setFlagEnabled(flag.key, next);
       if (!r.ok) {
-        setEnabled(!next);
+        setOn(!next);
         toast.error(r.message);
         return;
       }
@@ -299,13 +316,13 @@ function FlagCard({
         "rounded-xl border p-4 transition-colors",
         flag.archived
           ? "border-border bg-paper-raised/40 opacity-70"
-          : enabled
+          : on
             ? "border-brand/30 bg-brand/[0.04]"
             : "border-border bg-paper-raised/50",
       )}
     >
       <div className="flex items-start gap-3.5">
-        <Toggle on={enabled} busy={toggling} onClick={toggle} disabled={flag.archived} />
+        <Toggle on={on} busy={toggling} onClick={toggle} disabled={flag.archived} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-ink">{humanizeKey(flag.key)}</span>
@@ -389,7 +406,9 @@ function FlagEditor({
   const [reaching, startReach] = useTransition();
 
   function committedValue(): { ok: true; value: unknown } | { ok: false } {
-    if (feature) return { ok: true, value: true };
+    // A feature's on/off is owned by the card toggle — the editor only changes
+    // description / rollout / targeting, so preserve the current delivered value.
+    if (feature) return { ok: true, value: flag.value };
     if (flag.value_type === "json") {
       try {
         const parsed = JSON.parse(jsonText);
@@ -414,7 +433,9 @@ function FlagEditor({
       description: description.trim(),
       value_type: flag.value_type,
       value: committed.value,
-      enabled: flag.enabled,
+      // Features stay active (their on/off is the value); copy/settings keep
+      // whatever active state their card toggle set.
+      enabled: feature ? true : flag.enabled,
       rollout_percentage: rollout,
       audience_kind: audienceKind,
       target: audienceKind === "filtered" ? target : {},
