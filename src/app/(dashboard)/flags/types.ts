@@ -83,6 +83,42 @@ export const CATEGORY_BLURB: Record<FlagCategory, string> = {
   Settings: "Tune numbers without a release.",
 };
 
+/** The part of the app a flag belongs to, derived from its key prefix — used to
+ *  sub-group each category so a long list breaks into scannable chunks. */
+export function areaFor(key: string): string {
+  const has = (...p: string[]) => p.some((x) => key.startsWith(x));
+  if (has("home_")) return "Home";
+  if (has("feed_", "public_feed", "badge_feed")) return "Activity feed";
+  if (has("boards_")) return "Leaderboards";
+  if (has("compose_")) return "Log a round";
+  if (has("friend")) return "Friends";
+  if (has("badge")) return "Badges";
+  if (has("push", "notification", "realtime", "announcements")) return "Notifications";
+  if (has("societ")) return "Societies";
+  if (has("community", "curated", "user_list")) return "Lists";
+  if (has("beta")) return "Onboarding";
+  if (has("auth")) return "Sign-in";
+  if (has("search")) return "Search";
+  return "Other";
+}
+
+/** Rough top-to-bottom app order for the area sub-headers. */
+export const AREA_ORDER = [
+  "Home",
+  "Activity feed",
+  "Friends",
+  "Leaderboards",
+  "Lists",
+  "Log a round",
+  "Badges",
+  "Notifications",
+  "Societies",
+  "Onboarding",
+  "Sign-in",
+  "Search",
+  "Other",
+];
+
 /** "Feature" / "Setting" chip label. */
 export function kindLabel(type: FlagValueType): string {
   return isFeature(type) ? "Feature" : "Setting";

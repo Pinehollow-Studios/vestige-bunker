@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, SlidersHorizontal, Trash2, Users } from "lucide-react";
+import { ChevronDown, Plus, Search, SlidersHorizontal, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ import {
   type UpsertFlagInput,
 } from "./actions";
 import {
+  AREA_ORDER,
+  areaFor,
   CATEGORY_BLURB,
   defaultValueFor,
   flagCategory,
@@ -37,6 +39,7 @@ import {
   whoSummary,
   type BroadcastAudienceKind,
   type BroadcastTarget,
+  type FlagCategory,
   type FlagRow,
   type FlagValueType,
 } from "./types";
@@ -54,11 +57,27 @@ export function FlagsBoard({
   allUsers: PickerUser[];
   targetsByFlag: Record<string, string[]>;
 }) {
+  const [query, setQuery] = useState("");
+  // Long list — lead with Features expanded, tuck Copy + Settings away.
+  const [collapsed, setCollapsed] = useState<Record<FlagCategory, boolean>>({
+    Features: false,
+    Copy: true,
+    Settings: true,
+  });
+
   const live = flags.filter((f) => !f.archived);
-  const on = live.filter(isOn);
-  const off = live.filter((f) => !isOn(f));
   const archived = flags.filter((f) => f.archived);
-  const [showArchived, setShowArchived] = useState(false);
+  const on = live.filter(isOn);
+  const searching = query.trim().length > 0;
+
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (f: FlagRow) =>
+      !q ||
+      humanizeKey(f.key).toLowerCase().includes(q) ||
+      f.key.toLowerCase().includes(q) ||
+      (f.description ?? "").toLowerCase().includes(q);
+  }, [query]);
 
   const card = (flag: FlagRow) => (
     <FlagCard
@@ -71,12 +90,12 @@ export function FlagsBoard({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <p className="max-w-2xl text-sm text-ink-2">
         Switch features on or off and change settings — live, without shipping an app update.
       </p>
 
-      {/* What's on right now. */}
+      {/* What's on. */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl glass-panel px-4 py-3">
         <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">On now</span>
         {on.length === 0 ? (
@@ -95,11 +114,29 @@ export function FlagsBoard({
           </div>
         )}
         <span className="ml-auto text-xs tabular-nums text-ink-3">
-          {on.length} on · {off.length} off
+          {on.length} on · {live.length} total
         </span>
       </div>
 
-      <NewFlagPanel existingKeys={new Set(flags.map((f) => f.key))} />
+      {/* Search + add. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 py-2">
+          <Search aria-hidden className="size-4 text-ink-3" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search features, copy and settings…"
+            className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} className="text-ink-3 hover:text-ink-2" aria-label="Clear">
+              ×
+            </button>
+          )}
+        </div>
+        <NewFlagPanel existingKeys={new Set(flags.map((f) => f.key))} />
+      </div>
 
       {live.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
@@ -107,60 +144,106 @@ export function FlagsBoard({
         </div>
       ) : (
         FLAG_CATEGORIES.map((category) => {
-          // Within a category, show what's on first.
-          const items = live
-            .filter((f) => flagCategory(f.value_type) === category)
-            .sort((a, b) => Number(isOn(b)) - Number(isOn(a)));
-          if (items.length === 0) return null;
+          const items = live.filter((f) => flagCategory(f.value_type) === category && matches(f));
+          if (searching && items.length === 0) return null;
+          const onCount = items.filter(isOn).length;
+          const open = searching || !collapsed[category];
           return (
-            <Group key={category} title={category} blurb={CATEGORY_BLURB[category]} count={items.length}>
-              {items.map(card)}
-            </Group>
+            <CategorySection
+              key={category}
+              title={category}
+              blurb={CATEGORY_BLURB[category]}
+              count={items.length}
+              onCount={category === "Features" ? onCount : undefined}
+              open={open}
+              onToggle={() => setCollapsed((c) => ({ ...c, [category]: !c[category] }))}
+            >
+              {groupByArea(items).map(([area, areaItems]) => (
+                <AreaGroup key={area} area={area}>
+                  {areaItems.map(card)}
+                </AreaGroup>
+              ))}
+            </CategorySection>
           );
         })
       )}
 
-      {archived.length > 0 && (
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => setShowArchived((s) => !s)}
-            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3 hover:text-ink-2"
-          >
-            <ChevronDown className={cn("size-3.5 transition-transform", showArchived && "rotate-180")} />
-            Archived ({archived.length})
-          </button>
-          {showArchived && <div className="space-y-3">{archived.map(card)}</div>}
+      {searching && FLAG_CATEGORIES.every((c) => live.filter((f) => flagCategory(f.value_type) === c && matches(f)).length === 0) && (
+        <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
+          No matches for “{query}”.
         </div>
+      )}
+
+      {archived.length > 0 && !searching && (
+        <CategorySection title="Archived" count={archived.length} open={false} onToggle={() => {}} alwaysCollapsibleInline>
+          {archived.map(card)}
+        </CategorySection>
       )}
     </div>
   );
 }
 
-function Group({
+/** Group a category's items by app area, ordered + on-first within each area. */
+function groupByArea(items: FlagRow[]): [string, FlagRow[]][] {
+  const byArea = new Map<string, FlagRow[]>();
+  for (const f of items) {
+    const area = areaFor(f.key);
+    (byArea.get(area) ?? byArea.set(area, []).get(area)!).push(f);
+  }
+  return [...byArea.entries()]
+    .sort((a, b) => AREA_ORDER.indexOf(a[0]) - AREA_ORDER.indexOf(b[0]))
+    .map(([area, list]) => [area, list.sort((a, b) => Number(isOn(b)) - Number(isOn(a)))]);
+}
+
+function CategorySection({
   title,
-  count,
   blurb,
+  count,
+  onCount,
+  open,
+  onToggle,
+  alwaysCollapsibleInline,
   children,
 }: {
   title: string;
-  count: number;
   blurb?: string;
+  count: number;
+  onCount?: number;
+  open: boolean;
+  onToggle: () => void;
+  alwaysCollapsibleInline?: boolean;
   children: React.ReactNode;
 }) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const isOpen = alwaysCollapsibleInline ? localOpen : open;
   return (
     <section className="space-y-3">
-      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
-          {title}
-          <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">
-            {count}
+      <button
+        type="button"
+        onClick={alwaysCollapsibleInline ? () => setLocalOpen((o) => !o) : onToggle}
+        className="flex w-full items-center gap-2.5 text-left"
+      >
+        <ChevronDown className={cn("size-4 text-ink-3 transition-transform", !isOpen && "-rotate-90")} />
+        <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-2">{title}</h2>
+        <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">{count}</span>
+        {onCount !== undefined && onCount > 0 && (
+          <span className="rounded-full bg-brand/10 px-1.5 py-px text-[10px] font-semibold tabular-nums text-brand">
+            {onCount} on
           </span>
-        </h2>
-        {blurb && <span className="text-xs text-ink-3">{blurb}</span>}
-      </div>
-      <div className="space-y-3">{children}</div>
+        )}
+        {blurb && <span className="hidden text-xs text-ink-3 sm:inline">{blurb}</span>}
+      </button>
+      {isOpen && <div className="space-y-4 pl-1">{children}</div>}
     </section>
+  );
+}
+
+function AreaGroup({ area, children }: { area: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <p className="pl-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3/80">{area}</p>
+      <div className="space-y-2.5">{children}</div>
+    </div>
   );
 }
 
@@ -217,19 +300,15 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <Plus className="size-4" /> Add a feature or setting
+        <Plus className="size-4" /> Add
       </Button>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-xl glass-panel p-4">
+    <div className="w-full space-y-3 rounded-xl glass-panel p-4">
       <FieldLabel label="Type">
-        <select
-          className={SELECT_CLS}
-          value={valueType}
-          onChange={(e) => setValueType(e.target.value as FlagValueType)}
-        >
+        <select className={SELECT_CLS} value={valueType} onChange={(e) => setValueType(e.target.value as FlagValueType)}>
           {VALUE_TYPES.map((t) => (
             <option key={t} value={t}>
               {VALUE_TYPE_LABELS[t]}
@@ -241,11 +320,7 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
         <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="new_home_hero" />
       </FieldLabel>
       <FieldLabel label="What it controls" hint="A plain note for the team.">
-        <Input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="The redesigned Home hero"
-        />
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="The redesigned Home hero" />
       </FieldLabel>
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={reset} disabled={pending}>
@@ -276,16 +351,16 @@ function FlagCard({
   const [expanded, setExpanded] = useState(false);
   const [on, setOn] = useState(isOn(flag));
   const [toggling, startToggle] = useTransition();
+  const [confirmToggle, setConfirmToggle] = useState(false);
 
   const feature = isFeature(flag.value_type);
 
-  function toggle() {
-    const next = !on;
+  function applyToggle(next: boolean) {
     setOn(next); // optimistic
     startToggle(async () => {
       // A feature's on/off IS its delivered value (so a kill switch on a
-      // default-on feature actively delivers false). A copy/setting override is
-      // just switched active/inactive.
+      // default-on feature actively delivers false). Copy/settings just switch
+      // the override active/inactive.
       const r = feature
         ? await upsertFlag({
             key: flag.key,
@@ -300,6 +375,7 @@ function FlagCard({
             max_app_version: flag.max_app_version,
           })
         : await setFlagEnabled(flag.key, next);
+      setConfirmToggle(false);
       if (!r.ok) {
         setOn(!next);
         toast.error(r.message);
@@ -310,10 +386,17 @@ function FlagCard({
     });
   }
 
+  function requestToggle() {
+    // Features change what all users see — confirm to avoid a mis-tap. Copy /
+    // settings just revert to the built-in default, so they toggle immediately.
+    if (feature) setConfirmToggle(true);
+    else applyToggle(!on);
+  }
+
   return (
     <div
       className={cn(
-        "rounded-xl border p-4 transition-colors",
+        "rounded-xl border p-3.5 transition-colors",
         flag.archived
           ? "border-border bg-paper-raised/40 opacity-70"
           : on
@@ -322,7 +405,7 @@ function FlagCard({
       )}
     >
       <div className="flex items-start gap-3.5">
-        <Toggle on={on} busy={toggling} onClick={toggle} disabled={flag.archived} />
+        <Toggle on={on} busy={toggling} onClick={requestToggle} disabled={flag.archived} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-ink">{humanizeKey(flag.key)}</span>
@@ -365,6 +448,24 @@ function FlagCard({
           onSaved={() => router.refresh()}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmToggle}
+        title={on ? `Turn off “${humanizeKey(flag.key)}”?` : `Turn on “${humanizeKey(flag.key)}”?`}
+        confirmLabel={on ? "Turn off" : "Turn on"}
+        tone={on ? "danger" : "brand"}
+        busy={toggling}
+        onConfirm={() => applyToggle(!on)}
+        onCancel={() => {
+          if (!toggling) setConfirmToggle(false);
+        }}
+      >
+        <p>
+          {on
+            ? "This hides the feature from everyone in the app (from their next launch)."
+            : "This shows the feature to everyone — unless you limit who under Advanced."}
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }
@@ -433,8 +534,6 @@ function FlagEditor({
       description: description.trim(),
       value_type: flag.value_type,
       value: committed.value,
-      // Features stay active (their on/off is the value); copy/settings keep
-      // whatever active state their card toggle set.
       enabled: feature ? true : flag.enabled,
       rollout_percentage: rollout,
       audience_kind: audienceKind,
@@ -495,7 +594,6 @@ function FlagEditor({
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </FieldLabel>
 
-      {/* Value — settings only (a feature is simply on/off). */}
       {!feature && (
         <div className="space-y-1.5">
           <Label className="text-xs">Value people get when this is on</Label>
@@ -513,7 +611,6 @@ function FlagEditor({
         </div>
       )}
 
-      {/* Advanced: gradual rollout + who. Collapsed by default. */}
       <div className="rounded-lg border border-rule/60 bg-paper-sunken/20">
         <button
           type="button"
@@ -522,13 +619,18 @@ function FlagEditor({
         >
           <SlidersHorizontal className="size-3.5 text-ink-3" />
           <span className="font-medium">Roll out gradually or limit who sees it</span>
-          <span className="ml-auto text-xs text-ink-3">{whoSummary({ audience_kind: audienceKind, target_user_count: initialTargetIds.length, rollout_percentage: rollout })}</span>
+          <span className="ml-auto text-xs text-ink-3">
+            {whoSummary({
+              audience_kind: audienceKind,
+              target_user_count: initialTargetIds.length,
+              rollout_percentage: rollout,
+            })}
+          </span>
           <ChevronDown className={cn("size-4 text-ink-3 transition-transform", showAdvanced && "rotate-180")} />
         </button>
 
         {showAdvanced && (
           <div className="space-y-4 border-t border-rule/50 p-3">
-            {/* Percentage. */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Show to a percentage of people</Label>
@@ -559,12 +661,9 @@ function FlagEditor({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-ink-3">
-                The same people stay in as you raise it — nobody flickers in and out.
-              </p>
+              <p className="text-xs text-ink-3">The same people stay in as you raise it — nobody flickers in and out.</p>
             </div>
 
-            {/* Who (shared control). */}
             <AudiencePicker
               audienceKind={audienceKind}
               setAudienceKind={setAudienceKind}
@@ -583,7 +682,6 @@ function FlagEditor({
         )}
       </div>
 
-      {/* Actions. */}
       <div className="flex flex-wrap items-center gap-2 border-t border-rule/60 pt-3">
         <Button onClick={save} disabled={saving}>
           {saving ? "Saving…" : "Save"}
@@ -655,10 +753,12 @@ function ValueEditor({
   }
   if (valueType === "string") {
     return (
-      <Input
+      <textarea
         value={typeof value === "string" ? value : ""}
         onChange={(e) => setValue(e.target.value)}
+        rows={2}
         placeholder="The text the app shows"
+        className="w-full rounded-lg border border-rule/70 bg-paper-sunken/50 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
       />
     );
   }
