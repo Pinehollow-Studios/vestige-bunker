@@ -16,7 +16,6 @@ import {
   RotateCw,
   Send,
   TriangleAlert,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,32 +32,27 @@ export type Job = {
   status: Status;
 };
 export type Metrics = {
-  users_total: number;
-  new_users_24h: number;
-  new_users_7d: number;
-  rounds_24h: number;
-  markers_24h: number;
   crashes_24h: number;
   crashes_7d: number;
   http_24h: number;
   http_failed_24h: number;
   photos_pending: number;
 };
-export type SeriesPoint = { day: string; signups: number; rounds: number };
+export type HttpPoint = { hour: string; total: number; failed: number };
 
-// ── Dashboard ──────────────────────────────────────────────────────────
+// ── Dashboard (infrastructure / ops — distinct from the product Overview) ─
 
 export function HealthDashboard({
   checks,
   jobs,
   metrics,
-  series,
+  httpSeries,
   generatedAt,
 }: {
   checks: Check[];
   jobs: Job[];
   metrics: Metrics | null;
-  series: SeriesPoint[];
+  httpSeries: HttpPoint[];
   generatedAt: string;
 }) {
   const router = useRouter();
@@ -66,13 +60,11 @@ export function HealthDashboard({
   const [pending, start] = useTransition();
   const [now, setNow] = useState(() => Date.now());
 
-  // Tick the "updated Xs ago" label.
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 5000);
     return () => clearInterval(i);
   }, []);
 
-  // Auto-refresh: re-run the server component (force-dynamic) every 30s.
   useEffect(() => {
     if (!auto) return;
     const i = setInterval(() => router.refresh(), 30000);
@@ -84,6 +76,7 @@ export function HealthDashboard({
   const fails = all.filter((s) => s === "fail").length;
   const warns = all.filter((s) => s === "warn").length;
   const overall: Status = fails ? "fail" : warns ? "warn" : "ok";
+  const jobsOk = jobs.filter((j) => j.status === "ok").length;
 
   return (
     <div className="space-y-6">
@@ -92,7 +85,7 @@ export function HealthDashboard({
         <div className="space-y-1">
           <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">
             <span aria-hidden className="size-1.5 rounded-full bg-brand" />
-            Operations
+            Operations · infrastructure
           </p>
           <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-[1.75rem]">
             System health
@@ -130,12 +123,43 @@ export function HealthDashboard({
 
       <StatusHero overall={overall} green={green} total={all.length} warns={warns} fails={fails} />
 
-      {/* KPIs. */}
-      {metrics && <KpiRow m={metrics} />}
+      {/* Infra KPIs — throughput, reliability, scheduling, pipeline. */}
+      {metrics && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Kpi
+            icon={Radio}
+            label="Requests · 24h"
+            value={metrics.http_24h}
+            sub={metrics.http_failed_24h > 0 ? `${metrics.http_failed_24h} failed` : "all delivered"}
+            tone={metrics.http_failed_24h > 0 ? "warn" : undefined}
+          />
+          <Kpi
+            icon={Bug}
+            label="Crashes · 24h"
+            value={metrics.crashes_24h}
+            sub={`${metrics.crashes_7d} in 7 days`}
+            tone={metrics.crashes_24h > 0 ? "alert" : undefined}
+          />
+          <Kpi
+            icon={Clock}
+            label="Jobs healthy"
+            value={jobsOk}
+            sub={`of ${jobs.length} scheduled`}
+            tone={jobsOk < jobs.length ? "warn" : undefined}
+          />
+          <Kpi
+            icon={ImageIcon}
+            label="Photo backlog"
+            value={metrics.photos_pending}
+            sub={metrics.photos_pending > 0 ? "awaiting processing" : "pipeline clear"}
+            tone={metrics.photos_pending > 0 ? "warn" : undefined}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <TrendChart series={series} />
+          <HttpChart series={httpSeries} total24h={metrics?.http_24h ?? 0} failed24h={metrics?.http_failed_24h ?? 0} />
         </div>
         <ChecksPanel checks={checks} />
       </div>
@@ -143,9 +167,9 @@ export function HealthDashboard({
       <JobsPanel jobs={jobs} now={now} />
 
       <p className="text-xs text-ink-3">
-        Auto-refreshes every 30s. A 15-minute alerter posts to Slack/Discord on any failure once an{" "}
-        <code className="font-mono">ops_alert_webhook</code> vault secret is set. The prod-backup row greens up
-        when the backup job pings its heartbeat.
+        Infrastructure only — product metrics live on the <span className="text-ink-2">Overview</span> and{" "}
+        <span className="text-ink-2">Analytics</span>. Auto-refreshes every 30s. A 15-minute alerter posts to
+        Slack/Discord on any failure once an <code className="font-mono">ops_alert_webhook</code> vault secret is set.
       </p>
     </div>
   );
@@ -175,7 +199,6 @@ function StatusHero({
 
   return (
     <div className={cn("relative overflow-hidden rounded-3xl border bg-paper-raised/50 p-6 sm:p-8", cfg.ring)}>
-      {/* ambient glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full opacity-[0.16] blur-3xl"
@@ -206,12 +229,7 @@ function StatusOrb({ overall }: { overall: Status }) {
     <div className="relative flex size-16 shrink-0 items-center justify-center">
       <span className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-20 motion-reduce:hidden", color)} />
       <span className={cn("absolute inline-flex size-full rounded-full opacity-10", color)} />
-      <span
-        className={cn(
-          "relative flex size-12 items-center justify-center rounded-full text-white",
-          overall === "ok" ? "bg-brand" : overall === "warn" ? "bg-amber" : "bg-alert",
-        )}
-      >
+      <span className={cn("relative flex size-12 items-center justify-center rounded-full text-white", color)}>
         <Icon className="size-6" />
       </span>
     </div>
@@ -247,30 +265,7 @@ function HealthRing({ pct, status }: { pct: number; status: Status }) {
   );
 }
 
-// ── KPI row ────────────────────────────────────────────────────────────
-
-function KpiRow({ m }: { m: Metrics }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Kpi icon={Users} label="Users" value={m.users_total} sub={`+${m.new_users_7d} this week`} tone="brand" />
-      <Kpi icon={Activity} label="Rounds · 24h" value={m.rounds_24h} sub={`${m.markers_24h} courses marked`} />
-      <Kpi
-        icon={Radio}
-        label="Requests · 24h"
-        value={m.http_24h}
-        sub={m.http_failed_24h > 0 ? `${m.http_failed_24h} failed` : "all delivered"}
-        tone={m.http_failed_24h > 0 ? "warn" : undefined}
-      />
-      <Kpi
-        icon={Bug}
-        label="Crashes · 24h"
-        value={m.crashes_24h}
-        sub={`${m.crashes_7d} in 7 days`}
-        tone={m.crashes_24h > 0 ? "alert" : undefined}
-      />
-    </div>
-  );
-}
+// ── KPI tile ───────────────────────────────────────────────────────────
 
 function Kpi({
   icon: Icon,
@@ -283,73 +278,80 @@ function Kpi({
   label: string;
   value: number;
   sub: string;
-  tone?: "brand" | "warn" | "alert";
+  tone?: "warn" | "alert";
 }) {
-  const tint = tone === "warn" ? "text-amber" : tone === "alert" ? "text-alert" : tone === "brand" ? "text-brand" : "text-ink-3";
+  const tint = tone === "warn" ? "text-amber" : tone === "alert" ? "text-alert" : "text-ink-3";
   return (
     <div className="rounded-2xl border border-border bg-paper-raised/50 p-4">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
         <Icon className={cn("size-4", tint)} />
       </div>
-      <p className="mt-2 font-display text-3xl font-semibold tabular-nums tracking-tight text-ink">{value.toLocaleString()}</p>
+      <p className="mt-2 font-display text-3xl font-semibold tabular-nums tracking-tight text-ink">
+        {value.toLocaleString()}
+      </p>
       <p className={cn("mt-0.5 text-xs", tone ? tint : "text-ink-3")}>{sub}</p>
     </div>
   );
 }
 
-// ── Trend chart ────────────────────────────────────────────────────────
+// ── Outbound-traffic chart (24h hourly) ────────────────────────────────
 
-function TrendChart({ series }: { series: SeriesPoint[] }) {
-  const pts = series.length ? series : [];
-  const max = Math.max(1, ...pts.map((p) => Math.max(p.signups, p.rounds)));
+function HttpChart({ series, total24h, failed24h }: { series: HttpPoint[]; total24h: number; failed24h: number }) {
+  const pts = series;
+  const max = Math.max(1, ...pts.map((p) => p.total));
+  const quiet = total24h === 0;
   const W = 100;
   const H = 42;
   const n = Math.max(pts.length - 1, 1);
   const x = (i: number) => (i / n) * W;
   const y = (v: number) => H - (v / max) * (H - 4) - 2;
-
-  const line = (key: "signups" | "rounds") => pts.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(2)},${y(p[key]).toFixed(2)}`).join(" ");
-  const area = (key: "signups" | "rounds") =>
-    pts.length ? `M0,${H} ${pts.map((p, i) => `L${x(i).toFixed(2)},${y(p[key]).toFixed(2)}`).join(" ")} L${W},${H} Z` : "";
-
-  const totalSignups = pts.reduce((a, p) => a + p.signups, 0);
-  const totalRounds = pts.reduce((a, p) => a + p.rounds, 0);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(2)},${y(p.total).toFixed(2)}`).join(" ");
+  const area = pts.length ? `M0,${H} ${pts.map((p, i) => `L${x(i).toFixed(2)},${y(p.total).toFixed(2)}`).join(" ")} L${W},${H} Z` : "";
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-border bg-paper-raised/50 p-5">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Activity · last 14 days</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Outbound requests · 24h</p>
           <p className="mt-0.5 text-sm text-ink-2">
-            <span className="font-semibold text-ink">{totalSignups}</span> signups ·{" "}
-            <span className="font-semibold text-ink">{totalRounds}</span> rounds
+            <span className="font-semibold text-ink">{total24h}</span> total
+            {failed24h > 0 ? (
+              <span className="text-alert"> · {failed24h} failed</span>
+            ) : (
+              <span className="text-ink-3"> · none failed</span>
+            )}
           </p>
         </div>
         <div className="flex gap-3 text-[11px]">
-          <Legend color="var(--brand)" label="Signups" />
-          <Legend color="#8FE85B" label="Rounds" />
+          <Legend color="var(--brand)" label="Requests" />
+          {pts.some((p) => p.failed > 0) && <Legend color="#e2483d" label="Failed" />}
         </div>
       </div>
 
-      <div className="mt-4 flex-1">
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-32 w-full">
-          <defs>
-            <linearGradient id="sig" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.30" />
-              <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {/* baseline */}
-          <line x1="0" y1={H - 2} x2={W} y2={H - 2} stroke="currentColor" strokeWidth="0.3" className="text-ink-3/25" />
-          {pts.length > 0 && (
-            <>
-              <path d={area("signups")} fill="url(#sig)" />
-              <path d={line("signups")} fill="none" stroke="var(--brand)" strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-              <path d={line("rounds")} fill="none" stroke="#8FE85B" strokeWidth="1.2" strokeLinejoin="round" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-            </>
-          )}
-        </svg>
+      <div className="relative mt-4 flex-1">
+        {quiet ? (
+          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-rule/50 text-sm text-ink-3">
+            Quiet — no outbound traffic in the last 24h
+          </div>
+        ) : (
+          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-32 w-full">
+            <defs>
+              <linearGradient id="req" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.30" />
+                <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <line x1="0" y1={H - 2} x2={W} y2={H - 2} stroke="currentColor" strokeWidth="0.3" className="text-ink-3/25" />
+            <path d={area} fill="url(#req)" />
+            <path d={line} fill="none" stroke="var(--brand)" strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            {pts.map((p, i) =>
+              p.failed > 0 ? (
+                <circle key={i} cx={x(i)} cy={y(p.total)} r="1.1" fill="#e2483d" vectorEffect="non-scaling-stroke" />
+              ) : null,
+            )}
+          </svg>
+        )}
       </div>
     </div>
   );
@@ -387,7 +389,11 @@ function ChecksPanel({ checks }: { checks: Check[] }) {
               key={c.id}
               className={cn(
                 "flex items-center gap-3 rounded-xl border px-3 py-2.5",
-                c.status === "fail" ? "border-alert/25 bg-alert/[0.05]" : c.status === "warn" ? "border-amber/25 bg-amber/[0.05]" : "border-rule/50 bg-paper-sunken/20",
+                c.status === "fail"
+                  ? "border-alert/25 bg-alert/[0.05]"
+                  : c.status === "warn"
+                    ? "border-amber/25 bg-amber/[0.05]"
+                    : "border-rule/50 bg-paper-sunken/20",
               )}
             >
               <div
@@ -423,7 +429,11 @@ function JobsPanel({ jobs, now }: { jobs: Job[]; now: number }) {
             key={j.jobname}
             className={cn(
               "flex items-center gap-3 rounded-xl border px-3 py-2.5",
-              j.status === "fail" ? "border-alert/25 bg-alert/[0.05]" : j.status === "warn" ? "border-amber/25 bg-amber/[0.05]" : "border-rule/50 bg-paper-sunken/20",
+              j.status === "fail"
+                ? "border-alert/25 bg-alert/[0.05]"
+                : j.status === "warn"
+                  ? "border-amber/25 bg-amber/[0.05]"
+                  : "border-rule/50 bg-paper-sunken/20",
             )}
           >
             <Clock className="size-4 shrink-0 text-ink-3" />

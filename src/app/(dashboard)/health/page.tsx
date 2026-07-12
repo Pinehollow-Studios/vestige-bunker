@@ -1,7 +1,7 @@
 import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
-import { HealthDashboard, type Check, type Job, type Metrics, type SeriesPoint } from "./HealthDashboard";
+import { HealthDashboard, type Check, type HttpPoint, type Job, type Metrics } from "./HealthDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +26,11 @@ export default async function HealthPage() {
     );
   }
 
-  const [checksRes, jobsRes, metricsRes, seriesRes] = await Promise.all([
+  const [checksRes, jobsRes, metricsRes, httpRes] = await Promise.all([
     supabase.rpc("admin_ops_checks"),
     supabase.rpc("admin_ops_cron_health"),
     supabase.rpc("admin_ops_metrics"),
-    supabase.rpc("admin_ops_activity_series"),
+    supabase.rpc("admin_ops_http_series"),
   ]);
 
   return (
@@ -39,7 +39,7 @@ export default async function HealthPage() {
         checks={(checksRes.data ?? []) as Check[]}
         jobs={(jobsRes.data ?? []) as Job[]}
         metrics={((metricsRes.data ?? [])[0] ?? null) as Metrics | null}
-        series={(seriesRes.data ?? []) as SeriesPoint[]}
+        httpSeries={(httpRes.data ?? []) as HttpPoint[]}
         generatedAt={new Date().toISOString()}
       />
     </div>
