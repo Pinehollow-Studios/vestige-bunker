@@ -2,7 +2,26 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, Search, SlidersHorizontal, Trash2, Users } from "lucide-react";
+import {
+  Award,
+  Bell,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  Flag,
+  House,
+  ListChecks,
+  LogIn,
+  type LucideIcon,
+  Newspaper,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +43,9 @@ import {
 import {
   AREA_ORDER,
   areaFor,
-  CATEGORY_BLURB,
   defaultValueFor,
-  flagCategory,
-  FLAG_CATEGORIES,
   humanizeKey,
+  isChanged,
   isFeature,
   isOn,
   kindLabel,
@@ -39,10 +56,25 @@ import {
   whoSummary,
   type BroadcastAudienceKind,
   type BroadcastTarget,
-  type FlagCategory,
   type FlagRow,
   type FlagValueType,
 } from "./types";
+
+const AREA_ICON: Record<string, LucideIcon> = {
+  Home: House,
+  "Activity feed": Newspaper,
+  Friends: Users,
+  Leaderboards: Trophy,
+  Lists: ListChecks,
+  "Log a round": Flag,
+  Badges: Award,
+  Notifications: Bell,
+  Societies: Users,
+  Onboarding: LogIn,
+  "Sign-in": LogIn,
+  Search: Search,
+  Other: SlidersHorizontal,
+};
 
 // ── Board ──────────────────────────────────────────────────────────────
 
@@ -58,16 +90,9 @@ export function FlagsBoard({
   targetsByFlag: Record<string, string[]>;
 }) {
   const [query, setQuery] = useState("");
-  // Long list — lead with Features expanded, tuck Copy + Settings away.
-  const [collapsed, setCollapsed] = useState<Record<FlagCategory, boolean>>({
-    Features: false,
-    Copy: true,
-    Settings: true,
-  });
+  const [openArea, setOpenArea] = useState<string | null>(null);
 
-  const live = flags.filter((f) => !f.archived);
-  const archived = flags.filter((f) => f.archived);
-  const on = live.filter(isOn);
+  const live = useMemo(() => flags.filter((f) => !f.archived), [flags]);
   const searching = query.trim().length > 0;
 
   const matches = useMemo(() => {
@@ -79,46 +104,28 @@ export function FlagsBoard({
       (f.description ?? "").toLowerCase().includes(q);
   }, [query]);
 
-  const card = (flag: FlagRow) => (
-    <FlagCard
-      key={flag.key}
-      flag={flag}
-      counties={counties}
-      allUsers={allUsers}
-      initialTargetIds={targetsByFlag[flag.key] ?? []}
-    />
-  );
+  // Group live flags by app area, ordered.
+  const areas = useMemo(() => {
+    const byArea = new Map<string, FlagRow[]>();
+    for (const f of live) {
+      const a = areaFor(f.key);
+      const list = byArea.get(a) ?? [];
+      list.push(f);
+      byArea.set(a, list);
+    }
+    return [...byArea.entries()]
+      .sort((a, b) => AREA_ORDER.indexOf(a[0]) - AREA_ORDER.indexOf(b[0]))
+      .map(([area, items]) => ({
+        area,
+        items: items.sort((x, y) => Number(isChanged(y)) - Number(isChanged(x))),
+      }));
+  }, [live]);
+
+  const tileProps = { counties, allUsers, targetsByFlag };
 
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-ink-2">
-        Switch features on or off and change settings — live, without shipping an app update.
-      </p>
-
-      {/* What's on. */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl glass-panel px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">On now</span>
-        {on.length === 0 ? (
-          <span className="text-sm text-ink-3">Nothing is switched on.</span>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {on.map((f) => (
-              <span
-                key={f.key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-brand"
-              >
-                <span className="size-1.5 rounded-full bg-brand" />
-                {humanizeKey(f.key)}
-              </span>
-            ))}
-          </div>
-        )}
-        <span className="ml-auto text-xs tabular-nums text-ink-3">
-          {on.length} on · {live.length} total
-        </span>
-      </div>
-
-      {/* Search + add. */}
+      {/* Search + add — always available. */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-lg border border-rule/70 bg-paper-sunken/40 px-3 py-2">
           <Search aria-hidden className="size-4 text-ink-3" />
@@ -126,7 +133,7 @@ export function FlagsBoard({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search features, copy and settings…"
+            placeholder="Search everything…"
             className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
           />
           {query && (
@@ -138,111 +145,373 @@ export function FlagsBoard({
         <NewFlagPanel existingKeys={new Set(flags.map((f) => f.key))} />
       </div>
 
-      {live.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
-          Nothing here yet. Add a feature or setting above.
-        </div>
+      {searching ? (
+        // Flat results across every area.
+        <SearchResults flags={live.filter(matches)} query={query} {...tileProps} />
+      ) : openArea ? (
+        // One area, opened.
+        <AreaView
+          area={openArea}
+          items={areas.find((a) => a.area === openArea)?.items ?? []}
+          onBack={() => setOpenArea(null)}
+          {...tileProps}
+        />
       ) : (
-        FLAG_CATEGORIES.map((category) => {
-          const items = live.filter((f) => flagCategory(f.value_type) === category && matches(f));
-          if (searching && items.length === 0) return null;
-          const onCount = items.filter(isOn).length;
-          const open = searching || !collapsed[category];
-          return (
-            <CategorySection
-              key={category}
-              title={category}
-              blurb={CATEGORY_BLURB[category]}
-              count={items.length}
-              onCount={category === "Features" ? onCount : undefined}
-              open={open}
-              onToggle={() => setCollapsed((c) => ({ ...c, [category]: !c[category] }))}
-            >
-              {groupByArea(items).map(([area, areaItems]) => (
-                <AreaGroup key={area} area={area}>
-                  {areaItems.map(card)}
-                </AreaGroup>
-              ))}
-            </CategorySection>
-          );
-        })
-      )}
-
-      {searching && FLAG_CATEGORIES.every((c) => live.filter((f) => flagCategory(f.value_type) === c && matches(f)).length === 0) && (
-        <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-6 text-center text-sm text-ink-3">
-          No matches for “{query}”.
-        </div>
-      )}
-
-      {archived.length > 0 && !searching && (
-        <CategorySection title="Archived" count={archived.length} open={false} onToggle={() => {}} alwaysCollapsibleInline>
-          {archived.map(card)}
-        </CategorySection>
+        // Landing — overview + a grid of section boxes.
+        <>
+          <Overview live={live} onOpenArea={setOpenArea} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {areas.map(({ area, items }) => (
+              <AreaCard key={area} area={area} items={items} onOpen={() => setOpenArea(area)} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-/** Group a category's items by app area, ordered + on-first within each area. */
-function groupByArea(items: FlagRow[]): [string, FlagRow[]][] {
-  const byArea = new Map<string, FlagRow[]>();
-  for (const f of items) {
-    const area = areaFor(f.key);
-    (byArea.get(area) ?? byArea.set(area, []).get(area)!).push(f);
-  }
-  return [...byArea.entries()]
-    .sort((a, b) => AREA_ORDER.indexOf(a[0]) - AREA_ORDER.indexOf(b[0]))
-    .map(([area, list]) => [area, list.sort((a, b) => Number(isOn(b)) - Number(isOn(a)))]);
-}
+// ── Overview (the rethought "on now") ──────────────────────────────────
 
-function CategorySection({
-  title,
-  blurb,
-  count,
-  onCount,
-  open,
-  onToggle,
-  alwaysCollapsibleInline,
-  children,
-}: {
-  title: string;
-  blurb?: string;
-  count: number;
-  onCount?: number;
-  open: boolean;
-  onToggle: () => void;
-  alwaysCollapsibleInline?: boolean;
-  children: React.ReactNode;
-}) {
-  const [localOpen, setLocalOpen] = useState(false);
-  const isOpen = alwaysCollapsibleInline ? localOpen : open;
+function Overview({ live, onOpenArea }: { live: FlagRow[]; onOpenArea: (area: string) => void }) {
+  const featuresOff = live.filter((f) => isFeature(f.value_type) && !isOn(f));
+  const copyEdited = live.filter((f) => f.value_type === "string" && f.enabled);
+  const settingsChanged = live.filter((f) => !isFeature(f.value_type) && f.value_type !== "string" && f.enabled);
+  const changed = [...featuresOff, ...copyEdited, ...settingsChanged];
+
   return (
-    <section className="space-y-3">
-      <button
-        type="button"
-        onClick={alwaysCollapsibleInline ? () => setLocalOpen((o) => !o) : onToggle}
-        className="flex w-full items-center gap-2.5 text-left"
-      >
-        <ChevronDown className={cn("size-4 text-ink-3 transition-transform", !isOpen && "-rotate-90")} />
-        <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-2">{title}</h2>
-        <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">{count}</span>
-        {onCount !== undefined && onCount > 0 && (
-          <span className="rounded-full bg-brand/10 px-1.5 py-px text-[10px] font-semibold tabular-nums text-brand">
-            {onCount} on
-          </span>
-        )}
-        {blurb && <span className="hidden text-xs text-ink-3 sm:inline">{blurb}</span>}
-      </button>
-      {isOpen && <div className="space-y-4 pl-1">{children}</div>}
-    </section>
+    <div className="rounded-2xl glass-panel p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex size-10 items-center justify-center rounded-xl",
+              changed.length === 0 ? "bg-brand/12 text-brand" : "bg-amber/12 text-amber",
+            )}
+          >
+            <CircleCheck className="size-5" />
+          </div>
+          <div>
+            <p className="font-display text-lg font-semibold tracking-tight text-ink">
+              {changed.length === 0 ? "Running on defaults" : `${changed.length} changed from default`}
+            </p>
+            <p className="text-sm text-ink-3">
+              {changed.length === 0
+                ? "Every feature is on and nothing's overridden."
+                : "These differ from what the app ships with."}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <Stat label="Controls" value={live.length} />
+          <Stat label="Features off" value={featuresOff.length} tone={featuresOff.length ? "warn" : undefined} />
+          <Stat label="Edits live" value={copyEdited.length + settingsChanged.length} tone={copyEdited.length + settingsChanged.length ? "warn" : undefined} />
+        </div>
+      </div>
+
+      {changed.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5 border-t border-rule/50 pt-4">
+          {changed.slice(0, 10).map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => onOpenArea(areaFor(f.key))}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                isFeature(f.value_type)
+                  ? "border-alert/30 bg-alert/10 text-alert hover:bg-alert/15"
+                  : "border-amber/30 bg-amber/10 text-amber hover:bg-amber/15",
+              )}
+            >
+              {humanizeKey(f.key)}
+              <span className="opacity-70">{isFeature(f.value_type) ? "off" : "edited"}</span>
+            </button>
+          ))}
+          {changed.length > 10 && <span className="self-center text-xs text-ink-3">+{changed.length - 10} more</span>}
+        </div>
+      )}
+    </div>
   );
 }
 
-function AreaGroup({ area, children }: { area: string; children: React.ReactNode }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone?: "warn" }) {
   return (
-    <div className="space-y-2">
-      <p className="pl-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3/80">{area}</p>
-      <div className="space-y-2.5">{children}</div>
+    <div className="text-right">
+      <p className={cn("font-mono text-xl font-semibold tabular-nums", tone === "warn" ? "text-amber" : "text-ink")}>
+        {value}
+      </p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
+    </div>
+  );
+}
+
+// ── Landing: a section box per area ────────────────────────────────────
+
+function AreaCard({ area, items, onOpen }: { area: string; items: FlagRow[]; onOpen: () => void }) {
+  const Icon = AREA_ICON[area] ?? SlidersHorizontal;
+  const off = items.filter((f) => isFeature(f.value_type) && !isOn(f)).length;
+  const edited = items.filter((f) => !isFeature(f.value_type) && f.enabled).length;
+  const features = items.filter((f) => isFeature(f.value_type)).length;
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex flex-col gap-3 rounded-2xl border border-border bg-paper-raised/50 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:bg-paper-raised hover:shadow-lg"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+          <Icon className="size-5" />
+        </div>
+        <ChevronRight className="size-4 text-ink-3 transition-transform group-hover:translate-x-0.5" />
+      </div>
+      <div>
+        <p className="font-medium text-ink">{area}</p>
+        <p className="text-xs text-ink-3">
+          {items.length} {items.length === 1 ? "control" : "controls"}
+          {features > 0 ? ` · ${features} feature${features === 1 ? "" : "s"}` : ""}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {off > 0 && (
+          <span className="rounded-full border border-alert/30 bg-alert/10 px-2 py-0.5 text-[10px] font-semibold text-alert">
+            {off} off
+          </span>
+        )}
+        {edited > 0 && (
+          <span className="rounded-full border border-amber/30 bg-amber/10 px-2 py-0.5 text-[10px] font-semibold text-amber">
+            {edited} edited
+          </span>
+        )}
+        {off === 0 && edited === 0 && (
+          <span className="rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[10px] font-semibold text-brand">
+            all default
+          </span>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ── Area view (opened section): flags as tiles in a grid ───────────────
+
+function AreaView({
+  area,
+  items,
+  onBack,
+  counties,
+  allUsers,
+  targetsByFlag,
+}: {
+  area: string;
+  items: FlagRow[];
+  onBack: () => void;
+  counties: CountyOption[];
+  allUsers: PickerUser[];
+  targetsByFlag: Record<string, string[]>;
+}) {
+  const Icon = AREA_ICON[area] ?? SlidersHorizontal;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="sm" onClick={onBack}>
+          <ChevronLeft className="size-4" /> All sections
+        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
+            <Icon className="size-4" />
+          </div>
+          <h2 className="font-display text-lg font-semibold tracking-tight text-ink">{area}</h2>
+          <span className="rounded-full bg-paper-sunken/70 px-1.5 py-px text-[10px] tabular-nums text-ink-3">{items.length}</span>
+        </div>
+      </div>
+      <FlagGrid flags={items} counties={counties} allUsers={allUsers} targetsByFlag={targetsByFlag} />
+    </div>
+  );
+}
+
+function SearchResults({
+  flags,
+  query,
+  counties,
+  allUsers,
+  targetsByFlag,
+}: {
+  flags: FlagRow[];
+  query: string;
+  counties: CountyOption[];
+  allUsers: PickerUser[];
+  targetsByFlag: Record<string, string[]>;
+}) {
+  if (flags.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-paper-raised/50 p-8 text-center text-sm text-ink-3">
+        No matches for “{query}”.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-ink-3">
+        {flags.length} {flags.length === 1 ? "match" : "matches"}
+      </p>
+      <FlagGrid flags={flags} counties={counties} allUsers={allUsers} targetsByFlag={targetsByFlag} />
+    </div>
+  );
+}
+
+/** The tile grid + the one-open-at-a-time editor (opened tile spans full width). */
+function FlagGrid({
+  flags,
+  counties,
+  allUsers,
+  targetsByFlag,
+}: {
+  flags: FlagRow[];
+  counties: CountyOption[];
+  allUsers: PickerUser[];
+  targetsByFlag: Record<string, string[]>;
+}) {
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {flags.map((flag) => (
+        <FlagTile
+          key={flag.key}
+          flag={flag}
+          editing={editingKey === flag.key}
+          onEdit={() => setEditingKey((k) => (k === flag.key ? null : flag.key))}
+          counties={counties}
+          allUsers={allUsers}
+          initialTargetIds={targetsByFlag[flag.key] ?? []}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Flag tile (a box, not a row) ───────────────────────────────────────
+
+function FlagTile({
+  flag,
+  editing,
+  onEdit,
+  counties,
+  allUsers,
+  initialTargetIds,
+}: {
+  flag: FlagRow;
+  editing: boolean;
+  onEdit: () => void;
+  counties: CountyOption[];
+  allUsers: PickerUser[];
+  initialTargetIds: string[];
+}) {
+  const router = useRouter();
+  const [on, setOn] = useState(isOn(flag));
+  const [toggling, startToggle] = useTransition();
+  const [confirmToggle, setConfirmToggle] = useState(false);
+  const feature = isFeature(flag.value_type);
+
+  function applyToggle(next: boolean) {
+    setOn(next);
+    startToggle(async () => {
+      const r = feature
+        ? await upsertFlag({
+            key: flag.key,
+            description: flag.description,
+            value_type: flag.value_type,
+            value: next,
+            enabled: true,
+            rollout_percentage: flag.rollout_percentage,
+            audience_kind: flag.audience_kind,
+            target: flag.target ?? {},
+            min_app_version: flag.min_app_version,
+            max_app_version: flag.max_app_version,
+          })
+        : await setFlagEnabled(flag.key, next);
+      setConfirmToggle(false);
+      if (!r.ok) {
+        setOn(!next);
+        toast.error(r.message);
+        return;
+      }
+      toast.success(next ? "Turned on" : "Turned off");
+      router.refresh();
+    });
+  }
+
+  function requestToggle() {
+    if (feature) setConfirmToggle(true);
+    else applyToggle(!on);
+  }
+
+  const stateLine = feature ? (on ? "On" : "Off") : flag.enabled ? `Custom: ${valueSummary(flag)}` : "Default";
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col rounded-2xl border p-4 transition-colors",
+        editing && "sm:col-span-2",
+        flag.archived
+          ? "border-border bg-paper-raised/40 opacity-70"
+          : on || (!feature && flag.enabled)
+            ? "border-brand/30 bg-brand/[0.05]"
+            : "border-border bg-paper-raised/60",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span
+          className={cn(
+            "rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide",
+            feature ? "bg-info/10 text-info" : "bg-amber/10 text-amber",
+          )}
+        >
+          {kindLabel(flag.value_type)}
+        </span>
+        <Toggle on={on} busy={toggling} onClick={requestToggle} disabled={flag.archived} />
+      </div>
+
+      <p className="mt-2 font-medium text-ink">{humanizeKey(flag.key)}</p>
+      {flag.description && <p className="mt-0.5 line-clamp-2 text-xs text-ink-2">{flag.description}</p>}
+
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-rule/50 pt-2.5">
+        <span className={cn("text-xs font-medium", feature ? (on ? "text-brand" : "text-ink-3") : flag.enabled ? "text-amber" : "text-ink-3")}>
+          {stateLine}
+        </span>
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          <ChevronDown className={cn("size-4 transition-transform", editing && "rotate-180")} />
+          {editing ? "Close" : "Edit"}
+        </Button>
+      </div>
+
+      {editing && (
+        <FlagEditor
+          flag={flag}
+          counties={counties}
+          allUsers={allUsers}
+          initialTargetIds={initialTargetIds}
+          onSaved={() => router.refresh()}
+        />
+      )}
+
+      <ConfirmDialog
+        open={confirmToggle}
+        title={on ? `Turn off “${humanizeKey(flag.key)}”?` : `Turn on “${humanizeKey(flag.key)}”?`}
+        confirmLabel={on ? "Turn off" : "Turn on"}
+        tone={on ? "danger" : "brand"}
+        busy={toggling}
+        onConfirm={() => applyToggle(!on)}
+        onCancel={() => {
+          if (!toggling) setConfirmToggle(false);
+        }}
+      >
+        <p>
+          {on
+            ? "This hides the feature from everyone in the app (from their next launch)."
+            : "This shows the feature to everyone — unless you limit who under Advanced."}
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }
@@ -334,142 +603,6 @@ function NewFlagPanel({ existingKeys }: { existingKeys: Set<string> }) {
   );
 }
 
-// ── Flag card ──────────────────────────────────────────────────────────
-
-function FlagCard({
-  flag,
-  counties,
-  allUsers,
-  initialTargetIds,
-}: {
-  flag: FlagRow;
-  counties: CountyOption[];
-  allUsers: PickerUser[];
-  initialTargetIds: string[];
-}) {
-  const router = useRouter();
-  const [expanded, setExpanded] = useState(false);
-  const [on, setOn] = useState(isOn(flag));
-  const [toggling, startToggle] = useTransition();
-  const [confirmToggle, setConfirmToggle] = useState(false);
-
-  const feature = isFeature(flag.value_type);
-
-  function applyToggle(next: boolean) {
-    setOn(next); // optimistic
-    startToggle(async () => {
-      // A feature's on/off IS its delivered value (so a kill switch on a
-      // default-on feature actively delivers false). Copy/settings just switch
-      // the override active/inactive.
-      const r = feature
-        ? await upsertFlag({
-            key: flag.key,
-            description: flag.description,
-            value_type: flag.value_type,
-            value: next,
-            enabled: true,
-            rollout_percentage: flag.rollout_percentage,
-            audience_kind: flag.audience_kind,
-            target: flag.target ?? {},
-            min_app_version: flag.min_app_version,
-            max_app_version: flag.max_app_version,
-          })
-        : await setFlagEnabled(flag.key, next);
-      setConfirmToggle(false);
-      if (!r.ok) {
-        setOn(!next);
-        toast.error(r.message);
-        return;
-      }
-      toast.success(next ? "Turned on" : "Turned off");
-      router.refresh();
-    });
-  }
-
-  function requestToggle() {
-    // Features change what all users see — confirm to avoid a mis-tap. Copy /
-    // settings just revert to the built-in default, so they toggle immediately.
-    if (feature) setConfirmToggle(true);
-    else applyToggle(!on);
-  }
-
-  return (
-    <div
-      className={cn(
-        "rounded-xl border p-3.5 transition-colors",
-        flag.archived
-          ? "border-border bg-paper-raised/40 opacity-70"
-          : on
-            ? "border-brand/30 bg-brand/[0.04]"
-            : "border-border bg-paper-raised/50",
-      )}
-    >
-      <div className="flex items-start gap-3.5">
-        <Toggle on={on} busy={toggling} onClick={requestToggle} disabled={flag.archived} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-ink">{humanizeKey(flag.key)}</span>
-            <span
-              className={cn(
-                "rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide",
-                feature ? "bg-info/10 text-info" : "bg-amber/10 text-amber",
-              )}
-            >
-              {kindLabel(flag.value_type)}
-            </span>
-          </div>
-          {flag.description && <p className="mt-0.5 text-sm text-ink-2">{flag.description}</p>}
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-3">
-            {!feature && (
-              <>
-                <span>
-                  Set to <span className="font-medium text-ink-2">{valueSummary(flag)}</span>
-                </span>
-                <span aria-hidden>·</span>
-              </>
-            )}
-            <span>{whoSummary(flag)}</span>
-            <span aria-hidden>·</span>
-            <code className="font-mono text-[11px] text-ink-3">{flag.key}</code>
-          </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => setExpanded((e) => !e)}>
-          <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} />
-          {expanded ? "Close" : "Edit"}
-        </Button>
-      </div>
-
-      {expanded && (
-        <FlagEditor
-          flag={flag}
-          counties={counties}
-          allUsers={allUsers}
-          initialTargetIds={initialTargetIds}
-          onSaved={() => router.refresh()}
-        />
-      )}
-
-      <ConfirmDialog
-        open={confirmToggle}
-        title={on ? `Turn off “${humanizeKey(flag.key)}”?` : `Turn on “${humanizeKey(flag.key)}”?`}
-        confirmLabel={on ? "Turn off" : "Turn on"}
-        tone={on ? "danger" : "brand"}
-        busy={toggling}
-        onConfirm={() => applyToggle(!on)}
-        onCancel={() => {
-          if (!toggling) setConfirmToggle(false);
-        }}
-      >
-        <p>
-          {on
-            ? "This hides the feature from everyone in the app (from their next launch)."
-            : "This shows the feature to everyone — unless you limit who under Advanced."}
-        </p>
-      </ConfirmDialog>
-    </div>
-  );
-}
-
 // ── Editor ─────────────────────────────────────────────────────────────
 
 function FlagEditor({
@@ -488,18 +621,14 @@ function FlagEditor({
   const feature = isFeature(flag.value_type);
   const [description, setDescription] = useState(flag.description);
   const [value, setValue] = useState<unknown>(flag.value);
-  const [jsonText, setJsonText] = useState(
-    flag.value_type === "json" ? JSON.stringify(flag.value ?? {}, null, 2) : "",
-  );
+  const [jsonText, setJsonText] = useState(flag.value_type === "json" ? JSON.stringify(flag.value ?? {}, null, 2) : "");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [rollout, setRollout] = useState(flag.rollout_percentage);
   const [audienceKind, setAudienceKind] = useState<BroadcastAudienceKind>(flag.audience_kind);
   const [target, setTarget] = useState<BroadcastTarget>(flag.target ?? {});
   const [minVersion, setMinVersion] = useState(flag.min_app_version ?? "");
   const [maxVersion, setMaxVersion] = useState(flag.max_app_version ?? "");
-  const [showAdvanced, setShowAdvanced] = useState(
-    flag.rollout_percentage < 100 || flag.audience_kind !== "everyone",
-  );
+  const [showAdvanced, setShowAdvanced] = useState(flag.rollout_percentage < 100 || flag.audience_kind !== "everyone");
 
   const [saving, startSave] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -507,8 +636,6 @@ function FlagEditor({
   const [reaching, startReach] = useTransition();
 
   function committedValue(): { ok: true; value: unknown } | { ok: false } {
-    // A feature's on/off is owned by the card toggle — the editor only changes
-    // description / rollout / targeting, so preserve the current delivered value.
     if (feature) return { ok: true, value: flag.value };
     if (flag.value_type === "json") {
       try {
@@ -589,7 +716,7 @@ function FlagEditor({
   }
 
   return (
-    <div className="mt-4 space-y-4 border-t border-rule/60 pt-4">
+    <div className="mt-3 space-y-4 border-t border-rule/60 pt-4">
       <FieldLabel label="What it controls">
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </FieldLabel>
@@ -620,11 +747,7 @@ function FlagEditor({
           <SlidersHorizontal className="size-3.5 text-ink-3" />
           <span className="font-medium">Roll out gradually or limit who sees it</span>
           <span className="ml-auto text-xs text-ink-3">
-            {whoSummary({
-              audience_kind: audienceKind,
-              target_user_count: initialTargetIds.length,
-              rollout_percentage: rollout,
-            })}
+            {whoSummary({ audience_kind: audienceKind, target_user_count: initialTargetIds.length, rollout_percentage: rollout })}
           </span>
           <ChevronDown className={cn("size-4 text-ink-3 transition-transform", showAdvanced && "rotate-180")} />
         </button>
@@ -781,17 +904,7 @@ function ValueEditor({
 const SELECT_CLS =
   "flex h-9 w-full rounded-lg border border-input bg-paper-sunken/40 px-3 py-1 text-sm transition-colors focus-visible:border-brand/60 focus-visible:bg-paper-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30";
 
-function Toggle({
-  on,
-  busy,
-  onClick,
-  disabled,
-}: {
-  on: boolean;
-  busy: boolean;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
+function Toggle({ on, busy, onClick, disabled }: { on: boolean; busy: boolean; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
@@ -800,7 +913,7 @@ function Toggle({
       aria-pressed={on}
       title={disabled ? "Restore to switch it" : on ? "Turn off" : "Turn on"}
       className={cn(
-        "relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
+        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors disabled:opacity-50",
         on ? "border-brand/50 bg-brand/80" : "border-rule/70 bg-paper-sunken",
       )}
     >
@@ -814,15 +927,7 @@ function Toggle({
   );
 }
 
-function FieldLabel({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
+function FieldLabel({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-2">{label}</span>

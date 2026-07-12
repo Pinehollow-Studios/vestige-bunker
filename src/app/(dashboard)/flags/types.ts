@@ -66,6 +66,16 @@ export function isOn(row: Pick<FlagRow, "value_type" | "enabled" | "value">): bo
   return isFeature(row.value_type) ? row.enabled && row.value === true : row.enabled;
 }
 
+/**
+ * Is this flag currently changed from how the app ships? A feature that's OFF
+ * (hidden from users), or a copy/setting whose override is active. This — not
+ * "what's on" — is the signal worth surfacing, since most features are on by
+ * default.
+ */
+export function isChanged(row: Pick<FlagRow, "value_type" | "enabled" | "value">): boolean {
+  return isFeature(row.value_type) ? !isOn(row) : row.enabled;
+}
+
 /** The three plain-language buckets the panel groups by. */
 export type FlagCategory = "Features" | "Copy" | "Settings";
 
