@@ -10,8 +10,11 @@ import { cn } from "@/lib/utils";
 import { AudiencePicker } from "@/components/admin/AudiencePicker";
 import type { PickerUser } from "@/lib/users/roster";
 import type { EmailStarter } from "@/lib/email/starters";
+import { checkEmailCompliance } from "@/lib/email/compliance";
 import { StarterPicker } from "./StarterPicker";
 import { SendTestButton } from "./SendTestButton";
+import { CompliancePanel } from "./CompliancePanel";
+import { SendConfirmDialog } from "./SendConfirmDialog";
 import {
   cancelCampaign,
   deleteCampaign,
@@ -113,12 +116,19 @@ export function EmailComposer(props: EmailComposerProps) {
   const [wlTargetCount, setWlTargetCount] = useState(!isApp ? audience.initialTargets.length : 0);
 
   const [pending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const isSent = props.status === "sent" || props.status === "sending";
   const isCanceled = props.status === "canceled";
   const editable = !isSent && !isCanceled;
 
   const previewHtml = useMemo(() => render(html, SAMPLE), [html]);
+
+  // Live legal/deliverability checks — re-run on every edit.
+  const checks = useMemo(
+    () => checkEmailCompliance({ subject, html, preheader, isServiceMessage: isApp && bypass }),
+    [subject, html, preheader, isApp, bypass],
+  );
 
   function persist(): Promise<{ ok: boolean; message?: string }> {
     if (isApp) {
@@ -161,19 +171,17 @@ export function EmailComposer(props: EmailComposerProps) {
     toast.success(`Started from “${s.name}”`);
   }
 
-  function sendNow() {
-    if (!subject.trim() || !html.trim()) {
-      toast.error("Add a subject and content first.");
-      return;
-    }
+  // "Send now" never sends directly — it opens the confirmation dialog, which
+  // surfaces the compliance checks and requires an explicit acknowledgement.
+  function openSend() {
     if (!isApp && wlKind === "individuals" && wlTargetCount === 0) {
       toast.error("Pick at least one subscriber, or switch to Everyone.");
       return;
     }
-    const who = audienceDescription();
-    const consent =
-      isApp && !bypass ? " Opted-out members are excluded automatically." : "";
-    if (!window.confirm(`Send this email to ${who} now?${consent} This can't be undone.`)) return;
+    setConfirmOpen(true);
+  }
+
+  function doSend() {
     startTransition(async () => {
       const saved = await persist();
       if (!saved.ok) {
@@ -181,8 +189,12 @@ export function EmailComposer(props: EmailComposerProps) {
         return;
       }
       const r = isApp ? await sendCampaignNow(id) : await sendWaitlistNow(id);
-      if (!r.ok) toast.error(r.message);
-      else toast.success(`Queued ${r.data ?? 0} ${r.data === 1 ? "recipient" : "recipients"}`);
+      if (!r.ok) {
+        toast.error(r.message);
+        return;
+      }
+      setConfirmOpen(false);
+      toast.success(`Queued ${r.data ?? 0} ${r.data === 1 ? "recipient" : "recipients"}`);
     });
   }
 
@@ -250,7 +262,7 @@ export function EmailComposer(props: EmailComposerProps) {
             </Field>
             <div className="space-y-1">
               <Label className="text-xs">Preview</Label>
-              <div className="h-[420px] overflow-hidden rounded-lg border border-border bg-white">
+              <div className="h-[420px] overflow-hidden rounded-lg border border-border bg-[#070A10]">
                 <iframe title="Email preview" sandbox="" srcDoc={previewHtml} className="h-full w-full border-0" />
               </div>
             </div>
@@ -264,7 +276,8 @@ export function EmailComposer(props: EmailComposerProps) {
         )}
       </div>
 
-      <div className="lg:sticky lg:top-6 lg:self-start">
+      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        {editable && <CompliancePanel checks={checks} />}
         <DeliveryCard
           props={props}
           pending={pending}
@@ -274,9 +287,19 @@ export function EmailComposer(props: EmailComposerProps) {
           subject={subject}
           html={html}
           preheader={preheader}
-          onSendNow={sendNow}
+          onSendNow={openSend}
         />
       </div>
+
+      <SendConfirmDialog
+        open={confirmOpen}
+        onClose={() => !pending && setConfirmOpen(false)}
+        onConfirm={doSend}
+        audienceLine={audienceDescription()}
+        subject={subject}
+        checks={checks}
+        sending={pending}
+      />
     </div>
   );
 }
