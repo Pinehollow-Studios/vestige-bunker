@@ -128,6 +128,27 @@ export async function cancelCampaign(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+/**
+ * Delete a draft (or canceled) email from the list — any admin, no redirect.
+ * Refuses anything that has sent or is scheduled/sending, so a live or historical
+ * email can never be removed this way. For clearing clutter off the main list.
+ */
+export async function deleteDraftCampaign(id: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data: current, error: readErr } = await supabase
+    .from("email_campaigns").select("status").eq("id", id).maybeSingle();
+  if (readErr) return { ok: false, message: readErr.message };
+  if (!current) return { ok: true };
+  if (current.status !== "draft" && current.status !== "canceled") {
+    return { ok: false, message: "Only drafts can be deleted from here." };
+  }
+  const { error } = await supabase.from("email_campaigns").delete().eq("id", id);
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/emails");
+  return { ok: true };
+}
+
 /** Hard delete — super_admin only (mirrors deleteBroadcast). */
 export async function deleteCampaign(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();

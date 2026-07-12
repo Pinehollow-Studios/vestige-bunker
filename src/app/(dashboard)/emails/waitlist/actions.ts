@@ -108,6 +108,26 @@ export async function cancelWaitlist(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+/**
+ * Delete a draft (or canceled) waitlist email from the list — any admin, no
+ * redirect. Refuses anything sent/scheduled/sending. For clearing list clutter.
+ */
+export async function deleteDraftWaitlist(id: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data: current, error: readErr } = await supabase
+    .from("waitlist_campaigns").select("status").eq("id", id).maybeSingle();
+  if (readErr) return { ok: false, message: readErr.message };
+  if (!current) return { ok: true };
+  if (current.status !== "draft" && current.status !== "canceled") {
+    return { ok: false, message: "Only drafts can be deleted from here." };
+  }
+  const { error } = await supabase.from("waitlist_campaigns").delete().eq("id", id);
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/emails");
+  return { ok: true };
+}
+
 /** Hard delete — super_admin only (mirrors deleteCampaign). */
 export async function deleteWaitlist(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
