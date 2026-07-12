@@ -4,8 +4,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { MessageFunnel } from "@/components/admin/MessageFunnel";
 import { BroadcastEditor } from "./BroadcastEditor";
 import type { BroadcastRow, CountyOption, UserPickRow } from "../types";
+
+type PushFunnel = { recipients: number; accepted: number; failed: number; opened: number };
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +55,10 @@ export default async function BroadcastEditorPage({
 
   const counties: CountyOption[] = (countyRowsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
 
+  // Delivery funnel — only meaningful once the broadcast has been sent.
+  const funnelRes = row.status === "sent" ? await supabase.rpc("admin_broadcast_funnel", { p_broadcast_id: id }) : null;
+  const f = (funnelRes?.data?.[0] ?? null) as PushFunnel | null;
+
   return (
     <div className={pageShell("wide")}>
       <Link
@@ -60,6 +67,21 @@ export default async function BroadcastEditorPage({
       >
         <ArrowLeft className="size-4" /> Notifications
       </Link>
+
+      {f && (
+        <MessageFunnel
+          title="Delivery"
+          subtitle="via APNs"
+          stages={[
+            { label: "Recipients", value: f.recipients },
+            { label: "Accepted by Apple", value: f.accepted },
+            { label: "Opened", value: f.opened },
+          ]}
+          notes={[{ label: "failed / dead token", value: f.failed, tone: "warn" }]}
+          empty="Sent — per-device outcomes will appear here."
+        />
+      )}
+
       <BroadcastEditor
         row={row as BroadcastRow}
         initialTargetUsers={targetUsers}

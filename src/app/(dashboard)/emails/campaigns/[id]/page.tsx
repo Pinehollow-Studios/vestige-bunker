@@ -5,8 +5,19 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPickerUsers } from "@/lib/users/roster";
+import { MessageFunnel } from "@/components/admin/MessageFunnel";
 import { EmailCampaignEditor, type TemplateSeed } from "./EmailCampaignEditor";
 import type { CountyOption, EmailCampaignRow } from "../types";
+
+type EmailFunnel = {
+  recipients: number;
+  sent: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +56,11 @@ export default async function EmailCampaignEditorPage({
 
   const targetIds = (targetRowsRes.data ?? []).map((r) => r.user_id as string);
 
+  // Delivery funnel — only meaningful once the campaign has gone out.
+  const sentOut = row.status === "sent" || row.status === "sending";
+  const funnelRes = sentOut ? await supabase.rpc("admin_email_campaign_funnel", { p_campaign_id: id }) : null;
+  const f = (funnelRes?.data?.[0] ?? null) as EmailFunnel | null;
+
   const counties: CountyOption[] = (countyRowsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
   const templates: TemplateSeed[] = ((templatesRes.data as TemplateSeed[] | null) ?? []).map((t) => ({
     key: t.key,
@@ -61,6 +77,26 @@ export default async function EmailCampaignEditorPage({
       >
         <ArrowLeft className="size-4" /> Emails
       </Link>
+
+      {f && (
+        <MessageFunnel
+          title="Delivery"
+          subtitle="via Resend"
+          stages={[
+            { label: "Recipients", value: f.recipients },
+            { label: "Sent", value: f.sent },
+            { label: "Delivered", value: f.delivered },
+            { label: "Opened", value: f.opened },
+            { label: "Clicked", value: f.clicked },
+          ]}
+          notes={[
+            { label: "bounced", value: f.bounced, tone: "alert" },
+            { label: "complained", value: f.complained, tone: "alert" },
+          ]}
+          empty="Sent — delivery events will appear once Resend's webhook reports back."
+        />
+      )}
+
       <EmailCampaignEditor
         row={row as EmailCampaignRow}
         allUsers={allUsers}
