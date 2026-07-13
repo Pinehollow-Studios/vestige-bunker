@@ -90,6 +90,66 @@ export type CampaignRecipientRow = {
   delivery_delayed_at: string | null;
 };
 
+/**
+ * One individual email in the flat log (`admin_email_log`) — Resend "Emails".
+ * Event-driven across ALL email (transactional + campaign), so campaign fields
+ * are null for transactional sends and `email`/`subject` are null for older
+ * events sent before the webhook captured Resend's payload.
+ */
+export type EmailLogRow = {
+  resend_id: string | null;
+  campaign_id: string | null;
+  campaign_name: string | null;
+  subject: string | null;
+  email: string | null;
+  user_id: string | null;
+  display_name: string | null;
+  username: string | null;
+  recipient_status: "pending" | "sent" | "failed" | "skipped" | null;
+  is_campaign: boolean;
+  sent_at: string | null;
+  last_event: string;
+  last_event_at: string | null;
+  open_count: number;
+  click_count: number;
+  opened: boolean;
+  clicked: boolean;
+  bounced: boolean;
+  complained: boolean;
+  delivered: boolean;
+  total_count: number;
+};
+
+/** One individual email's full detail (`admin_email_message`) — the message page. */
+export type EmailMessage = {
+  resend_id: string;
+  campaign_id: string | null;
+  campaign_name: string | null;
+  subject: string | null;
+  preheader: string | null;
+  html: string | null;
+  from_address: string | null;
+  email: string | null;
+  user_id: string | null;
+  display_name: string | null;
+  username: string | null;
+  recipient_status: "pending" | "sent" | "failed" | "skipped" | null;
+  error: string | null;
+  is_campaign: boolean;
+  sent_at: string | null;
+  delivered_at: string | null;
+  opened_at: string | null;
+  last_opened_at: string | null;
+  open_count: number;
+  clicked_at: string | null;
+  click_count: number;
+  bounced_at: string | null;
+  bounce_reason: string | null;
+  complained_at: string | null;
+  last_event: string;
+  last_event_at: string | null;
+};
+
 /** One raw Resend event for a recipient (`admin_email_recipient_events`). */
 export type EmailEventRow = {
   event_type:

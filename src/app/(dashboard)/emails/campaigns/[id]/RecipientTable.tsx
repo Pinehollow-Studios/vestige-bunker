@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ExternalLink, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadRecipientEvents } from "../actions";
 import type { CampaignRecipientRow, EmailEventRow } from "../types";
@@ -148,23 +149,34 @@ function Row({ r }: { r: CampaignRecipientRow }) {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={!r.resend_id}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-paper-raised/40 disabled:cursor-default"
-      >
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm text-ink">{name}</p>
-          <p className="truncate text-[11px] text-ink-3">{r.email}</p>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-          <StatePills r={r} />
-        </div>
+      <div className="flex items-center gap-1 px-1">
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={!r.resend_id}
+          className="flex flex-1 items-center gap-3 px-2 py-2.5 text-left transition-colors hover:bg-paper-raised/40 disabled:cursor-default"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-ink">{name}</p>
+            <p className="truncate text-[11px] text-ink-3">{r.email}</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+            <StatePills r={r} />
+          </div>
+          {r.resend_id && (
+            <ChevronDown aria-hidden className={cn("size-4 shrink-0 text-ink-3 transition-transform", open && "rotate-180")} />
+          )}
+        </button>
         {r.resend_id && (
-          <ChevronDown aria-hidden className={cn("size-4 shrink-0 text-ink-3 transition-transform", open && "rotate-180")} />
+          <Link
+            href={`/emails/message/${encodeURIComponent(r.resend_id)}`}
+            title="Open full email"
+            className="shrink-0 rounded-md p-1.5 text-ink-3 transition-colors hover:text-ink"
+          >
+            <ExternalLink aria-hidden className="size-4" />
+          </Link>
         )}
-      </button>
+      </div>
 
       {open && (
         <div className="border-t border-rule/40 bg-paper-sunken/20 px-3 py-3">

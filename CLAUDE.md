@@ -616,3 +616,18 @@ canonical write-up lives on disk.
   prod+dev (idempotent `db query -f`); suppression/rollup functionally tested on
   dev. Forward-only capture (existing prod events stay meta-empty). Verified
   `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-07-13** — Individual email log + per-message view (Resend "Emails"
+  parity — the flat all-emails half, vs the per-campaign "Broadcasts" half). iOS
+  migration `20260713110000_email_message_log.sql`: `admin_email_log` (one row per
+  individual email across ALL email — event-driven off `email_events`, since the
+  webhook records every account email incl. transactional; enriched from campaign
+  tables when it's a campaign, else from event `meta` for to/subject/from) +
+  `admin_email_message` (full per-email header + campaign html + rollup, works for
+  transactional too). Bunker: `/emails/log` (status-filter tabs + search +
+  pagination + status chip per row) and `/emails/message/[resendId]` (metadata +
+  vertical event timeline + Preview/HTML/Raw content tabs via `EmailContentTabs`,
+  sandboxed `srcdoc` iframe); shared `lib/email/status.ts` (Resend event vocab →
+  chip). Linked from the `/emails` header + each campaign recipient row. Migration
+  applied prod+dev (idempotent); log validated over real prod data (51 = 50
+  transactional + 1 campaign). Verified `tsc`/`eslint`/`build`. Long-form in
+  `CHANGELOG.md`.

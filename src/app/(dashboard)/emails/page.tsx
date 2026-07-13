@@ -1,7 +1,7 @@
 import { pageShell } from "@/components/admin/PageShell";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import Link from "next/link";
-import { ShieldX } from "lucide-react";
+import { Inbox, ShieldX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { EmailsIndex, type EmailListItem } from "./EmailsIndex";
@@ -71,12 +71,20 @@ export default async function EmailsPage() {
         eyebrow="Editorial"
         title="Emails"
         actions={
-          <Link
-            href="/emails/suppressions"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-rule/60 px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:text-ink"
-          >
-            <ShieldX aria-hidden className="size-3.5" /> Suppressions
-          </Link>
+          <>
+            <Link
+              href="/emails/log"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-rule/60 px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:text-ink"
+            >
+              <Inbox aria-hidden className="size-3.5" /> Emails
+            </Link>
+            <Link
+              href="/emails/suppressions"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-rule/60 px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:text-ink"
+            >
+              <ShieldX aria-hidden className="size-3.5" /> Suppressions
+            </Link>
+          </>
         }
       />
       <EmailsIndex items={items} error={loadError} />

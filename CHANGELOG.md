@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-07-13 — Individual email log + per-message view (Resend "Emails" parity)
+
+Tom wanted the other half of Resend's structure: not just the per-campaign
+("Broadcasts") aggregate, but a flat **Emails** log of every individual message
+you click into for its own history. Built off Resend's dashboard model (a list
+filterable by status → a detail page with metadata + an event timeline +
+Preview/HTML/Raw content tabs).
+
+Key realisation from prod data: `email_events` is the superset of ALL email —
+the `resend-webhook` records events for every email on the account (auth
+magic-links, welcome, waitlist, AND campaigns), so prod had 50 events but only 1
+campaign recipient. So the log is **event-driven, not campaign-driven**: keyed on
+the Resend email id, enriched from `email_campaign_recipients` + `email_campaigns`
+when it's a campaign send, otherwise falling back to the recipient/subject/from
+carried in the event `meta` (captured since today's webhook change — older events
+have empty meta and render "—").
+
+**iOS migration `20260713110000_email_message_log.sql`** (additive):
+- `admin_email_log(status, search, limit, offset)` — one row per individual email
+  across everything, with last event + engagement flags + `is_campaign`,
+  filterable + paginated (total via `count() over()`), keys = `email_events ∪
+  email_campaign_recipients` so just-sent campaign emails appear before their
+  first webhook lands.
+- `admin_email_message(resend_id)` — full header (from/to/subject) + campaign
+  `html` (campaigns only) + rollup for one email; works for transactional ids too.
+
+**Bunker:**
+- **`/emails/log`** — the flat Emails list: status filter tabs (All / Delivered /
+  Opened / Clicked / Bounced / Complained / Failed), search, pagination, status
+  chip + engagement per row, click-through. Shared `lib/email/status.ts` (Resend
+  event vocabulary → label + tone).
+- **`/emails/message/[resendId]`** — the per-email page: metadata card, a vertical
+  **event timeline** (delivered/opened/clicked/bounced with device/link/reason
+  detail), and **Preview / HTML / Raw** content tabs (`EmailContentTabs`, Preview
+  in a sandboxed `srcdoc` iframe with the send-time token substitution).
+- Linked from the `/emails` header ("Emails") + each campaign recipient row
+  (open-in-full icon → the message page).
+
+Migration applied to prod + dev (idempotent); log validated over real prod data
+(51 rows: 50 transactional + 1 campaign). Verified `tsc` / `eslint` / `build`.
+
 ## 2026-07-13 — Email analytics parity (make The Bunker the email centre)
 
 Tom + Jack were still reaching for the Resend dashboard because the bunker's
