@@ -598,3 +598,21 @@ canonical write-up lives on disk.
   risk): per-page density tuning, toolbar *mechanism* unification (visuals already
   consistent). Presentation only, all shipped to prod via Vercel. Verified
   `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.
+- **2026-07-13** — Email analytics parity (make The Bunker the email centre, so
+  Tom + Jack stop reaching for the Resend dashboard). The 2026-07-12 spine
+  (`resend-webhook` → `email_events` + funnel) recorded event TYPES only and
+  discarded Resend's payload (`p_meta:{}`). Paired iOS migration
+  `20260713100000_email_analytics_parity.sql`: `email_suppressions` (hard-bounce/
+  complaint auto-skip, distinct from `email_marketing_opt_out`); `record_email_event`
+  now stores the full payload + auto-suppresses permanent bounces/complaints;
+  `admin_email_campaign_recipients` widened to a per-recipient rollup over
+  `email_events`; new `admin_user_email_history` + `admin_email_recipient_events`;
+  `_begin_email_campaign_send` skips suppressed. iOS `resend-webhook` now passes
+  `event.data` as meta (redeployed to prod). Bunker: campaign-page rate stats +
+  filterable recipient table w/ per-recipient event timeline + "Reconcile from
+  Resend" backfill (`RESEND_API_KEY`-gated, terminal-state only); `/users/[id]`
+  Email history card; `/analytics` "Email delivery · 30d" strip (`getMessageOverview`);
+  `/emails/suppressions` view+remove surface. Migration applied directly to
+  prod+dev (idempotent `db query -f`); suppression/rollup functionally tested on
+  dev. Forward-only capture (existing prod events stay meta-empty). Verified
+  `tsc`/`eslint`/`build`. Long-form in `CHANGELOG.md`.

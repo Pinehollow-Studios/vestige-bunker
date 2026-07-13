@@ -1,8 +1,9 @@
 import { pageShell } from "@/components/admin/PageShell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronRight, Flag, MessageSquareWarning } from "lucide-react";
+import { ArrowLeft, ChevronRight, Flag, Mail, MessageSquareWarning } from "lucide-react";
 import { activeStorageBaseUrl, createServiceClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { isUuid } from "@/lib/security/postgrest";
 import { avatarURL } from "@/lib/storage";
@@ -42,6 +43,21 @@ const USER_COLUMNS =
 type ReportRow = { id: string; kind: FeedbackKind; work_stage: FeedbackWorkStage; body: string; created_at: string };
 type FlagRow = { id: string; flag_kind: string; state: string; triggered_at: string };
 type RoundRow = { course_id: string; date: string; gross_score: number | null };
+type EmailHistRow = {
+  campaign_id: string;
+  name: string;
+  subject: string;
+  sent_at: string | null;
+  recipient_status: string;
+  delivered_at: string | null;
+  opened_at: string | null;
+  open_count: number;
+  clicked_at: string | null;
+  click_count: number;
+  bounced_at: string | null;
+  bounce_reason: string | null;
+  complained_at: string | null;
+};
 
 export default async function UserHubPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -131,6 +147,12 @@ export default async function UserHubPage({ params }: { params: Promise<{ id: st
     const { data: cRows } = await supabase.from("courses").select("id,name").in("id", courseIds);
     for (const c of cRows ?? []) courseNames[c.id] = c.name;
   }
+
+  // Email history — the RPC self-gates on is_admin(), so it needs the admin
+  // SESSION (the service-role client has no auth.uid()). Degrades to empty.
+  const sessionDb = await createClient();
+  const emailHistRes = await sessionDb.rpc("admin_user_email_history", { p_user_id: id });
+  const emailHistory = (emailHistRes.data as EmailHistRow[] | null) ?? [];
 
   const clubName = (clubRes.data as { name?: string } | null)?.name ?? null;
   const countyName = (countyRes.data as { name?: string } | null)?.name ?? null;
@@ -255,6 +277,34 @@ export default async function UserHubPage({ params }: { params: Promise<{ id: st
               </ul>
             )}
           </Card>
+
+          <Card title={`Email history (${emailHistory.length})`}>
+            {emailHistory.length === 0 ? (
+              <Empty>No campaign emails sent to this user.</Empty>
+            ) : (
+              <ul className="divide-y divide-rule/50">
+                {emailHistory.map((e) => (
+                  <li key={e.campaign_id}>
+                    <Link
+                      href={`/emails/campaigns/${e.campaign_id}`}
+                      className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
+                    >
+                      <Mail aria-hidden className="size-4 shrink-0 text-ink-3" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-ink">{e.subject || e.name}</p>
+                        <p className="text-[11px] text-ink-3">
+                          {e.sent_at ? relativeTime(e.sent_at) : "not sent"}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                        <EmailStatePills e={e} />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </div>
 
         {/* Actions + account */}
@@ -332,6 +382,18 @@ function Pill({ tone, children }: { tone: "brand" | "amber" | "neutral"; childre
       {children}
     </span>
   );
+}
+
+function EmailStatePills({ e }: { e: EmailHistRow }) {
+  const pills: React.ReactNode[] = [];
+  if (e.recipient_status === "failed") pills.push(<Pill key="f" tone="amber">Failed</Pill>);
+  if (e.complained_at) pills.push(<Pill key="c" tone="amber">Spam</Pill>);
+  if (e.bounced_at) pills.push(<Pill key="b" tone="amber">Bounced</Pill>);
+  if (e.click_count > 0) pills.push(<Pill key="cl" tone="brand">Clicked</Pill>);
+  else if (e.open_count > 0) pills.push(<Pill key="o" tone="brand">Opened</Pill>);
+  else if (e.delivered_at) pills.push(<Pill key="d" tone="neutral">Delivered</Pill>);
+  else if (e.recipient_status === "sent") pills.push(<Pill key="s" tone="neutral">Sent</Pill>);
+  return <>{pills}</>;
 }
 
 function StatusChip({ status }: { status: AccountStatus }) {

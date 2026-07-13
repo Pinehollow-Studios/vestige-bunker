@@ -327,3 +327,46 @@ export async function getEvents(
   }
   return (data as AppEventRow[]) ?? [];
 }
+
+// ── Email delivery overview (30-day) ──────────────────────────────────────
+
+export type MessageOverview = {
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  suppressed: number;
+};
+
+/**
+ * 30-day email delivery signals from the Resend webhook (`email_events`) plus
+ * the running suppression total. Read directly through the service-role client
+ * (these tables are RPC/service-role only). Counts are event rows — one
+ * delivered/bounced per email, so those read as recipients; opens/clicks are
+ * total events (a recipient can open more than once).
+ */
+export async function getMessageOverview(supabase: SupabaseClient): Promise<MessageOverview> {
+  const since = isoDaysAgo(30);
+  const countEvents = async (type: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from("email_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", type)
+      .gte("occurred_at", since);
+    if (error) return 0;
+    return count ?? 0;
+  };
+  const [delivered, opened, clicked, bounced, complained, suppressed] = await Promise.all([
+    countEvents("delivered"),
+    countEvents("opened"),
+    countEvents("clicked"),
+    countEvents("bounced"),
+    countEvents("complained"),
+    supabase
+      .from("email_suppressions")
+      .select("email", { count: "exact", head: true })
+      .then(({ count }) => count ?? 0),
+  ]);
+  return { delivered, opened, clicked, bounced, complained, suppressed };
+}

@@ -3,8 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import type { CampaignAudienceKind, CampaignTarget, CampaignRecipientRow } from "./types";
+import type {
+  CampaignAudienceKind,
+  CampaignTarget,
+  CampaignRecipientRow,
+  EmailEventRow,
+} from "./types";
 
 export type ActionResult<T = void> =
   | { ok: true; data?: T }
@@ -180,6 +186,87 @@ export async function loadCampaignRecipients(id: string): Promise<ActionResult<C
   const { data, error } = await supabase.rpc("admin_email_campaign_recipients", { p_id: id });
   if (error) return { ok: false, message: error.message };
   return { ok: true, data: (data as CampaignRecipientRow[] | null) ?? [] };
+}
+
+/** The raw Resend event timeline for one recipient (the drill-down). */
+export async function loadRecipientEvents(resendId: string): Promise<ActionResult<EmailEventRow[]>> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_email_recipient_events", { p_resend_id: resendId });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, data: (data as EmailEventRow[] | null) ?? [] };
+}
+
+// Resend's terminal `last_event` (from GET /emails/{id}) → our event_type. Only
+// terminal states are backfillable — Resend's API exposes the LAST event, not the
+// full history, so opens/clicks that happened before the webhook was live can't
+// be reconstructed. Live campaigns are fully tracked via the webhook.
+const RESEND_LAST_EVENT_MAP: Record<string, string> = {
+  delivered: "delivered",
+  delivery_delayed: "delivery_delayed",
+  opened: "opened",
+  clicked: "clicked",
+  bounced: "bounced",
+  complained: "complained",
+  failed: "failed",
+};
+
+/**
+ * Backfill delivery events for an already-sent campaign from Resend's API, for
+ * campaigns sent before the webhook was capturing (or to reconcile a missed
+ * webhook). Walks each recipient's `resend_id`, pulls `GET /emails/{id}`, and
+ * records its terminal `last_event` (idempotent). Requires `RESEND_API_KEY` in
+ * the bunker env; degrades to a clear notice if unset.
+ */
+export async function backfillCampaignEvents(
+  id: string,
+): Promise<ActionResult<{ scanned: number; recorded: number }>> {
+  await requireAdmin();
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return { ok: false, message: "Set RESEND_API_KEY in the bunker env to backfill from Resend." };
+  }
+  const supabase = await tryCreateServiceClient();
+  if (!supabase) return { ok: false, message: "Service-role key not configured." };
+
+  const { data: rows, error } = await supabase
+    .from("email_campaign_recipients")
+    .select("resend_id")
+    .eq("campaign_id", id)
+    .eq("status", "sent")
+    .not("resend_id", "is", null)
+    .limit(1000);
+  if (error) return { ok: false, message: error.message };
+
+  const resendIds = (rows ?? []).map((r) => r.resend_id as string).filter(Boolean);
+  let recorded = 0;
+
+  for (const resendId of resendIds) {
+    try {
+      const res = await fetch(`https://api.resend.com/emails/${resendId}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!res.ok) continue;
+      const body = (await res.json()) as { last_event?: string; created_at?: string };
+      const eventType = RESEND_LAST_EVENT_MAP[body.last_event ?? ""];
+      if (!eventType) continue;
+      const { error: recErr } = await supabase.rpc("record_email_event", {
+        p_provider_event_id: `backfill:${resendId}:${eventType}`,
+        p_resend_id: resendId,
+        p_event_type: eventType,
+        p_occurred_at: body.created_at ?? new Date().toISOString(),
+        p_meta: { source: "backfill" },
+      });
+      if (!recErr) recorded += 1;
+    } catch {
+      // Skip a single failed lookup — a partial backfill is fine (idempotent).
+    }
+    // Stay under Resend's ~2 req/s API limit.
+    await new Promise((r) => setTimeout(r, 550));
+  }
+
+  revalidatePath(`/emails/campaigns/${id}`);
+  return { ok: true, data: { scanned: resendIds.length, recorded } };
 }
 
 function isUuid(s: string): boolean {

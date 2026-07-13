@@ -20,6 +20,7 @@ import {
   getActivationFunnel,
   getDiscovery,
   getEventVolume,
+  getMessageOverview,
 } from "@/lib/analytics/queries";
 
 export const dynamic = "force-dynamic";
@@ -44,12 +45,13 @@ export default async function AnalyticsOverviewPage() {
     );
   }
 
-  const [overview, daily, funnel, discovery, eventVolume] = await Promise.all([
+  const [overview, daily, funnel, discovery, eventVolume, messages] = await Promise.all([
     getOverview(supabase),
     getDailyActivity(supabase),
     getActivationFunnel(supabase),
     getDiscovery(supabase),
     getEventVolume(supabase),
+    getMessageOverview(supabase),
   ]);
 
   if (!overview) {
@@ -173,6 +175,29 @@ export default async function AnalyticsOverviewPage() {
         </section>
       </Reveal>
 
+      {/* ── Email delivery (Resend webhook) ── */}
+      <Reveal delay={70}>
+        <section className="space-y-4 rounded-2xl glass-panel p-5">
+          <div className="flex items-center justify-between gap-3">
+            <SectionLabel>Email delivery · 30d</SectionLabel>
+            <Link
+              href="/emails"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline"
+            >
+              Campaigns <ArrowUpRight className="size-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <MsgStat label="Delivered" value={messages.delivered} />
+            <MsgStat label="Opens" value={messages.opened} />
+            <MsgStat label="Clicks" value={messages.clicked} />
+            <MsgStat label="Bounced" value={messages.bounced} alert />
+            <MsgStat label="Complaints" value={messages.complained} alert />
+            <MsgStat label="Suppressed" value={messages.suppressed} alert href="/emails/suppressions" />
+          </div>
+        </section>
+      </Reveal>
+
       {/* ── Activation funnel + discovery ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Reveal delay={80}>
@@ -232,6 +257,30 @@ export default async function AnalyticsOverviewPage() {
 
 function PulseCard({ children }: { children: React.ReactNode }) {
   return <div className="rounded-2xl glass-panel p-5">{children}</div>;
+}
+
+function MsgStat({ label, value, alert, href }: { label: string; value: number; alert?: boolean; href?: string }) {
+  const inner = (
+    <>
+      <p
+        className={
+          "font-display text-2xl font-semibold tabular-nums " +
+          (alert && value > 0 ? "text-alert" : "text-ink")
+        }
+      >
+        {value.toLocaleString()}
+      </p>
+      <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
+    </>
+  );
+  const cls = "block rounded-xl border border-rule/60 bg-paper-sunken/30 px-3 py-3 text-center";
+  return href ? (
+    <Link href={href} className={cls + " transition-colors hover:border-brand/40"}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
+  );
 }
 
 function Legend({ dotClass, label }: { dotClass: string; label: string }) {

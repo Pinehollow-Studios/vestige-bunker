@@ -5,6 +5,58 @@
 
 ---
 
+## 2026-07-13 — Email analytics parity (make The Bunker the email centre)
+
+Tom + Jack were still reaching for the Resend dashboard because the bunker's
+email surface was blind past "we handed it off." The delivery-analytics *spine*
+already existed (2026-07-12: `resend-webhook` → `email_events` +
+`admin_email_campaign_funnel`), but it (a) **threw away Resend's payload** — the
+webhook passed `p_meta: {}`, discarding every bounce reason / open device / click
+link — and (b) surfaced only an aggregate funnel: no per-recipient view, no
+per-user history, no suppression, no reasons. This slice closes the gap to full
+Resend parity so the bunker is strictly better (joined to the Vestige user, never
+ages out of a retention window).
+
+**Paired iOS migration `20260713100000_email_analytics_parity.sql`** (additive):
+- **`email_suppressions`** — hard bounces + spam complaints recorded and skipped
+  on future sends, kept DISTINCT from `users.email_marketing_opt_out` (a bounce
+  isn't a user choice). RLS `is_admin()`. `_begin_email_campaign_send` re-created
+  to anti-join it at materialise time.
+- **`record_email_event` enriched** — same signature (the webhook already calls
+  it), now stores the full event payload and, on a *permanent* bounce (soft =
+  recorded not suppressed) or a complaint, writes a suppression row (resolving the
+  recipient email by `resend_id`).
+- **`admin_email_campaign_recipients` widened** from the send-only 8-col shape to
+  a per-recipient rollup over `email_events` (delivered / opened ×N / clicked ×N /
+  bounced + reason / complained). New `admin_user_email_history` (per user) +
+  `admin_email_recipient_events` (raw drill-down timeline).
+
+**iOS `resend-webhook`** — one-line-but-highest-leverage: passes `event.data` as
+`meta` instead of `{}`. Redeployed to prod (`--no-verify-jwt`).
+
+**Bunker (this repo):**
+- **Campaign page** — delivery/open/click/bounce/complaint **rate stats** + a
+  filterable **recipient table** (`RecipientTable`: opened / not-opened / clicked
+  / bounced / complained / failed, searchable) with an expandable per-recipient
+  **event timeline** (`admin_email_recipient_events`), plus a **"Reconcile from
+  Resend"** backfill (`backfillCampaignEvents` — gated on a bunker `RESEND_API_KEY`
+  env; Resend's API only exposes `last_event`, so backfill is terminal-state only,
+  clearly noted).
+- **`/users/[id]`** — an **Email history** card (`admin_user_email_history` via the
+  session client, since the RPC self-gates on `is_admin()`).
+- **`/analytics`** — an **"Email delivery · 30d"** strip (`getMessageOverview`,
+  direct service-role reads of `email_events` + `email_suppressions`).
+- **`/emails/suppressions`** — view + remove suppressed addresses (reads via
+  service-role, deletes via the session client through the table's `is_admin()`
+  RLS). Linked from the `/emails` header + the analytics "Suppressed" tile.
+
+Migration applied directly to prod + dev (surgical `db query -f`, idempotent — the
+migration-history row isn't recorded, so a later `db push` re-applies harmlessly).
+Suppression + rollup functionally tested on dev (hard-bounce suppresses, soft
+doesn't, opens counted, bounce reason captured). Verified `tsc` / `eslint` /
+`build`. Forward-only: events already in prod stay meta-empty; capture is full
+from the redeploy on.
+
 ## 2026-07-11 — QuickCreate refresh + Index mechanics collapsed
 
 - **TopBar "New" up to date.** `QuickCreate` gained the newer create surfaces
