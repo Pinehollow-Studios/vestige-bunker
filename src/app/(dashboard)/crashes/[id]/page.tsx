@@ -16,11 +16,14 @@ import {
   getLinkedFeedbackForCrash,
 } from "@/lib/crashes/queries";
 import {
-  type CrashLevel,
   type CrashLinkedFeedback,
   type CrashReportEnriched,
-  levelLabel,
 } from "@/lib/crashes/types";
+import {
+  classifyCrash,
+  friendlyLocation,
+  SEVERITY_META,
+} from "@/lib/crashes/severity";
 import {
   fetchSentryEvent,
   getSentryIssueURL,
@@ -28,19 +31,6 @@ import {
 } from "@/lib/sentry/client";
 
 export const dynamic = "force-dynamic";
-
-// Calm, single-tone bordered chips, matched to the queue page.
-function levelChip(level: CrashLevel): string {
-  switch (level) {
-    case "fatal":
-    case "error":
-      return "border-alert/40 text-alert";
-    case "warning":
-      return "border-amber/40 text-amber";
-    default:
-      return "border-rule/70 text-ink-3";
-  }
-}
 
 function environmentChip(env: string | null): string {
   if (env === "release") return "border-brand/40 text-brand";
@@ -117,6 +107,14 @@ function CrashHeader({
   const reporterAvatar = avatarURL(crash.user_id, crash.reporter_avatar_photo_id);
   const reporterDisplay =
     crash.reporter_display_name ?? crash.reporter_username ?? null;
+  const { severity, category, summary } = classifyCrash({
+    level: crash.level,
+    message: crash.message,
+    culprit: crash.culprit,
+    eventCount: crash.event_count,
+  });
+  const meta = SEVERITY_META[severity];
+  const where = friendlyLocation(crash.culprit);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -134,18 +132,40 @@ function CrashHeader({
           </>
         )}
       </div>
-      <h1 className="display-serif text-2xl font-semibold leading-tight break-words text-ink sm:text-3xl">
-        {crash.message ?? crash.culprit ?? "(no message)"}
-      </h1>
-      {crash.culprit && crash.message && (
-        <p className="font-mono text-sm text-ink-2">{crash.culprit}</p>
-      )}
+
+      {/* Plain-English hero: severity badge + what actually happened. The raw
+          Sentry signature is kept below as mono technical detail. */}
+      <div className={`space-y-2 rounded-xl border p-4 ${meta.chip}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-current/30 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+            <span aria-hidden className={`size-2 rounded-full ${meta.dot}`} />
+            {meta.label}
+          </span>
+          <span className="rounded-full border border-current/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
+            {category}
+          </span>
+        </div>
+        <p className="text-lg font-semibold leading-snug text-ink">{summary}</p>
+        {where && (
+          <p className="text-sm text-ink-2">
+            <span className="text-ink-3">Screen:</span> {where}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+          Technical signature
+        </p>
+        <h1 className="font-mono text-base font-semibold leading-tight break-words text-ink sm:text-lg">
+          {crash.message ?? crash.culprit ?? "(no message)"}
+        </h1>
+        {crash.culprit && crash.message && (
+          <p className="font-mono text-sm text-ink-2 break-words">{crash.culprit}</p>
+        )}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
-        <span
-          className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${levelChip(crash.level)}`}
-        >
-          {levelLabel(crash.level)}
-        </span>
         <span
           className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${environmentChip(crash.environment)}`}
         >

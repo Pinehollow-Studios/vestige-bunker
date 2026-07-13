@@ -9,28 +9,17 @@ import { listCrashes } from "@/lib/crashes/queries";
 import {
   type CrashLevel,
   type CrashReportEnriched,
-  levelLabel,
 } from "@/lib/crashes/types";
+import {
+  classifyCrash,
+  friendlyLocation,
+  SEVERITY_META,
+  type CrashSeverity,
+} from "@/lib/crashes/severity";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
-
-// Calm, single-tone bordered chips - fatal/error read claret (alert),
-// warning amber, info/debug muted. Kept local to the presentation
-// layer so the queue reads in the Atlas palette without touching the
-// shared lib helpers.
-function levelChip(level: CrashLevel): string {
-  switch (level) {
-    case "fatal":
-    case "error":
-      return "border-alert/40 text-alert";
-    case "warning":
-      return "border-amber/40 text-amber";
-    default:
-      return "border-rule/70 text-ink-3";
-  }
-}
 
 function environmentChip(env: string | null): string {
   if (env === "release") return "border-brand/40 text-brand";
@@ -108,6 +97,25 @@ export default async function CrashesQueuePage({
     queryError = e instanceof Error ? e.message : String(e);
   }
 
+  // Classify every row once, then float the most-severe crashes to the top of
+  // the current page (server paginates by last_seen; this re-orders within the
+  // page so a Critical never hides below a stale Low). Ties keep last_seen desc.
+  const classified: ClassifiedRow[] = rows
+    .map((row) => ({
+      row,
+      ...classifyCrash({
+        level: row.level,
+        message: row.message,
+        culprit: row.culprit,
+        eventCount: row.event_count,
+      }),
+    }))
+    .sort((a, b) => {
+      const rank = SEVERITY_META[b.severity].rank - SEVERITY_META[a.severity].rank;
+      if (rank !== 0) return rank;
+      return new Date(b.row.last_seen).getTime() - new Date(a.row.last_seen).getTime();
+    });
+
   return (
     <div className={pageShell("content")}>
       <SectionHeader
@@ -132,14 +140,17 @@ export default async function CrashesQueuePage({
             query={query}
             count={rows.length}
           />
-          {rows.length === 0 ? (
+          {classified.length === 0 ? (
             <EmptyQueue />
           ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {rows.map((row) => (
-                <CrashRow key={row.id} row={row} />
-              ))}
-            </div>
+            <>
+              <SeverityStrip rows={classified} />
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {classified.map((c) => (
+                  <CrashRow key={c.row.id} row={c.row} severity={c.severity} category={c.category} summary={c.summary} />
+                ))}
+              </div>
+            </>
           )}
           <PaginationFooter
             offset={safeOffset}
@@ -149,6 +160,45 @@ export default async function CrashesQueuePage({
           />
         </>
       )}
+    </div>
+  );
+}
+
+type ClassifiedRow = {
+  row: CrashReportEnriched;
+  severity: CrashSeverity;
+  category: string;
+  summary: string;
+};
+
+// --------------------------------------------------------------
+// Severity summary strip — counts per band for the current page, so an
+// operator sees "how bad is it right now" before reading a single row.
+// --------------------------------------------------------------
+
+function SeverityStrip({ rows }: { rows: ClassifiedRow[] }) {
+  const order: CrashSeverity[] = ["critical", "high", "medium", "low"];
+  const counts = order.map((sev) => ({
+    sev,
+    n: rows.filter((r) => r.severity === sev).length,
+  }));
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {counts.map(({ sev, n }) => {
+        const meta = SEVERITY_META[sev];
+        const active = n > 0;
+        return (
+          <span
+            key={sev}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
+              active ? meta.chip : "border-rule/40 text-ink-3 opacity-50"
+            }`}
+          >
+            <span aria-hidden className={`size-2 rounded-full ${active ? meta.dot : "bg-ink-3"}`} />
+            {n} {meta.label}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -227,10 +277,23 @@ function EmptyQueue() {
 // Row
 // --------------------------------------------------------------
 
-function CrashRow({ row }: { row: CrashReportEnriched }) {
+function CrashRow({
+  row,
+  severity,
+  category,
+  summary,
+}: {
+  row: CrashReportEnriched;
+  severity: CrashSeverity;
+  category: string;
+  summary: string;
+}) {
   const reporterAvatar = avatarURL(row.user_id, row.reporter_avatar_photo_id);
   const reporterDisplay =
     row.reporter_display_name ?? row.reporter_username ?? null;
+  const meta = SEVERITY_META[severity];
+  const where = friendlyLocation(row.culprit);
+  const rawSignature = row.message ?? row.culprit ?? "(no message)";
   return (
     <Link
       href={`/crashes/${row.id}`}
@@ -238,15 +301,19 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
     >
       <article className="flex h-full flex-col gap-3 p-5">
         <header className="flex flex-wrap items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-alert/10 text-alert">
+          <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${meta.chip}`}>
             <AlertTriangle aria-hidden className="size-4" />
           </span>
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${levelChip(row.level)}`}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.chip}`}
               >
-                {levelLabel(row.level)}
+                <span aria-hidden className={`size-1.5 rounded-full ${meta.dot}`} />
+                {meta.label}
+              </span>
+              <span className="rounded-full border border-rule/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-2">
+                {category}
               </span>
               <span
                 className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${environmentChip(row.environment)}`}
@@ -263,14 +330,15 @@ function CrashRow({ row }: { row: CrashReportEnriched }) {
                 <span className="text-ink-3">· seen {row.event_count}×</span>
               )}
             </div>
-            <p className="line-clamp-2 text-sm leading-snug text-ink">
-              {row.message ?? row.culprit ?? "(no message)"}
-            </p>
-            {row.culprit && row.message && (
-              <p className="truncate font-mono text-[11px] text-ink-3">
-                {row.culprit}
+            <p className="text-sm font-medium leading-snug text-ink">{summary}</p>
+            {where && (
+              <p className="truncate text-[11px] text-ink-2">
+                <span className="text-ink-3">Screen:</span> {where}
               </p>
             )}
+            <p className="truncate font-mono text-[11px] text-ink-3" title={rawSignature}>
+              {rawSignature}
+            </p>
           </div>
           <ArrowUpRight aria-hidden className="size-4 shrink-0 text-ink-3" />
         </header>

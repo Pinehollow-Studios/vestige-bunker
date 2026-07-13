@@ -5,6 +5,63 @@
 
 ---
 
+## 2026-07-13 — Crash severity ranking + plain-English translation; email alerts replace Discord
+
+Crash reports came through in raw Sentry jargon (`EXC_BAD_ACCESS: Exception 1,
+Code 2`, `WatchdogTermination`, `App Hanging for 2000 ms`), delivered to Discord
++ the Bunker. Tom wanted three things: an at-a-glance **severity** so he can
+instantly judge how bad a crash is, **plain English** instead of jargon, and the
+notifications moved off Discord onto **email**. "Building something real, not
+random technical jargon messages."
+
+Sentry can route (Discord/email) but will never rewrite the language or apply a
+Vestige-tuned severity — so we own that. Since we already own the whole pipeline
+(`sentry-webhook` → `crash_reports` → this dashboard, plus Resend), we translate
+once and both surfaces read the same result.
+
+**Classifier — `src/lib/crashes/severity.ts` (canonical).** A curated
+signature→meaning map (not AI: crashes cluster into a handful of shapes, so a
+deterministic map is instant, free, predictable). `classifyCrash()` returns a
+**severity band** + short **category** + one plain-English **summary**. Severity
+is driven by what the *user experienced*, not the error class:
+- 🔴 **Critical** — app crashed and the session died (EXC_BAD_ACCESS, NSException,
+  main-thread violations, fatal errors, force-unwraps).
+- 🟠 **High** — app froze or was force-killed (WatchdogTermination, OOM).
+- 🟡 **Medium** — recovered but degraded (short hangs, caught data-layer errors).
+- ⚪ **Low / Noise** — handled or not-really-a-bug (cancellations, offline blips,
+  WeatherKit/external). Deliberately demoted, *matched before* the broad "fatal"
+  rules, so genuine noise doesn't crowd the queue. First matching rule wins;
+  unmatched falls back to Sentry `level`. `friendlyLocation()` prettifies the
+  culprit into a screen name. Computed at **render** time (no migration, instant
+  re-tuning, never stale).
+
+**Bunker rendering.** The queue (`/crashes`) leads each card with the severity
+badge + category + plain summary; the raw signature is demoted to a muted mono
+line; a severity-count strip sits on top and the page sorts most-severe-first.
+The detail page (`/crashes/[id]`) gets a coloured severity hero (badge + summary
++ screen) above a de-emphasised "Technical signature" block; the raw Sentry stack
+trace stays below, unchanged.
+
+**Email (Critical + High only) — mirrored into `Vestige-ios`.** The same ruleset
+is ported into the `sentry-webhook` Edge Function, which after a successful ingest
+classifies the event and, for Critical/High, sends a clean Resend email (severity
+badge, summary, screen/release/device, "View in the Bunker" deep-link, raw
+signature in the footer) to tom@ + jack@pinehollow.studio. Best-effort — a Resend
+failure logs but never fails the ingest. Reuses the project-wide `RESEND_API_KEY`
+/ `CAMPAIGN_FROM`; recipients via a `CRASH_ALERT_TO` secret. **The rule list is
+duplicated in two runtimes (this dashboard's TS + the Deno function) — keep them
+in sync.** Deployed to prod + end-to-end verified (a synthetic Critical event
+flowed Sentry→webhook→`crash_reports`→email in ~15s).
+
+**Discord off.** The two Sentry Discord alert rules (`Discord: new issue`,
+`fairways-ios`) were deleted (Sentry's API has no clean per-rule disable). The
+`Pipe to Supabase (prod)` bridge rule is untouched. (Sentry's native
+"high priority issues" email rule was left as-is, flagged to Tom — it re-sends
+jargon and may want removing too.)
+
+Presentation + one Edge Function; no schema/migration in this repo. Verified
+`tsc`/`eslint` clean.
+
 ## 2026-07-13 — Individual email log + per-message view (Resend "Emails" parity)
 
 Tom wanted the other half of Resend's structure: not just the per-campaign

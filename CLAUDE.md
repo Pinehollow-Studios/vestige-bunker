@@ -631,3 +631,21 @@ canonical write-up lives on disk.
   applied prod+dev (idempotent); log validated over real prod data (51 = 50
   transactional + 1 campaign). Verified `tsc`/`eslint`/`build`. Long-form in
   `CHANGELOG.md`.
+- **2026-07-13** — Crash severity + plain-English translation; email alerts
+  replace Discord. New canonical classifier `src/lib/crashes/severity.ts`
+  (`classifyCrash` — curated signature→meaning map, not AI) returns a severity
+  band (🔴 Critical crashed / 🟠 High froze / 🟡 Medium degraded / ⚪ Low noise,
+  by *user impact* not error class; noise like cancellations/offline/WeatherKit
+  demoted before the broad fatal rules), a category, and a plain summary,
+  computed at render (no migration). `/crashes` queue + `/crashes/[id]` detail
+  lead with the severity badge + summary + friendly screen; raw Sentry signature
+  demoted to a muted "technical" line; queue sorts most-severe-first + severity
+  strip. The **same ruleset is mirrored into the iOS `sentry-webhook` Edge
+  Function**, which sends a clean Resend crash-alert email (Critical + High only)
+  to tom@+jack@pinehollow.studio after ingest (best-effort; reuses
+  `RESEND_API_KEY`/`CAMPAIGN_FROM`; `CRASH_ALERT_TO` secret; deep-links to the
+  Bunker) — deployed to prod + end-to-end verified. The two Sentry **Discord**
+  alert rules deleted (no clean API disable); `Pipe to Supabase` bridge untouched;
+  Sentry's native jargon email rule left for Tom to decide. Rule list duplicated
+  across two runtimes — keep in sync. Verified `tsc`/`eslint`. Long-form in
+  `CHANGELOG.md`.
