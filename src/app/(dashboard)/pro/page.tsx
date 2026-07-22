@@ -4,6 +4,7 @@ import { StatTile } from "@/components/admin/StatTile";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { FoundingPerkCard } from "./FoundingPerkCard";
 import { GrantsCard, type GrantRow } from "./GrantsCard";
+import { PromoCodesCard, type PromoCodeRow } from "./PromoCodesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function ProPage() {
     );
   }
 
-  const [overviewRes, configRes, foundersRes, grantsRes] = await Promise.all([
+  const [overviewRes, configRes, foundersRes, grantsRes, codesRes] = await Promise.all([
     supabase.rpc("admin_pro_overview"),
     supabase
       .from("pro_config")
@@ -49,6 +50,9 @@ export default async function ProPage() {
       .select("id, user_id, kind, expires_at, reason, revoked_at, created_at")
       .order("created_at", { ascending: false })
       .limit(50),
+    // Codes + redeemer usernames in one round-trip (service_role passes the
+    // RPC's is_admin() gate).
+    supabase.rpc("admin_list_promo_codes", { p_limit: 200, p_offset: 0 }),
   ]);
 
   // `admin_pro_overview` returns a single-row table.
@@ -72,6 +76,29 @@ export default async function ProPage() {
     reason: g.reason,
     revokedAt: g.revoked_at,
     createdAt: g.created_at,
+  }));
+
+  type CodeRpcRow = {
+    id: string;
+    code: string;
+    kind: string;
+    duration_months: number | null;
+    label: string | null;
+    created_at: string;
+    redeemed_at: string | null;
+    redeemed_username: string | null;
+    revoked_at: string | null;
+  };
+  const promoCodes: PromoCodeRow[] = ((codesRes.data ?? []) as CodeRpcRow[]).map((c) => ({
+    id: c.id,
+    code: c.code,
+    kind: c.kind,
+    durationMonths: c.duration_months,
+    label: c.label,
+    createdAt: c.created_at,
+    redeemedAt: c.redeemed_at,
+    redeemedUsername: c.redeemed_username,
+    revokedAt: c.revoked_at,
   }));
 
   const foundingActive = overview?.founding_active ?? 0;
@@ -140,6 +167,8 @@ export default async function ProPage() {
         founders={overview?.founding_members ?? founders}
         granted={foundingActive}
       />
+
+      <PromoCodesCard codes={promoCodes} />
 
       <GrantsCard grants={grants} />
 

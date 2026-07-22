@@ -127,6 +127,65 @@ export async function grantProToUsername(
   };
 }
 
+/**
+ * Mint one-time promo codes (`admin_create_promo_codes`,
+ * `20260722110000_pro_promo_codes.sql`). The server generates the words —
+ * WORD-WORD-NN from the golf pools — and enforces uniqueness; a redeemed code
+ * becomes a `pro_grants` row of kind `promo`. Returns the fresh codes so the
+ * card can put them straight on the clipboard.
+ */
+export type CreateCodesResult =
+  | { ok: true; codes: { id: string; code: string }[] }
+  | { ok: false; message: string };
+
+export async function createPromoCodes(
+  kind: "trial" | "lifetime",
+  durationMonths: number | null,
+  count: number,
+  label: string | null,
+): Promise<CreateCodesResult> {
+  if (kind === "trial" && (!Number.isInteger(durationMonths) || durationMonths! < 1 || durationMonths! > 60)) {
+    return { ok: false, message: "Trial length must be a whole number of months, 1–60." };
+  }
+  if (!Number.isInteger(count) || count < 1 || count > 500) {
+    return { ok: false, message: "Batch size must be a whole number between 1 and 500." };
+  }
+
+  let supabase;
+  try {
+    supabase = await client();
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Service-role not configured" };
+  }
+
+  const { data, error } = await supabase.rpc("admin_create_promo_codes", {
+    p_kind: kind,
+    p_duration_months: kind === "trial" ? durationMonths : null,
+    p_count: count,
+    p_label: label?.trim() || null,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/pro");
+  return { ok: true, codes: (data ?? []) as { id: string; code: string }[] };
+}
+
+/** Void an unused code (`admin_revoke_promo_code`). Redeemed codes are history — they stay. */
+export async function revokePromoCode(codeId: string): Promise<ActionResult> {
+  let supabase;
+  try {
+    supabase = await client();
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Service-role not configured" };
+  }
+
+  const { error } = await supabase.rpc("admin_revoke_promo_code", { p_id: codeId });
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/pro");
+  return { ok: true, message: "Code voided." };
+}
+
 /** Soft-revoke a grant (sets `revoked_at`; the row stays for the audit trail). */
 export async function revokeProGrant(grantId: string): Promise<ActionResult> {
   let supabase;
