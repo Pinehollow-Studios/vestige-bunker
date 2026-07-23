@@ -1,12 +1,16 @@
 import { pageShell } from "@/components/admin/PageShell";
+import { PageTabs } from "@/components/admin/PageTabs";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { StatTile } from "@/components/admin/StatTile";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
 import { FoundingPerkCard } from "./FoundingPerkCard";
 import { GrantsCard, type GrantRow } from "./GrantsCard";
-import { PromoCodesCard, type PromoCodeRow } from "./PromoCodesCard";
+import { PromoCodesPanel, type PromoBatchRow, type PromoCodeRow } from "./PromoCodesPanel";
 
 export const dynamic = "force-dynamic";
+
+/** How many codes the ledger pulls before it admits to being a window. */
+const CODE_FETCH_CAP = 1000;
 
 /**
  * Vestige Pro — the membership surface.
@@ -15,17 +19,20 @@ export const dynamic = "force-dynamic";
  * server decides who is Pro, not Apple and not the client.** Two inputs feed
  * that answer — `pro_subscriptions` (the Apple mirror, written by the
  * `appstore-notifications` function) and `pro_grants` (everything else: comps,
- * promos, and the founding windows). This page is where the second one is
+ * promo codes, and the founding windows). This page is where the second one is
  * driven, and where the first one is watched.
  *
- * WIP by design — Pro ships September, and the surfaces grow with it.
+ * Three jobs, three tabs, because they're used at different times: **Codes** is
+ * the day-to-day one (mint a batch, hand it out, see what's been taken up),
+ * **Grants** is the one-off ("give this person Pro"), and **Founding perk** is
+ * the launch-day switch you touch twice, ever.
  */
 export default async function ProPage() {
   const supabase = await tryCreateServiceClient();
 
   if (!supabase) {
     return (
-      <div className={pageShell()}>
+      <div className={pageShell("wide")}>
         <SectionHeader eyebrow="Operations" title="Vestige Pro" />
         <div className="rounded-xl border border-amber/40 bg-amber/10 p-4 text-sm text-ink-2">
           Needs the service-role key for the active environment to read Pro config and grants.
@@ -34,7 +41,7 @@ export default async function ProPage() {
     );
   }
 
-  const [overviewRes, configRes, foundersRes, grantsRes, codesRes] = await Promise.all([
+  const [overviewRes, configRes, foundersRes, grantsRes, codesRes, batchesRes] = await Promise.all([
     supabase.rpc("admin_pro_overview"),
     supabase
       .from("pro_config")
@@ -51,8 +58,16 @@ export default async function ProPage() {
       .order("created_at", { ascending: false })
       .limit(50),
     // Codes + redeemer usernames in one round-trip (service_role passes the
-    // RPC's is_admin() gate).
-    supabase.rpc("admin_list_promo_codes", { p_limit: 200, p_offset: 0 }),
+    // RPC's is_admin() gate). Filtering/search happen client-side over this
+    // window — instant, and a beta's code table fits inside it many times over.
+    supabase.rpc("admin_list_promo_codes", {
+      p_status: null,
+      p_search: null,
+      p_batch: null,
+      p_limit: CODE_FETCH_CAP,
+      p_offset: 0,
+    }),
+    supabase.rpc("admin_list_promo_batches", { p_limit: 200, p_offset: 0 }),
   ]);
 
   // `admin_pro_overview` returns a single-row table.
@@ -81,9 +96,9 @@ export default async function ProPage() {
   type CodeRpcRow = {
     id: string;
     code: string;
-    kind: string;
     duration_months: number | null;
     label: string | null;
+    batch_id: string | null;
     created_at: string;
     redeemed_at: string | null;
     redeemed_username: string | null;
@@ -92,31 +107,49 @@ export default async function ProPage() {
   const promoCodes: PromoCodeRow[] = ((codesRes.data ?? []) as CodeRpcRow[]).map((c) => ({
     id: c.id,
     code: c.code,
-    kind: c.kind,
     durationMonths: c.duration_months,
     label: c.label,
+    batchId: c.batch_id,
     createdAt: c.created_at,
     redeemedAt: c.redeemed_at,
     redeemedUsername: c.redeemed_username,
     revokedAt: c.revoked_at,
   }));
 
+  type BatchRpcRow = {
+    batch_id: string | null;
+    label: string | null;
+    duration_months: number | null;
+    created_at: string;
+    total: number;
+    redeemed: number;
+    voided: number;
+    unused: number;
+  };
+  const promoBatches: PromoBatchRow[] = ((batchesRes.data ?? []) as BatchRpcRow[]).map((b) => ({
+    batchId: b.batch_id,
+    label: b.label,
+    durationMonths: b.duration_months,
+    createdAt: b.created_at,
+    total: b.total,
+    redeemed: b.redeemed,
+    voided: b.voided,
+    unused: b.unused,
+  }));
+
   const foundingActive = overview?.founding_active ?? 0;
   const armed = config?.founding_pro_enabled ?? false;
+  const codesOut = promoCodes.filter((c) => !c.redeemedAt && !c.revokedAt).length;
 
   return (
-    <div className={pageShell()}>
+    <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Operations" title="Vestige Pro" />
 
       {/* Where the tier stands */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile label="Pro members" value={overview?.total_pro ?? 0} tone="brand" />
-        <StatTile
-          label="Paid"
-          value={overview?.via_subscription ?? 0}
-          hint="Via the App Store"
-        />
-        <StatTile label="Granted" value={overview?.via_grant ?? 0} hint="Comps + founding" />
+        <StatTile label="Paid" value={overview?.via_subscription ?? 0} hint="Via the App Store" />
+        <StatTile label="Granted" value={overview?.via_grant ?? 0} hint="Comps, codes, founding" />
         <StatTile
           label="Founding windows"
           value={foundingActive}
@@ -129,11 +162,7 @@ export default async function ProPage() {
           tone="amber"
           hint="Grants about to lapse"
         />
-        <StatTile
-          label="Founding members"
-          value={overview?.founding_members ?? founders}
-          hint="Eligible for the perk"
-        />
+        <StatTile label="Codes out" value={codesOut} hint="Minted, not yet used" />
       </div>
 
       {/* Launch state, in one line, because it's the thing that's easy to get wrong */}
@@ -155,27 +184,49 @@ export default async function ProPage() {
         ) : (
           <>
             <strong className="text-ink">Pro is not launched.</strong> The founding perk is off,
-            nobody&rsquo;s free window is running, and no clocks have started. Everything below is
-            safe to look at.
+            nobody&rsquo;s free window is running, and no clocks have started. Codes still work —
+            redeeming one starts that person&rsquo;s membership there and then.
           </>
         )}
       </div>
 
-      <FoundingPerkCard
-        enabled={armed}
-        months={config?.beta_free_months ?? 6}
-        founders={overview?.founding_members ?? founders}
-        granted={foundingActive}
+      <PageTabs
+        tabs={[
+          {
+            key: "codes",
+            label: "Codes",
+            content: (
+              <PromoCodesPanel
+                codes={promoCodes}
+                batches={promoBatches}
+                truncated={promoCodes.length >= CODE_FETCH_CAP}
+              />
+            ),
+          },
+          {
+            key: "grants",
+            label: "Grants",
+            content: <GrantsCard grants={grants} />,
+          },
+          {
+            key: "founding",
+            label: "Founding perk",
+            content: (
+              <FoundingPerkCard
+                enabled={armed}
+                months={config?.beta_free_months ?? 6}
+                founders={overview?.founding_members ?? founders}
+                granted={foundingActive}
+              />
+            ),
+          },
+        ]}
       />
-
-      <PromoCodesCard codes={promoCodes} />
-
-      <GrantsCard grants={grants} />
 
       <p className="pb-2 text-xs leading-relaxed text-ink-3">
         Paid subscriptions are written by the <code>appstore-notifications</code> function when
-        Apple reports a purchase, renewal, refund or lapse — they never need touching here.
-        Pricing lives in App Store Connect.
+        Apple reports a purchase, renewal, refund or lapse — they never need touching here. Pricing
+        lives in App Store Connect.
       </p>
     </div>
   );

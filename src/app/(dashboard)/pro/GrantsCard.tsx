@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { cn } from "@/lib/utils";
 import { grantProToUsername, revokeProGrant } from "./actions";
 
 export type GrantRow = {
@@ -32,6 +33,56 @@ function when(iso: string | null): string {
   });
 }
 
+/** The quick lengths, mirroring the codes surface. `null` = forever. */
+const LENGTHS: { label: string; months: number | null }[] = [
+  { label: "1 month", months: 1 },
+  { label: "3 months", months: 3 },
+  { label: "6 months", months: 6 },
+  { label: "12 months", months: 12 },
+  { label: "Forever", months: null },
+];
+
+/** `yyyy-mm-dd`, N months out — the shape `<input type="date">` wants. */
+function monthsFromNow(months: number): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+        active
+          ? "border-brand/50 bg-brand/10 text-brand"
+          : "border-border bg-surface-2 text-ink-2 hover:text-ink",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * Non-Apple Pro entitlement: comps, promos, and the founding windows. These sit
  * alongside `pro_subscriptions` (the Apple mirror) as the second input to
@@ -42,6 +93,8 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
   const [username, setUsername] = useState("");
   const [kind, setKind] = useState<"comp" | "promo" | "manual">("comp");
   const [expires, setExpires] = useState("");
+  /** True once "Until a date" is chosen, so the chips stop claiming the value. */
+  const [pickDate, setPickDate] = useState(false);
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
   const [revoking, setRevoking] = useState<GrantRow | null>(null);
@@ -54,6 +107,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
         setUsername("");
         setReason("");
         setExpires("");
+        setPickDate(false);
       } else {
         toast.error(result.message);
       }
@@ -81,43 +135,81 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
         </p>
       </div>
 
-      {/* Give someone Pro */}
-      <div className="grid gap-3 rounded-lg border border-rule/70 bg-paper-sunken/40 p-4 sm:grid-cols-[1fr_auto_auto]">
-        <input
-          type="text"
-          value={username}
-          placeholder="@username"
-          onChange={(e) => setUsername(e.target.value)}
-          className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
-        />
-        <select
-          value={kind}
-          onChange={(e) => setKind(e.target.value as typeof kind)}
-          className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
-        >
-          <option value="comp">Comp</option>
-          <option value="promo">Promo</option>
-          <option value="manual">Manual</option>
-        </select>
-        <Button onClick={grant} disabled={pending || !username.trim()}>
-          {pending ? "Working…" : "Grant Pro"}
-        </Button>
-        <input
-          type="date"
-          value={expires}
-          onChange={(e) => setExpires(e.target.value)}
-          className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
-        />
-        <input
-          type="text"
-          value={reason}
-          placeholder="Reason (optional)"
-          onChange={(e) => setReason(e.target.value)}
-          className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50 sm:col-span-2"
-        />
-        <p className="text-[11px] leading-snug text-ink-3 sm:col-span-3">
-          Leave the date blank for a lifetime grant.
-        </p>
+      {/* Give someone Pro — same mental model as a code: a length, and
+          "forever" is one of the lengths. */}
+      <div className="space-y-4 rounded-lg border border-rule/70 bg-paper-sunken/40 p-4">
+        <Field label="Who gets it">
+          <input
+            type="text"
+            value={username}
+            placeholder="@username"
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full max-w-xs rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
+          />
+        </Field>
+
+        <Field label="How long">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {LENGTHS.map((l) => (
+              <Chip
+                key={l.label}
+                active={!pickDate && expires === (l.months === null ? "" : monthsFromNow(l.months))}
+                onClick={() => {
+                  setPickDate(false);
+                  setExpires(l.months === null ? "" : monthsFromNow(l.months));
+                }}
+              >
+                {l.label}
+              </Chip>
+            ))}
+            <Chip active={pickDate} onClick={() => setPickDate(true)}>
+              Until a date
+            </Chip>
+            {pickDate && (
+              <input
+                type="date"
+                value={expires}
+                onChange={(e) => setExpires(e.target.value)}
+                className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-2 py-1 text-sm text-ink outline-none focus:border-brand/50"
+              />
+            )}
+          </div>
+        </Field>
+
+        <Field label="Why">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as typeof kind)}
+              className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
+            >
+              <option value="comp">Comp</option>
+              <option value="promo">Promo</option>
+              <option value="manual">Manual</option>
+            </select>
+            <input
+              type="text"
+              value={reason}
+              placeholder="Note (optional) - shows in the ledger"
+              onChange={(e) => setReason(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
+            />
+          </div>
+        </Field>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule/50 pt-3">
+          <p className="text-sm text-ink-2">
+            <strong className="text-ink">{username.trim() ? `@${username.trim().replace(/^@/, "")}` : "Nobody yet"}</strong>{" "}
+            {expires ? (
+              <>gets Pro until <strong className="text-ink">{when(expires)}</strong>.</>
+            ) : (
+              <>gets Pro <strong className="text-ink">for good</strong>.</>
+            )}
+          </p>
+          <Button onClick={grant} disabled={pending || !username.trim()}>
+            {pending ? "Working…" : "Grant Pro"}
+          </Button>
+        </div>
       </div>
 
       {/* The list */}

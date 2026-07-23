@@ -128,24 +128,29 @@ export async function grantProToUsername(
 }
 
 /**
- * Mint one-time promo codes (`admin_create_promo_codes`,
- * `20260722110000_pro_promo_codes.sql`). The server generates the words —
- * WORD-WORD-NN from the golf pools — and enforces uniqueness; a redeemed code
- * becomes a `pro_grants` row of kind `promo`. Returns the fresh codes so the
- * card can put them straight on the clipboard.
+ * Mint one batch of one-time promo codes (`admin_create_promo_codes`,
+ * `20260723100000_pro_promo_codes_length.sql`). The server generates the words
+ * — WORD-WORD-NN from the golf pools — enforces uniqueness, and stamps the
+ * whole call with one `batch_id`.
+ *
+ * There is only ONE kind of code: it hands over Pro for a length of time, and
+ * `durationMonths === null` is the "forever" length. Trial codes are gone —
+ * a code was never a trial, because nothing is being sold at the end of it.
  */
 export type CreateCodesResult =
-  | { ok: true; codes: { id: string; code: string }[] }
+  | { ok: true; batchId: string | null; codes: { id: string; code: string }[] }
   | { ok: false; message: string };
 
 export async function createPromoCodes(
-  kind: "trial" | "lifetime",
   durationMonths: number | null,
   count: number,
   label: string | null,
 ): Promise<CreateCodesResult> {
-  if (kind === "trial" && (!Number.isInteger(durationMonths) || durationMonths! < 1 || durationMonths! > 60)) {
-    return { ok: false, message: "Trial length must be a whole number of months, 1–60." };
+  if (
+    durationMonths !== null &&
+    (!Number.isInteger(durationMonths) || durationMonths < 1 || durationMonths > 60)
+  ) {
+    return { ok: false, message: "Length must be a whole number of months, 1–60, or forever." };
   }
   if (!Number.isInteger(count) || count < 1 || count > 500) {
     return { ok: false, message: "Batch size must be a whole number between 1 and 500." };
@@ -159,15 +164,19 @@ export async function createPromoCodes(
   }
 
   const { data, error } = await supabase.rpc("admin_create_promo_codes", {
-    p_kind: kind,
-    p_duration_months: kind === "trial" ? durationMonths : null,
+    p_duration_months: durationMonths,
     p_count: count,
     p_label: label?.trim() || null,
   });
   if (error) return { ok: false, message: error.message };
 
+  const codes = (data ?? []) as { id: string; code: string; batch_id: string }[];
   revalidatePath("/pro");
-  return { ok: true, codes: (data ?? []) as { id: string; code: string }[] };
+  return {
+    ok: true,
+    batchId: codes[0]?.batch_id ?? null,
+    codes: codes.map((c) => ({ id: c.id, code: c.code })),
+  };
 }
 
 /** Void an unused code (`admin_revoke_promo_code`). Redeemed codes are history — they stay. */
@@ -184,6 +193,33 @@ export async function revokePromoCode(codeId: string): Promise<ActionResult> {
 
   revalidatePath("/pro");
   return { ok: true, message: "Code voided." };
+}
+
+/**
+ * Void every still-unused code in a batch (`admin_revoke_promo_batch`) — the
+ * "that event fell through, kill the sheet" button. Codes people have already
+ * redeemed are untouched; nobody loses Pro they were given.
+ */
+export async function revokePromoBatch(batchId: string): Promise<ActionResult> {
+  let supabase;
+  try {
+    supabase = await client();
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Service-role not configured" };
+  }
+
+  const { data, error } = await supabase.rpc("admin_revoke_promo_batch", { p_batch: batchId });
+  if (error) return { ok: false, message: error.message };
+
+  const voided = typeof data === "number" ? data : 0;
+  revalidatePath("/pro");
+  return {
+    ok: true,
+    message:
+      voided === 0
+        ? "Nothing left to void in that batch."
+        : `Voided ${voided} unused code${voided === 1 ? "" : "s"}.`,
+  };
 }
 
 /** Soft-revoke a grant (sets `revoked_at`; the row stays for the audit trail). */
