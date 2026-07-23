@@ -1,5 +1,4 @@
 import { pageShell } from "@/components/admin/PageShell";
-import { PageTabs } from "@/components/admin/PageTabs";
 import { SectionHeader } from "@/components/admin/SectionHeader";
 import { StatTile } from "@/components/admin/StatTile";
 import { tryCreateServiceClient } from "@/lib/supabase/admin";
@@ -9,7 +8,7 @@ import { PromoCodesPanel, type PromoBatchRow, type PromoCodeRow } from "./PromoC
 
 export const dynamic = "force-dynamic";
 
-/** How many codes the ledger pulls before it admits to being a window. */
+/** How many codes the list pulls before it admits to being a window. */
 const CODE_FETCH_CAP = 1000;
 
 /**
@@ -19,13 +18,14 @@ const CODE_FETCH_CAP = 1000;
  * server decides who is Pro, not Apple and not the client.** Two inputs feed
  * that answer — `pro_subscriptions` (the Apple mirror, written by the
  * `appstore-notifications` function) and `pro_grants` (everything else: comps,
- * promo codes, and the founding windows). This page is where the second one is
- * driven, and where the first one is watched.
+ * codes, and the founding windows). This page drives the second one.
  *
- * Three jobs, three tabs, because they're used at different times: **Codes** is
- * the day-to-day one (mint a batch, hand it out, see what's been taken up),
- * **Grants** is the one-off ("give this person Pro"), and **Founding perk** is
- * the launch-day switch you touch twice, ever.
+ * **Ordered by what it's actually for.** Pro isn't on sale, so handing out codes
+ * is the only job this page does day to day — it leads, full width, in plain
+ * words. Giving one person Pro directly and the early-member perk are real but
+ * rare, so they sit below under a quieter heading. The numbers go last: they're
+ * a glance, not a task. (Tabs were tried here on 2026-07-23 and taken out same
+ * day — they hid the one thing the page is for behind a click.)
  */
 export default async function ProPage() {
   const supabase = await tryCreateServiceClient();
@@ -58,7 +58,7 @@ export default async function ProPage() {
       .order("created_at", { ascending: false })
       .limit(50),
     // Codes + redeemer usernames in one round-trip (service_role passes the
-    // RPC's is_admin() gate). Filtering/search happen client-side over this
+    // RPC's is_admin() gate). Search + grouping happen client-side over this
     // window — instant, and a beta's code table fits inside it many times over.
     supabase.rpc("admin_list_promo_codes", {
       p_status: null,
@@ -139,35 +139,15 @@ export default async function ProPage() {
 
   const foundingActive = overview?.founding_active ?? 0;
   const armed = config?.founding_pro_enabled ?? false;
-  const codesOut = promoCodes.filter((c) => !c.redeemedAt && !c.revokedAt).length;
+  const codesWaiting = promoCodes.filter((c) => !c.redeemedAt && !c.revokedAt).length;
 
   return (
     <div className={pageShell("wide")}>
       <SectionHeader eyebrow="Operations" title="Vestige Pro" />
 
-      {/* Where the tier stands */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <StatTile label="Pro members" value={overview?.total_pro ?? 0} tone="brand" />
-        <StatTile label="Paid" value={overview?.via_subscription ?? 0} hint="Via the App Store" />
-        <StatTile label="Granted" value={overview?.via_grant ?? 0} hint="Comps, codes, founding" />
-        <StatTile
-          label="Founding windows"
-          value={foundingActive}
-          tone={foundingActive > 0 ? "brand" : "default"}
-          hint="Free Pro running"
-        />
-        <StatTile
-          label="Expiring 30d"
-          value={overview?.expiring_30d ?? 0}
-          tone="amber"
-          hint="Grants about to lapse"
-        />
-        <StatTile label="Codes out" value={codesOut} hint="Minted, not yet used" />
-      </div>
-
-      {/* Launch state, in one line, because it's the thing that's easy to get wrong */}
+      {/* Where things stand, said once, in words rather than jargon. */}
       <div
-        className={`rounded-xl border p-4 text-sm ${
+        className={`rounded-xl border p-4 text-sm leading-relaxed ${
           armed
             ? "border-brand/40 bg-brand/10 text-ink-2"
             : "border-rule/70 bg-paper-sunken/40 text-ink-2"
@@ -175,59 +155,89 @@ export default async function ProPage() {
       >
         {armed ? (
           <>
-            <strong className="text-ink">The founding perk is live.</strong> New founding members
-            get free Pro automatically.
+            <strong className="text-ink">Early members are getting free Pro.</strong> Anyone who
+            joins now as a founding member gets it automatically.
             {foundingActive === 0 && (
-              <> No windows are running yet — use the grant button to start the existing founders.</>
+              <>
+                {" "}
+                Nobody&rsquo;s free time has started yet — use the button under &ldquo;Free Pro for
+                early members&rdquo; below to start the ones who have already joined.
+              </>
             )}
           </>
         ) : (
           <>
-            <strong className="text-ink">Pro is not launched.</strong> The founding perk is off,
-            nobody&rsquo;s free window is running, and no clocks have started. Codes still work —
-            redeeming one starts that person&rsquo;s membership there and then.
+            <strong className="text-ink">Pro isn&rsquo;t on sale yet.</strong> Nobody can buy it in
+            the app, and early members aren&rsquo;t getting their free months yet. Codes do work —
+            anyone who uses one gets Pro straight away.
           </>
         )}
       </div>
 
-      <PageTabs
-        tabs={[
-          {
-            key: "codes",
-            label: "Codes",
-            content: (
-              <PromoCodesPanel
-                codes={promoCodes}
-                batches={promoBatches}
-                truncated={promoCodes.length >= CODE_FETCH_CAP}
-              />
-            ),
-          },
-          {
-            key: "grants",
-            label: "Grants",
-            content: <GrantsCard grants={grants} />,
-          },
-          {
-            key: "founding",
-            label: "Founding perk",
-            content: (
-              <FoundingPerkCard
-                enabled={armed}
-                months={config?.beta_free_months ?? 6}
-                founders={overview?.founding_members ?? founders}
-                granted={foundingActive}
-              />
-            ),
-          },
-        ]}
+      {/* The job this page is actually for. */}
+      <PromoCodesPanel
+        codes={promoCodes}
+        batches={promoBatches}
+        truncated={promoCodes.length >= CODE_FETCH_CAP}
       />
 
-      <p className="pb-2 text-xs leading-relaxed text-ink-3">
-        Paid subscriptions are written by the <code>appstore-notifications</code> function when
-        Apple reports a purchase, renewal, refund or lapse — they never need touching here. Pricing
-        lives in App Store Connect.
-      </p>
+      {/* Real, but rare. */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center gap-3">
+          <h2 className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+            Other ways to give someone Pro
+          </h2>
+          <span className="h-px flex-1 bg-rule/60" />
+        </div>
+        <GrantsCard grants={grants} />
+        <FoundingPerkCard
+          enabled={armed}
+          months={config?.beta_free_months ?? 6}
+          founders={overview?.founding_members ?? founders}
+          granted={foundingActive}
+        />
+      </div>
+
+      {/* A glance, not a task — so it goes last. */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center gap-3">
+          <h2 className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-3">
+            How Pro stands
+          </h2>
+          <span className="h-px flex-1 bg-rule/60" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatTile label="People with Pro" value={overview?.total_pro ?? 0} tone="brand" />
+          <StatTile
+            label="Bought it"
+            value={overview?.via_subscription ?? 0}
+            hint="Paid in the App Store"
+          />
+          <StatTile
+            label="Given it"
+            value={overview?.via_grant ?? 0}
+            hint="Codes, gifts, early members"
+          />
+          <StatTile
+            label="Free time running"
+            value={foundingActive}
+            tone={foundingActive > 0 ? "brand" : "default"}
+            hint="Early members mid-window"
+          />
+          <StatTile
+            label="Ending in 30 days"
+            value={overview?.expiring_30d ?? 0}
+            tone="amber"
+            hint="Free time about to run out"
+          />
+          <StatTile label="Codes waiting" value={codesWaiting} hint="Made, not used yet" />
+        </div>
+        <p className="pb-2 text-xs leading-relaxed text-ink-3">
+          Purchases look after themselves: Apple tells us when someone buys, renews, refunds or
+          lapses, and the <code>appstore-notifications</code> function writes it down. Prices are
+          set in App Store Connect, not here.
+        </p>
+      </div>
     </div>
   );
 }

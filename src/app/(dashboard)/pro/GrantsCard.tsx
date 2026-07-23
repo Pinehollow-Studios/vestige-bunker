@@ -17,11 +17,12 @@ export type GrantRow = {
   createdAt: string;
 };
 
+/** The database's words, in ours. `founding_beta` is set by the app, not here. */
 const KIND_LABEL: Record<string, string> = {
-  founding_beta: "Founding",
-  comp: "Comp",
-  promo: "Promo",
-  manual: "Manual",
+  founding_beta: "Early member",
+  comp: "A gift",
+  promo: "A code or promotion",
+  manual: "Something else",
 };
 
 function when(iso: string | null): string {
@@ -84,10 +85,14 @@ function Chip({
 }
 
 /**
- * Non-Apple Pro entitlement: comps, promos, and the founding windows. These sit
- * alongside `pro_subscriptions` (the Apple mirror) as the second input to
- * `is_pro()` — which is why a grant can hand someone Pro without them ever
- * touching the App Store.
+ * Pro handed over without the App Store: gifts, redeemed codes, and the early
+ * member windows. These are `pro_grants` rows — the second input to `is_pro()`
+ * alongside `pro_subscriptions` (the Apple mirror), which is why someone can
+ * have Pro having never bought anything.
+ *
+ * Written in the words the person using this page would use, not the schema's:
+ * "give someone Pro", not "grant"; "take it back", not "revoke". The database
+ * keeps its own vocabulary and `KIND_LABEL` does the translating.
  */
 export function GrantsCard({ grants }: { grants: GrantRow[] }) {
   const [username, setUsername] = useState("");
@@ -120,7 +125,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
     startTransition(async () => {
       const result = await revokeProGrant(id);
       setRevoking(null);
-      if (result.ok) toast.success(result.message ?? "Revoked.");
+      if (result.ok) toast.success(result.message ?? "Taken back.");
       else toast.error(result.message);
     });
   }
@@ -128,17 +133,18 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
   return (
     <div className="space-y-5 rounded-xl glass-panel p-5">
       <div>
-        <h2 className="font-hero text-lg text-ink">Grants</h2>
+        <h2 className="font-hero text-lg text-ink">Give someone Pro directly</h2>
         <p className="mt-1 text-sm leading-relaxed text-ink-2">
-          Pro given directly, without the App Store — comps, promos, and founding windows. The
-          server treats these exactly like a paid subscription.
+          No code needed - type their username and they have Pro the next time the app checks.
+          It counts exactly the same as paying for it. Everything given out this way is listed
+          below, including codes people have used and early members&rsquo; free months.
         </p>
       </div>
 
       {/* Give someone Pro — same mental model as a code: a length, and
           "forever" is one of the lengths. */}
       <div className="space-y-4 rounded-lg border border-rule/70 bg-paper-sunken/40 p-4">
-        <Field label="Who gets it">
+        <Field label="Who gets it?">
           <input
             type="text"
             value={username}
@@ -148,7 +154,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
           />
         </Field>
 
-        <Field label="How long">
+        <Field label="How long do they get it for?">
           <div className="flex flex-wrap items-center gap-1.5">
             {LENGTHS.map((l) => (
               <Chip
@@ -176,21 +182,21 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
           </div>
         </Field>
 
-        <Field label="Why">
+        <Field label="Why are they getting it?">
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={kind}
               onChange={(e) => setKind(e.target.value as typeof kind)}
               className="rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
             >
-              <option value="comp">Comp</option>
-              <option value="promo">Promo</option>
-              <option value="manual">Manual</option>
+              <option value="comp">A gift</option>
+              <option value="promo">A code or promotion</option>
+              <option value="manual">Something else</option>
             </select>
             <input
               type="text"
               value={reason}
-              placeholder="Note (optional) - shows in the ledger"
+              placeholder="Note to yourself (optional) - shows in the list below"
               onChange={(e) => setReason(e.target.value)}
               className="min-w-0 flex-1 rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
             />
@@ -207,7 +213,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
             )}
           </p>
           <Button onClick={grant} disabled={pending || !username.trim()}>
-            {pending ? "Working…" : "Grant Pro"}
+            {pending ? "Working…" : "Give them Pro"}
           </Button>
         </div>
       </div>
@@ -215,7 +221,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
       {/* The list */}
       {grants.length === 0 ? (
         <p className="py-6 text-center text-sm text-ink-3">
-          No grants yet. The founding windows will appear here once you launch the perk.
+          Nobody has been given Pro yet. Codes people use, gifts, and early members’ free months will all show up here.
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -223,9 +229,9 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
             <thead>
               <tr className="border-b border-rule/70 text-left text-[10px] uppercase tracking-[0.16em] text-ink-3">
                 <th className="py-2 pr-3 font-semibold">Who</th>
-                <th className="py-2 pr-3 font-semibold">Kind</th>
-                <th className="py-2 pr-3 font-semibold">Expires</th>
-                <th className="py-2 pr-3 font-semibold">Reason</th>
+                <th className="py-2 pr-3 font-semibold">Why</th>
+                <th className="py-2 pr-3 font-semibold">Until</th>
+                <th className="py-2 pr-3 font-semibold">Note</th>
                 <th className="py-2 font-semibold" />
               </tr>
             </thead>
@@ -247,7 +253,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
                     <td className="py-2.5 text-right">
                       {revoked ? (
                         <span className="text-[11px] uppercase tracking-wider text-ink-3">
-                          Revoked
+                          Taken back
                         </span>
                       ) : (
                         <button
@@ -256,7 +262,7 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
                           disabled={pending}
                           className="text-[11px] uppercase tracking-wider text-alert hover:underline disabled:opacity-50"
                         >
-                          Revoke
+                          Take it back
                         </button>
                       )}
                     </td>
@@ -270,8 +276,8 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
 
       <ConfirmDialog
         open={revoking !== null}
-        title="Revoke this grant?"
-        confirmLabel="Revoke"
+        title="Take Pro back?"
+        confirmLabel="Take it back"
         tone="danger"
         busy={pending}
         onConfirm={revoke}
@@ -280,8 +286,9 @@ export function GrantsCard({ grants }: { grants: GrantRow[] }) {
         }}
       >
         <p>
-          {revoking?.username ? `@${revoking.username}` : "This user"} loses Pro immediately —
-          unless they also have a paid subscription, which is unaffected.
+          {revoking?.username ? `@${revoking.username}` : "This person"} loses Pro straight
+          away. If they have also paid for it in the App Store, that is untouched - they keep
+          Pro either way.
         </p>
       </ConfirmDialog>
     </div>

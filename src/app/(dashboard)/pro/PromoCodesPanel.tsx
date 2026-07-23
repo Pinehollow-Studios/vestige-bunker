@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Ban, Copy, Infinity as InfinityIcon, Search, Ticket, X } from "lucide-react";
+import { ChevronDown, Copy, Search, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { EmptyState } from "@/components/admin/EmptyState";
@@ -33,12 +33,13 @@ export type PromoBatchRow = {
   unused: number;
 };
 
-type Status = "all" | "unused" | "redeemed" | "voided";
-
-/** The one place a length becomes words. "Forever" is a length, not a kind. */
+/**
+ * The one place a length becomes words. "Forever" is a length, not a kind —
+ * there is only one sort of code and this is the only thing that varies.
+ */
 export function lengthLabel(months: number | null): string {
-  if (months === null) return "Forever";
-  return `${months} month${months === 1 ? "" : "s"}`;
+  if (months === null) return "Pro forever";
+  return `${months} month${months === 1 ? "" : "s"} of Pro`;
 }
 
 function when(iso: string | null): string {
@@ -50,10 +51,10 @@ function when(iso: string | null): string {
   });
 }
 
-function statusOf(c: PromoCodeRow): Exclude<Status, "all"> {
-  if (c.redeemedAt) return "redeemed";
-  if (c.revokedAt) return "voided";
-  return "unused";
+function statusOf(c: PromoCodeRow): "used" | "off" | "waiting" {
+  if (c.redeemedAt) return "used";
+  if (c.revokedAt) return "off";
+  return "waiting";
 }
 
 async function copy(text: string, note: string) {
@@ -64,10 +65,6 @@ async function copy(text: string, note: string) {
     toast.error("Couldn't reach the clipboard.");
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Small shared pieces                                                  */
-/* ------------------------------------------------------------------ */
 
 function Chip({
   active,
@@ -83,7 +80,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+        "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
         active
           ? "border-brand/50 bg-brand/10 text-brand"
           : "border-border bg-surface-2 text-ink-2 hover:text-ink",
@@ -94,36 +91,22 @@ function Chip({
   );
 }
 
-/** The length badge that follows a code everywhere it's shown. */
-function LengthBadge({ months }: { months: number | null }) {
+function Question({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
-        months === null
-          ? "border-amber/40 bg-amber/10 text-amber"
-          : "border-rule/70 bg-paper-sunken/60 text-ink-2",
-      )}
-    >
-      {months === null && <InfinityIcon aria-hidden className="size-3" />}
-      {lengthLabel(months)}
-    </span>
-  );
-}
-
-/** How much of a batch has been taken up — the thing you actually want to know. */
-function UsageBar({ batch }: { batch: PromoBatchRow }) {
-  const pct = (n: number) => (batch.total === 0 ? 0 : (n / batch.total) * 100);
-  return (
-    <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-paper-sunken">
-      <span className="bg-brand" style={{ width: `${pct(batch.redeemed)}%` }} />
-      <span className="bg-ink-3/30" style={{ width: `${pct(batch.voided)}%` }} />
+    <div className="flex gap-3">
+      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-rule/70 text-xs font-semibold tabular-nums text-ink-3">
+        {n}
+      </span>
+      <div className="min-w-0 flex-1 space-y-2.5">
+        <p className="text-sm font-semibold text-ink">{title}</p>
+        {children}
+      </div>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Mint                                                                 */
+/* Make codes — the main event                                          */
 /* ------------------------------------------------------------------ */
 
 const LENGTHS: { label: string; months: number | null }[] = [
@@ -136,326 +119,319 @@ const LENGTHS: { label: string; months: number | null }[] = [
 
 const COUNTS = [1, 5, 10, 25, 50];
 
-function MintCard({ onMinted }: { onMinted: (codes: string[]) => void }) {
-  // `custom` is a separate mode so "6 months" and a typed 6 can't fight.
+/**
+ * Three questions and a button. Pro isn't on sale yet, so handing out codes is
+ * the only thing this page really does — it gets the top of the page, the
+ * biggest type, and no jargon.
+ */
+function MakeCodes({ onMade }: { onMade: (codes: string[]) => void }) {
   const [months, setMonths] = useState<number | null>(6);
   const [customMonths, setCustomMonths] = useState("");
-  const [useCustomLength, setUseCustomLength] = useState(false);
+  const [otherLength, setOtherLength] = useState(false);
   const [count, setCount] = useState(5);
   const [customCount, setCustomCount] = useState("");
-  const [useCustomCount, setUseCustomCount] = useState(false);
+  const [otherCount, setOtherCount] = useState(false);
   const [label, setLabel] = useState("");
   const [pending, startTransition] = useTransition();
 
-  const resolvedMonths = useCustomLength ? Number(customMonths) : months;
-  const resolvedCount = useCustomCount ? Number(customCount) : count;
-  const lengthValid =
-    !useCustomLength ||
-    (Number.isInteger(resolvedMonths) && resolvedMonths !== null && resolvedMonths >= 1 && resolvedMonths <= 60);
-  const countValid = Number.isInteger(resolvedCount) && resolvedCount >= 1 && resolvedCount <= 500;
-  const valid = lengthValid && countValid;
+  const chosenMonths = otherLength ? Number(customMonths) : months;
+  const chosenCount = otherCount ? Number(customCount) : count;
+  const lengthOk =
+    !otherLength || (Number.isInteger(chosenMonths) && chosenMonths! >= 1 && chosenMonths! <= 60);
+  const countOk = Number.isInteger(chosenCount) && chosenCount >= 1 && chosenCount <= 500;
+  const ready = lengthOk && countOk;
 
-  function mint() {
-    if (!valid) return;
+  function make() {
+    if (!ready) return;
     startTransition(async () => {
       const result = await createPromoCodes(
-        useCustomLength ? Number(customMonths) : months,
-        resolvedCount,
+        otherLength ? Number(customMonths) : months,
+        chosenCount,
         label || null,
       );
       if (!result.ok) {
         toast.error(result.message);
         return;
       }
-      const minted = result.codes.map((c) => c.code);
-      onMinted(minted);
-      toast.success(`Minted ${minted.length} code${minted.length === 1 ? "" : "s"}.`);
+      onMade(result.codes.map((c) => c.code));
     });
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-rule/70 bg-paper-sunken/40 p-4">
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-          How long does it last?
+    <section className="space-y-6 rounded-xl glass-panel p-6">
+      <div>
+        <h2 className="font-hero text-2xl text-ink">Make codes</h2>
+        <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-2">
+          A code gives one person Vestige Pro. They type it into the app, under Vestige Pro &rarr;
+          &ldquo;Have a code?&rdquo;. Each code works once, for one person.
         </p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {LENGTHS.map((l) => (
-            <Chip
-              key={l.label}
-              active={!useCustomLength && months === l.months}
-              onClick={() => {
-                setUseCustomLength(false);
-                setMonths(l.months);
-              }}
-            >
-              {l.label}
+      </div>
+
+      <div className="space-y-5">
+        <Question n={1} title="How long do they get Pro for?">
+          <div className="flex flex-wrap items-center gap-2">
+            {LENGTHS.map((l) => (
+              <Chip
+                key={l.label}
+                active={!otherLength && months === l.months}
+                onClick={() => {
+                  setOtherLength(false);
+                  setMonths(l.months);
+                }}
+              >
+                {l.label}
+              </Chip>
+            ))}
+            <Chip active={otherLength} onClick={() => setOtherLength(true)}>
+              Another length
             </Chip>
-          ))}
-          <Chip active={useCustomLength} onClick={() => setUseCustomLength(true)}>
-            Custom
-          </Chip>
-          {useCustomLength && (
-            <span className="flex items-center gap-1.5 text-xs text-ink-2">
+            {otherLength && (
+              <span className="flex items-center gap-2 text-sm text-ink-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  autoFocus
+                  value={customMonths}
+                  onChange={(e) => setCustomMonths(e.target.value)}
+                  className="w-16 rounded-lg border border-rule/70 bg-paper-sunken/60 px-2 py-1.5 text-sm text-ink outline-none focus:border-brand/50"
+                />
+                months
+              </span>
+            )}
+          </div>
+        </Question>
+
+        <Question n={2} title="How many codes do you need?">
+          <div className="flex flex-wrap items-center gap-2">
+            {COUNTS.map((n) => (
+              <Chip
+                key={n}
+                active={!otherCount && count === n}
+                onClick={() => {
+                  setOtherCount(false);
+                  setCount(n);
+                }}
+              >
+                {n}
+              </Chip>
+            ))}
+            <Chip active={otherCount} onClick={() => setOtherCount(true)}>
+              Another number
+            </Chip>
+            {otherCount && (
               <input
                 type="number"
                 min={1}
-                max={60}
+                max={500}
                 autoFocus
-                value={customMonths}
-                onChange={(e) => setCustomMonths(e.target.value)}
-                className="w-16 rounded-lg border border-rule/70 bg-paper-sunken/60 px-2 py-1 text-sm text-ink outline-none focus:border-brand/50"
+                value={customCount}
+                onChange={(e) => setCustomCount(e.target.value)}
+                className="w-20 rounded-lg border border-rule/70 bg-paper-sunken/60 px-2 py-1.5 text-sm text-ink outline-none focus:border-brand/50"
               />
-              months
-            </span>
-          )}
-        </div>
+            )}
+          </div>
+        </Question>
+
+        <Question n={3} title="What are these for?">
+          <input
+            type="text"
+            value={label}
+            placeholder="Open day at Woking, Jack's mates, launch giveaway…"
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full max-w-md rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
+          />
+          <p className="text-xs text-ink-3">
+            Only you see this. It&rsquo;s how you&rsquo;ll find these codes again later.
+          </p>
+        </Question>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-          How many codes?
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {COUNTS.map((n) => (
-            <Chip
-              key={n}
-              active={!useCustomCount && count === n}
-              onClick={() => {
-                setUseCustomCount(false);
-                setCount(n);
-              }}
-            >
-              {n}
-            </Chip>
-          ))}
-          <Chip active={useCustomCount} onClick={() => setUseCustomCount(true)}>
-            Custom
-          </Chip>
-          {useCustomCount && (
-            <input
-              type="number"
-              min={1}
-              max={500}
-              autoFocus
-              value={customCount}
-              onChange={(e) => setCustomCount(e.target.value)}
-              className="w-20 rounded-lg border border-rule/70 bg-paper-sunken/60 px-2 py-1 text-sm text-ink outline-none focus:border-brand/50"
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">
-          What are they for?
-        </p>
-        <input
-          type="text"
-          value={label}
-          placeholder="Open day cards, Jack's mates, launch giveaway…"
-          onChange={(e) => setLabel(e.target.value)}
-          className="w-full rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule/50 pt-3">
-        {/* Say the whole thing back before it's real. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule/50 pt-4">
         <p className="text-sm text-ink-2">
-          {valid ? (
+          {ready ? (
             <>
+              You&rsquo;ll get{" "}
               <strong className="text-ink">
-                {resolvedCount} code{resolvedCount === 1 ? "" : "s"}
+                {chosenCount} code{chosenCount === 1 ? "" : "s"}
               </strong>
-              , each worth{" "}
+              . Each one gives whoever uses it{" "}
               <strong className="text-ink">
-                {useCustomLength && lengthValid
-                  ? lengthLabel(Number(customMonths))
-                  : lengthLabel(months)}
-              </strong>{" "}
-              of Pro{months === null && !useCustomLength ? "" : ", one use each"}.
+                {otherLength ? lengthLabel(Number(customMonths)) : lengthLabel(months)}
+              </strong>
+              .
             </>
           ) : (
             <span className="text-alert">
-              Length must be 1–60 months; batch size must be 1–500.
+              A length has to be between 1 and 60 months, and you can make between 1 and 500 codes
+              at a time.
             </span>
           )}
         </p>
-        <Button onClick={mint} disabled={pending || !valid}>
-          {pending ? "Minting…" : "Mint codes"}
+        {/* The button says what will happen, not what it is. */}
+        <Button size="lg" onClick={make} disabled={pending || !ready}>
+          {pending
+            ? "Making them…"
+            : ready
+              ? `Make ${chosenCount} code${chosenCount === 1 ? "" : "s"}`
+              : "Make codes"}
         </Button>
       </div>
-    </div>
+    </section>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* The panel                                                            */
+/* The list                                                             */
 /* ------------------------------------------------------------------ */
 
+function StatusText({ code }: { code: PromoCodeRow }) {
+  const s = statusOf(code);
+  if (s === "off") return <span className="text-ink-3">Turned off</span>;
+  if (s === "used") {
+    return (
+      <span className="text-ink-2">
+        Used by {code.redeemedUsername ? `@${code.redeemedUsername}` : "someone"}
+        <span className="text-ink-3"> · {when(code.redeemedAt)}</span>
+      </span>
+    );
+  }
+  return <span className="text-brand">Not used yet</span>;
+}
+
 /**
- * Promo codes — one kind of code, with a length.
- *
- * The shape follows how codes are actually used: you mint a **batch** for a
- * thing (an open day, a giveaway), hand it out, and later want to know how
- * much of it has been taken up — or kill what's left. So batches lead, and
- * the flat code ledger is the drill-down, not the front door.
+ * Everything already made. Groups lead — a group is one press of "Make codes",
+ * which is how you actually think about them ("the 50 for the open day") — and
+ * a group opens in place to show its codes. Typing in the search box switches
+ * to a flat list of matches, because "has this code been used?" is the other
+ * question people ask.
  */
-export function PromoCodesPanel({
+function CodeList({
   codes,
   batches,
   truncated,
 }: {
   codes: PromoCodeRow[];
   batches: PromoBatchRow[];
-  /** True when the ledger hit its fetch cap — say so rather than imply totality. */
   truncated: boolean;
 }) {
-  const [view, setView] = useState<"batches" | "codes">("batches");
-  const [status, setStatus] = useState<Status>("all");
   const [search, setSearch] = useState("");
-  const [batchFilter, setBatchFilter] = useState<string | null>(null);
-  const [fresh, setFresh] = useState<string[]>([]);
+  const [open, setOpen] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
-  const [revokingCode, setRevokingCode] = useState<PromoCodeRow | null>(null);
-  const [revokingBatch, setRevokingBatch] = useState<PromoBatchRow | null>(null);
+  const [turningOffCode, setTurningOffCode] = useState<PromoCodeRow | null>(null);
+  const [turningOffBatch, setTurningOffBatch] = useState<PromoBatchRow | null>(null);
 
-  const counts = useMemo(() => {
-    const c = { all: codes.length, unused: 0, redeemed: 0, voided: 0 };
-    for (const row of codes) c[statusOf(row)] += 1;
-    return c;
+  const totals = useMemo(() => {
+    const t = { total: codes.length, used: 0, waiting: 0, off: 0 };
+    for (const c of codes) {
+      const s = statusOf(c);
+      if (s === "used") t.used += 1;
+      else if (s === "off") t.off += 1;
+      else t.waiting += 1;
+    }
+    return t;
   }, [codes]);
 
-  const visible = useMemo(() => {
+  const matches = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return codes.filter((c) => {
-      if (batchFilter && c.batchId !== batchFilter) return false;
-      if (status !== "all" && statusOf(c) !== status) return false;
-      if (!q) return true;
-      return (
+    if (!q) return [];
+    return codes.filter(
+      (c) =>
         c.code.toLowerCase().includes(q) ||
         (c.label ?? "").toLowerCase().includes(q) ||
-        (c.redeemedUsername ?? "").toLowerCase().includes(q)
-      );
+        (c.redeemedUsername ?? "").toLowerCase().includes(q),
+    );
+  }, [codes, search]);
+
+  function codesIn(batchId: string | null) {
+    return codes.filter((c) => c.batchId === batchId);
+  }
+
+  function toggle(batchId: string) {
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(batchId)) next.delete(batchId);
+      else next.add(batchId);
+      return next;
     });
-  }, [codes, status, search, batchFilter]);
-
-  const activeBatch = batchFilter ? batches.find((b) => b.batchId === batchFilter) : undefined;
-
-  function unusedIn(batchId: string | null): string[] {
-    return codes.filter((c) => c.batchId === batchId && statusOf(c) === "unused").map((c) => c.code);
   }
 
-  function openBatch(batch: PromoBatchRow) {
-    setBatchFilter(batch.batchId);
-    setStatus("all");
-    setSearch("");
-    setView("codes");
-  }
-
-  function revokeCode() {
-    if (!revokingCode) return;
-    const id = revokingCode.id;
+  function turnOffCode() {
+    if (!turningOffCode) return;
+    const id = turningOffCode.id;
     startTransition(async () => {
       const result = await revokePromoCode(id);
-      setRevokingCode(null);
-      if (result.ok) toast.success(result.message ?? "Voided.");
+      setTurningOffCode(null);
+      if (result.ok) toast.success("That code won't work any more.");
       else toast.error(result.message);
     });
   }
 
-  function revokeBatch() {
-    if (!revokingBatch?.batchId) return;
-    const id = revokingBatch.batchId;
+  function turnOffBatch() {
+    if (!turningOffBatch?.batchId) return;
+    const id = turningOffBatch.batchId;
     startTransition(async () => {
       const result = await revokePromoBatch(id);
-      setRevokingBatch(null);
-      if (result.ok) toast.success(result.message ?? "Voided.");
+      setTurningOffBatch(null);
+      if (result.ok) toast.success(result.message ?? "Done.");
       else toast.error(result.message);
     });
   }
 
+  const codeRow = (c: PromoCodeRow) => (
+    <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+      <button
+        type="button"
+        onClick={() => copy(c.code, `${c.code} copied.`)}
+        className={cn(
+          "font-mono text-[13px] hover:underline",
+          statusOf(c) === "off" ? "text-ink-3 line-through" : "text-ink",
+        )}
+        title="Click to copy"
+      >
+        {c.code}
+      </button>
+      <span className="text-xs text-ink-3">{lengthLabel(c.durationMonths)}</span>
+      <span className="ml-auto text-xs">
+        <StatusText code={c} />
+      </span>
+      {statusOf(c) === "waiting" && (
+        <button
+          type="button"
+          onClick={() => setTurningOffCode(c)}
+          disabled={pending}
+          className="text-xs text-alert hover:underline disabled:opacity-50"
+        >
+          Turn off
+        </button>
+      )}
+    </li>
+  );
+
   return (
-    <div className="space-y-5">
-      {/* Mint */}
-      <section className="space-y-4 rounded-xl glass-panel p-5">
+    <section className="space-y-4 rounded-xl glass-panel p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-hero text-lg text-ink">Mint codes</h2>
-          <p className="mt-1 text-sm leading-relaxed text-ink-2">
-            One-time codes that hand over Vestige Pro for as long as you say. Users redeem them in
-            the app under Vestige Pro &rarr; &ldquo;Have a code?&rdquo;. Each code works exactly
-            once, and a code redeemed on top of a window already running adds its full length to
-            the end of it.
+          <h2 className="font-hero text-lg text-ink">Codes you&rsquo;ve made</h2>
+          <p className="mt-1 text-sm text-ink-2">
+            {totals.total === 0 ? (
+              "Nothing yet."
+            ) : (
+              <>
+                <span className="tabular-nums">{totals.total}</span> in total ·{" "}
+                <span className="tabular-nums">{totals.used}</span> used ·{" "}
+                <span className="tabular-nums">{totals.waiting}</span> still waiting to be used
+                {totals.off > 0 && (
+                  <>
+                    {" "}
+                    · <span className="tabular-nums">{totals.off}</span> turned off
+                  </>
+                )}
+              </>
+            )}
           </p>
         </div>
-
-        <MintCard
-          onMinted={(minted) => {
-            setFresh(minted);
-            setBatchFilter(null);
-            setView("batches");
-          }}
-        />
-
-        {/* The one chance to grab the batch as a block. */}
-        {fresh.length > 0 && (
-          <div className="space-y-3 rounded-lg border border-brand/40 bg-brand/10 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-ink">
-                Fresh batch — {fresh.length} code{fresh.length === 1 ? "" : "s"}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copy(fresh.join("\n"), "Codes copied.")}
-                >
-                  <Copy aria-hidden /> Copy all
-                </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => setFresh([])} aria-label="Dismiss">
-                  <X aria-hidden />
-                </Button>
-              </div>
-            </div>
-            <div className="grid gap-1 font-mono text-[13px] text-ink-2 sm:grid-cols-2 lg:grid-cols-3">
-              {fresh.map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => copy(code, `${code} copied.`)}
-                  className="rounded px-2 py-1 text-left hover:bg-paper-sunken/60"
-                  title="Copy"
-                >
-                  {code}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Ledger */}
-      <section className="space-y-4 rounded-xl glass-panel p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1" role="tablist">
-            {(["batches", "codes"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                role="tab"
-                aria-selected={view === v}
-                onClick={() => setView(v)}
-                className={cn(
-                  "-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors",
-                  view === v
-                    ? "border-brand text-ink"
-                    : "border-transparent text-ink-3 hover:text-ink-2",
-                )}
-              >
-                {v === "batches" ? "Batches" : "All codes"}
-              </button>
-            ))}
-          </div>
+        {totals.total > 0 && (
           <label className="relative">
             <Search
               aria-hidden
@@ -464,229 +440,216 @@ export function PromoCodesPanel({
             <input
               type="search"
               value={search}
-              placeholder="Find a code, label or redeemer"
-              onChange={(e) => {
-                setSearch(e.target.value);
-                if (e.target.value) setView("codes");
-              }}
-              className="w-64 rounded-lg border border-rule/70 bg-paper-sunken/60 py-1.5 pl-8 pr-3 text-sm text-ink outline-none focus:border-brand/50"
+              placeholder="Find a code or a name"
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-60 rounded-lg border border-rule/70 bg-paper-sunken/60 py-1.5 pl-8 pr-3 text-sm text-ink outline-none focus:border-brand/50"
             />
           </label>
-        </div>
-
-        {view === "batches" ? (
-          batches.length === 0 ? (
-            <EmptyState
-              icon={Ticket}
-              title="No codes yet"
-              description="Mint a batch above and hand them out. Each batch keeps its own tally of what's been used."
-            />
-          ) : (
-            <ul className="divide-y divide-rule/40">
-              {batches.map((b) => (
-                <li
-                  key={b.batchId ?? "none"}
-                  className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-center sm:gap-4"
-                >
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate font-medium text-ink">
-                        {b.label ?? "Untitled batch"}
-                      </span>
-                      <LengthBadge months={b.durationMonths} />
-                      <span className="text-xs text-ink-3">{when(b.createdAt)}</span>
-                    </div>
-                    <UsageBar batch={b} />
-                    <p className="text-xs text-ink-3">
-                      <span className="tabular-nums text-ink-2">{b.redeemed}</span> of{" "}
-                      <span className="tabular-nums text-ink-2">{b.total}</span> redeemed
-                      {b.voided > 0 && <> · {b.voided} voided</>}
-                      {b.unused > 0 && <> · {b.unused} still out there</>}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openBatch(b)}>
-                      View codes
-                    </Button>
-                    {b.unused > 0 && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            copy(
-                              unusedIn(b.batchId).join("\n"),
-                              `Copied ${b.unused} unused code${b.unused === 1 ? "" : "s"}.`,
-                            )
-                          }
-                        >
-                          <Copy aria-hidden /> Copy unused
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={pending}
-                          onClick={() => setRevokingBatch(b)}
-                          aria-label="Void the unused codes in this batch"
-                          title="Void unused"
-                        >
-                          <Ban aria-hidden className="text-alert" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )
-        ) : (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {(["all", "unused", "redeemed", "voided"] as const).map((s) => (
-                <Chip key={s} active={status === s} onClick={() => setStatus(s)}>
-                  <span className="capitalize">{s === "all" ? "All" : s}</span>
-                  <span className="ml-1 tabular-nums opacity-60">{counts[s]}</span>
-                </Chip>
-              ))}
-              {activeBatch && (
-                <button
-                  type="button"
-                  onClick={() => setBatchFilter(null)}
-                  className="inline-flex items-center gap-1 rounded-full border border-brand/50 bg-brand/10 px-3 py-1 text-xs font-medium text-brand"
-                  title="Clear the batch filter"
-                >
-                  {activeBatch.label ?? "Untitled batch"}
-                  <X aria-hidden className="size-3" />
-                </button>
-              )}
-            </div>
-
-            {visible.length === 0 ? (
-              <EmptyState
-                icon={Search}
-                title="Nothing matches"
-                description="Try a different filter, or clear the search."
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-rule/70 text-left text-[10px] uppercase tracking-[0.16em] text-ink-3">
-                      <th className="py-2 pr-3 font-semibold">Code</th>
-                      <th className="py-2 pr-3 font-semibold">Worth</th>
-                      <th className="py-2 pr-3 font-semibold">Batch</th>
-                      <th className="py-2 pr-3 font-semibold">Minted</th>
-                      <th className="py-2 pr-3 font-semibold">Status</th>
-                      <th className="py-2 font-semibold" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map((c) => {
-                      const st = statusOf(c);
-                      return (
-                        <tr key={c.id} className="border-b border-rule/40 last:border-0">
-                          <td className="py-2.5 pr-3">
-                            <button
-                              type="button"
-                              onClick={() => copy(c.code, `${c.code} copied.`)}
-                              className={cn(
-                                "font-mono text-[13px] hover:underline",
-                                st === "voided" ? "text-ink-3 line-through" : "text-ink",
-                              )}
-                              title="Copy"
-                            >
-                              {c.code}
-                            </button>
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            <LengthBadge months={c.durationMonths} />
-                          </td>
-                          <td className="max-w-[12rem] truncate py-2.5 pr-3 text-ink-3">
-                            {c.label ?? "—"}
-                          </td>
-                          <td className="py-2.5 pr-3 tabular-nums text-ink-2">
-                            {when(c.createdAt)}
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            {st === "voided" ? (
-                              <span className="text-[11px] uppercase tracking-wider text-ink-3">
-                                Voided
-                              </span>
-                            ) : st === "redeemed" ? (
-                              <span className="text-ink-2">
-                                {c.redeemedUsername ? `@${c.redeemedUsername}` : "Redeemed"}
-                                <span className="text-ink-3"> · {when(c.redeemedAt)}</span>
-                              </span>
-                            ) : (
-                              <span className="text-[11px] uppercase tracking-wider text-brand">
-                                Unused
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2.5 text-right">
-                            {st === "unused" && (
-                              <button
-                                type="button"
-                                onClick={() => setRevokingCode(c)}
-                                disabled={pending}
-                                className="text-[11px] uppercase tracking-wider text-alert hover:underline disabled:opacity-50"
-                              >
-                                Void
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {truncated && (
-              <p className="text-[11px] text-ink-3">
-                Showing the most recent 1,000 codes. Older ones are still valid — search by code to
-                find one.
-              </p>
-            )}
-          </div>
         )}
-      </section>
+      </div>
+
+      {totals.total === 0 ? (
+        <EmptyState
+          icon={Ticket}
+          title="No codes yet"
+          description="Make some above and hand them out. They'll all be listed here, so you can see who's used one."
+        />
+      ) : search.trim() ? (
+        matches.length === 0 ? (
+          <p className="py-6 text-center text-sm text-ink-3">
+            Nothing matches &ldquo;{search.trim()}&rdquo;.
+          </p>
+        ) : (
+          <ul className="divide-y divide-rule/40">{matches.map(codeRow)}</ul>
+        )
+      ) : (
+        <ul className="divide-y divide-rule/40">
+          {batches.map((b) => {
+            const key = b.batchId ?? "none";
+            const isOpen = open.has(key);
+            const pct = (n: number) => (b.total === 0 ? 0 : (n / b.total) * 100);
+            return (
+              <li key={key} className="py-3.5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                  <button
+                    type="button"
+                    onClick={() => b.batchId && toggle(b.batchId)}
+                    className="group min-w-0 flex-1 space-y-1.5 text-left"
+                    aria-expanded={isOpen}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ChevronDown
+                        aria-hidden
+                        className={cn(
+                          "size-4 shrink-0 text-ink-3 transition-transform",
+                          isOpen && "rotate-180",
+                        )}
+                      />
+                      <span className="truncate font-medium text-ink group-hover:underline">
+                        {b.label ?? "No name"}
+                      </span>
+                      <span className="text-xs text-ink-3">
+                        {b.total} code{b.total === 1 ? "" : "s"} · {lengthLabel(b.durationMonths)} ·
+                        made {when(b.createdAt)}
+                      </span>
+                    </div>
+                    <div className="ml-6 flex h-1.5 max-w-md overflow-hidden rounded-full bg-paper-sunken">
+                      <span className="bg-brand" style={{ width: `${pct(b.redeemed)}%` }} />
+                      <span className="bg-ink-3/30" style={{ width: `${pct(b.voided)}%` }} />
+                    </div>
+                    <p className="ml-6 text-xs text-ink-3">
+                      <span className="tabular-nums text-ink-2">{b.redeemed}</span> of{" "}
+                      <span className="tabular-nums text-ink-2">{b.total}</span> used
+                      {b.unused > 0 && <> · {b.unused} still waiting</>}
+                      {b.voided > 0 && <> · {b.voided} turned off</>}
+                    </p>
+                  </button>
+                  {b.unused > 0 && (
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          copy(
+                            codesIn(b.batchId)
+                              .filter((c) => statusOf(c) === "waiting")
+                              .map((c) => c.code)
+                              .join("\n"),
+                            `Copied ${b.unused} unused code${b.unused === 1 ? "" : "s"}.`,
+                          )
+                        }
+                      >
+                        <Copy aria-hidden /> Copy the {b.unused} unused
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={pending}
+                        onClick={() => setTurningOffBatch(b)}
+                        className="text-alert"
+                      >
+                        Turn them off
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {isOpen && (
+                  <ul className="ml-6 mt-2 divide-y divide-rule/30 border-t border-rule/30">
+                    {codesIn(b.batchId).map(codeRow)}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {truncated && (
+        <p className="text-xs text-ink-3">
+          Showing the 1,000 most recent codes. Older ones still work — search for one to find it.
+        </p>
+      )}
 
       <ConfirmDialog
-        open={revokingCode !== null}
-        title="Void this code?"
-        confirmLabel="Void"
+        open={turningOffCode !== null}
+        title="Turn off this code?"
+        confirmLabel="Turn it off"
         tone="danger"
         busy={pending}
-        onConfirm={revokeCode}
+        onConfirm={turnOffCode}
         onCancel={() => {
-          if (!pending) setRevokingCode(null);
+          if (!pending) setTurningOffCode(null);
         }}
       >
         <p>
-          {revokingCode?.code} stops working immediately. Anyone still holding it will see
-          &ldquo;code not recognised&rdquo;. This can&rsquo;t be undone.
+          {turningOffCode?.code} stops working straight away. Anyone who tries it will be told it
+          isn&rsquo;t recognised. You can&rsquo;t turn it back on.
         </p>
       </ConfirmDialog>
 
       <ConfirmDialog
-        open={revokingBatch !== null}
-        title="Void the unused codes?"
-        confirmLabel="Void them"
+        open={turningOffBatch !== null}
+        title={`Turn off ${turningOffBatch?.unused} codes?`}
+        confirmLabel="Turn them off"
         tone="danger"
         busy={pending}
-        onConfirm={revokeBatch}
+        onConfirm={turnOffBatch}
         onCancel={() => {
-          if (!pending) setRevokingBatch(null);
+          if (!pending) setTurningOffBatch(null);
         }}
       >
         <p>
-          All {revokingBatch?.unused} unused codes in{" "}
-          {revokingBatch?.label ?? "this batch"} stop working immediately. Codes people have
-          already redeemed are untouched - nobody loses Pro they were given.
+          The {turningOffBatch?.unused} unused codes from{" "}
+          {turningOffBatch?.label ?? "this lot"} stop working straight away. Anyone who has
+          already used one keeps their Pro - nobody loses anything.
         </p>
       </ConfirmDialog>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * Vestige Pro codes — the page's main job while Pro isn't on sale.
+ *
+ * One kind of code, with a length; "forever" is one of the lengths. Making them
+ * comes first and looks like it matters, the freshly-made ones land right under
+ * the button, and everything already made sits below that.
+ */
+export function PromoCodesPanel({
+  codes,
+  batches,
+  truncated,
+}: {
+  codes: PromoCodeRow[];
+  batches: PromoBatchRow[];
+  /** True when the list hit its fetch cap — say so rather than imply totality. */
+  truncated: boolean;
+}) {
+  const [fresh, setFresh] = useState<string[]>([]);
+
+  return (
+    <div className="space-y-5">
+      <MakeCodes onMade={setFresh} />
+
+      {/* Right under the button that made them. */}
+      {fresh.length > 0 && (
+        <section className="space-y-3 rounded-xl border border-brand/40 bg-brand/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-hero text-lg text-ink">
+                Your {fresh.length} new code{fresh.length === 1 ? "" : "s"}
+              </p>
+              <p className="mt-0.5 text-sm text-ink-2">
+                Click any code to copy it on its own. They&rsquo;re saved in the list below too.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => copy(fresh.join("\n"), "All copied.")}
+            >
+              <Copy aria-hidden /> Copy all {fresh.length}
+            </Button>
+          </div>
+          <div className="grid gap-1 font-mono text-sm text-ink sm:grid-cols-2 lg:grid-cols-3">
+            {fresh.map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => copy(code, `${code} copied.`)}
+                className="rounded px-2 py-1 text-left hover:bg-paper-sunken/60"
+                title="Click to copy"
+              >
+                {code}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <CodeList codes={codes} batches={batches} truncated={truncated} />
     </div>
   );
 }

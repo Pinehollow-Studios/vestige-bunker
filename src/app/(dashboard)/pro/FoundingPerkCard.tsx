@@ -49,8 +49,8 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
         setOn(nextOn);
         toast.success(
           nextOn
-            ? "Founding perk armed — new founding members now get free Pro automatically."
-            : "Founding perk disarmed — new founders get nothing. Existing grants are untouched.",
+            ? "On - new early members now get their free Pro automatically."
+            : "Off - new early members get nothing. Anyone already running keeps theirs.",
         );
       } else {
         setOn(enabled);
@@ -81,11 +81,12 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
   return (
     <div className="space-y-5 rounded-xl glass-panel p-5">
       <div>
-        <h2 className="font-hero text-lg text-ink">Founding perk</h2>
+        <h2 className="font-hero text-lg text-ink">Free Pro for early members</h2>
         <p className="mt-1 text-sm leading-relaxed text-ink-2">
-          Free Pro for founding members, then a permanently reduced lifetime price. The switch
-          arms it for <em>future</em> founders; the button below grants it to the ones who
-          already exist.
+          Everyone who joins during the beta gets a stretch of Pro free, and keeps a permanently
+          cheaper price after it. Two separate things here: the switch handles everyone who joins
+          <em>from now on</em>, and the button at the bottom starts the clock for the people who
+          have <em>already</em> joined.
         </p>
       </div>
 
@@ -93,19 +94,19 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
       <div className="flex items-start justify-between gap-4 rounded-lg border border-rule/70 bg-paper-sunken/40 p-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink">
-            Automatic free Pro for new founding members
+            Give free Pro to new early members automatically
           </p>
           <p className="mt-1 text-xs leading-relaxed text-ink-3">
             {on
-              ? "Armed. Anyone who becomes a founding member gets their free window on signup."
-              : "Off. New founding members get the badge, but no free Pro. Nothing is running."}
+              ? "On. Anyone who joins as an early member gets their free months the moment they sign up."
+              : "Off. New early members still get the badge, but no free Pro. Nothing is running."}
           </p>
         </div>
         <button
           type="button"
           role="switch"
           aria-checked={on}
-          aria-label="Automatic free Pro for new founding members"
+          aria-label="Give free Pro to new early members automatically"
           disabled={pending}
           onClick={() => setOn((v) => !v)}
           className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
@@ -123,7 +124,7 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
       {/* How long */}
       <label className="block space-y-1">
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-2">
-          Free months
+          How many free months
         </span>
         <input
           type="number"
@@ -134,8 +135,9 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
           className="w-28 rounded-lg border border-rule/70 bg-paper-sunken/60 px-3 py-2 text-sm text-ink outline-none focus:border-brand/50"
         />
         <span className="block text-[11px] leading-snug text-ink-3">
-          How long a founder&rsquo;s free window lasts. Used by both the switch and the button
-          below, so they can never disagree. Changing it does not affect windows already running.
+          How long the free stretch lasts. Both the switch above and the button below use this
+          number, so they can never disagree. Changing it does not shorten or extend anyone whose
+          free months have already started.
         </span>
       </label>
 
@@ -148,16 +150,16 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
       {/* The launch batch */}
       <div className="space-y-3 rounded-lg border border-rule/70 bg-paper-sunken/40 p-4">
         <div>
-          <p className="text-sm font-semibold text-ink">Grant free Pro to existing founders</p>
+          <p className="text-sm font-semibold text-ink">Start the people who have already joined</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-3">
             {pendingFounders === 0
-              ? `All ${founders} founding member${founders === 1 ? "" : "s"} already have a free window.`
-              : `${pendingFounders} of ${founders} founding member${
+              ? `All ${founders} early member${founders === 1 ? "" : "s"} already have their free months.`
+              : `${pendingFounders} of ${founders} early member${
                   founders === 1 ? "" : "s"
-                } would get ${monthsValid ? parsedMonths : months} months free, starting the moment you press this.`}
+                } would get ${monthsValid ? parsedMonths : months} months free, counted from the moment you press this.`}
           </p>
           <p className="mt-1 text-[11px] text-ink-3">
-            Safe to run twice — anyone who already has a window is skipped.
+            Safe to press twice - anyone who already has their free months is skipped.
           </p>
         </div>
         <Button
@@ -165,14 +167,14 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
           onClick={() => setConfirmBatch(true)}
           disabled={pending || pendingFounders === 0}
         >
-          {pending ? "Working…" : `Grant to ${pendingFounders} founder${pendingFounders === 1 ? "" : "s"}`}
+          {pending ? "Working…" : `Start ${pendingFounders} early member${pendingFounders === 1 ? "" : "s"}`}
         </Button>
       </div>
 
       <ConfirmDialog
         open={confirmSwitch}
-        title="Arm the founding perk?"
-        confirmLabel="Arm it"
+        title="Turn this on?"
+        confirmLabel="Turn it on"
         busy={pending}
         onConfirm={() => save(true)}
         onCancel={() => {
@@ -183,20 +185,20 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
         }}
       >
         <p>
-          From now on, anyone who becomes a founding member automatically gets{" "}
+          From now on, anyone who joins as an early member automatically gets{" "}
           <strong className="text-ink">{monthsValid ? parsedMonths : months} months</strong> of
           free Pro.
         </p>
         <p className="mt-2 text-ink-3">
-          This grants nothing to the {founders} founder{founders === 1 ? "" : "s"} who already
-          exist — use the button below for those, when you&rsquo;re ready.
+          This gives nothing to the {founders} person{founders === 1 ? "" : "s"} who have already
+          joined - use the button at the bottom for those, when you&rsquo;re ready.
         </p>
       </ConfirmDialog>
 
       <ConfirmDialog
         open={confirmBatch}
-        title={`Start ${pendingFounders} clock${pendingFounders === 1 ? "" : "s"}?`}
-        confirmLabel="Grant free Pro"
+        title={`Start ${pendingFounders} free ${pendingFounders === 1 ? "membership" : "memberships"}?`}
+        confirmLabel="Start them"
         tone="danger"
         busy={pending}
         onConfirm={runBatch}
@@ -205,14 +207,14 @@ export function FoundingPerkCard({ enabled, months, founders, granted }: Props) 
         }}
       >
         <p>
-          <strong className="text-ink">{pendingFounders}</strong> founding member
+          <strong className="text-ink">{pendingFounders}</strong> early member
           {pendingFounders === 1 ? "" : "s"} will get{" "}
           <strong className="text-ink">{monthsValid ? parsedMonths : months} months</strong> of
           free Pro, counted from right now.
         </p>
         <p className="mt-2 text-ink-3">
-          There is no undo for the batch — you&rsquo;d have to revoke each grant individually.
-          Do this when Pro actually launches, not before.
+          There is no single undo - you&rsquo;d have to take it back from each person one at a
+          time. Do this on the day Pro launches, not before.
         </p>
       </ConfirmDialog>
     </div>
